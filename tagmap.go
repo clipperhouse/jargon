@@ -9,14 +9,18 @@ type TagMap struct {
 	values map[string]string
 }
 
-// NewTagMap creates a new, empty TagMap for the purpose of looking up canonical tags
-func NewTagMap(tags []string) *TagMap {
+// NewTagMap creates and populates a new TagMap for the purpose of looking up canonical tags
+func NewTagMap(tags []string, synonyms map[string]string) *TagMap {
 	result := &TagMap{
 		values: make(map[string]string),
 	}
 	for _, tag := range tags {
 		key := normalize(tag)
 		result.values[key] = tag
+	}
+	for synonym, canonical := range synonyms {
+		key := normalize(synonym)
+		result.values[key] = canonical
 	}
 	return result
 }
