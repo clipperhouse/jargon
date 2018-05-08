@@ -19,17 +19,18 @@ func TestNormalize(t *testing.T) {
 	}
 }
 
-func TestAddTag(t *testing.T) {
-	tagmap := NewTagMap()
-	tag := "Node.js"
-	tagmap.AddTag(tag)
+func TestNewTagMap(t *testing.T) {
+	tags := []string{"Node.js", "ASP.net"}
+	tagmap := NewTagMap(tags)
 
-	key := normalize(tag)
-	got, exists := tagmap.values[key]
-	if !exists {
-		t.Errorf("Given added tag %q, expected exists true, but got %t", tag, exists)
-	}
-	if got != tag {
-		t.Errorf("Given added tag %q, expected to retrieve same, but got %q", tag, got)
+	for _, value := range tags {
+		key := normalize(value)
+		got, exists := tagmap.values[key]
+		if !exists {
+			t.Errorf("Given added tag %q, expected exists true, but got %t", value, exists)
+		}
+		if got != value {
+			t.Errorf("Given added tag %q, expected to retrieve same, but got %q", value, got)
+		}
 	}
 }

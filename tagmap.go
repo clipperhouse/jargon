@@ -1,7 +1,6 @@
 package techlemm
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -11,16 +10,15 @@ type TagMap struct {
 }
 
 // NewTagMap creates a new, empty TagMap for the purpose of looking up canonical tags
-func NewTagMap() *TagMap {
-	return &TagMap{
+func NewTagMap(tags []string) *TagMap {
+	result := &TagMap{
 		values: make(map[string]string),
 	}
-}
-
-func (t *TagMap) AddTag(s string) error {
-	key := normalize(s)
-	t.values[key] = s
-	return nil
+	for _, tag := range tags {
+		key := normalize(tag)
+		result.values[key] = tag
+	}
+	return result
 }
 
 // normalize returns a string suitable as a key for tag lookup, removing dots and dashes and converting to lowercase
@@ -28,7 +26,6 @@ func normalize(s string) string {
 	result := make([]rune, 0)
 
 	for index, value := range s {
-		fmt.Printf("index: %q, value: %q\n", index, value)
 		if index == 0 {
 			// Leading dots are meaningful and should not be removed, for example ".net"
 			result = append(result, value)
@@ -39,7 +36,5 @@ func normalize(s string) string {
 		}
 		result = append(result, value)
 	}
-	fmt.Printf("%v\n", result)
-	fmt.Printf("%q\n", string(result))
 	return strings.ToLower(string(result))
 }
