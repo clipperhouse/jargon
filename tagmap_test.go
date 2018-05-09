@@ -51,3 +51,33 @@ func TestNewTagMap(t *testing.T) {
 		}
 	}
 }
+
+func TestGet(t *testing.T) {
+	tags := []string{"Node.js", "ASP.net"}
+	synonyms := map[string]string{
+		"io.js":      "Node.js",
+		"ECMAScript": "JavaScript",
+	}
+	tagmap := NewTagMap(tags, synonyms)
+
+	type test struct {
+		input, expected string
+		found           bool
+	}
+
+	tests := []test{
+		{"nodejs", "Node.js", true},
+		{"IOjs", "Node.js", true},
+		{"foo", "", false},
+	}
+
+	for _, test := range tests {
+		got, found := tagmap.Get(test.input)
+		if found != test.found {
+			t.Errorf("Given input %q, expected found to be true, but got %t", test.input, found)
+		}
+		if got != test.expected {
+			t.Errorf("Given input %q, expected get %q, but got %q", test.input, test.expected, got)
+		}
+	}
+}

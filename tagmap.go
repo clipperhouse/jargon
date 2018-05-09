@@ -25,6 +25,14 @@ func NewTagMap(tags []string, synonyms map[string]string) *TagMap {
 	return result
 }
 
+// Get attempts to canonicalize a given input.
+// Returned string is the canonical, if found; returned bool indicates whether found
+func (t *TagMap) Get(s string) (string, bool) {
+	key := normalize(s)
+	canonical, found := t.values[key]
+	return canonical, found
+}
+
 // normalize returns a string suitable as a key for tag lookup, removing dots and dashes and converting to lowercase
 func normalize(s string) string {
 	result := make([]rune, 0)
