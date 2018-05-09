@@ -10,19 +10,28 @@ type TagMap struct {
 }
 
 // NewTagMap creates and populates a new TagMap for the purpose of looking up canonical tags
-func NewTagMap(tags []string, synonyms map[string]string) *TagMap {
+func NewTagMap(d *Dictionary) *TagMap {
 	result := &TagMap{
 		values: make(map[string]string),
 	}
-	for _, tag := range tags {
+	for _, tag := range d.Tags {
 		key := normalize(tag)
 		result.values[key] = tag
 	}
-	for synonym, canonical := range synonyms {
+	for synonym, canonical := range d.Synonyms {
 		key := normalize(synonym)
 		result.values[key] = canonical
 	}
 	return result
+}
+
+type Dictionary struct {
+	Tags     []string
+	Synonyms map[string]string
+}
+
+func NewDictionary(tags []string, synonyms map[string]string) *Dictionary {
+	return &Dictionary{tags, synonyms}
 }
 
 // Get attempts to canonicalize a given input.

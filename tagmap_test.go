@@ -27,7 +27,9 @@ func TestNewTagMap(t *testing.T) {
 		"io.js":      "Node.js",
 		"ECMAScript": "JavaScript",
 	}
-	tagmap := NewTagMap(tags, synonyms)
+	d := NewDictionary(tags, synonyms)
+
+	tagmap := NewTagMap(d)
 
 	for _, value := range tags {
 		key := normalize(value)
@@ -58,7 +60,9 @@ func TestGet(t *testing.T) {
 		"io.js":      "Node.js",
 		"ECMAScript": "JavaScript",
 	}
-	tagmap := NewTagMap(tags, synonyms)
+	d := NewDictionary(tags, synonyms)
+
+	tagmap := NewTagMap(d)
 
 	type test struct {
 		input, expected string
