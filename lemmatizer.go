@@ -1,4 +1,4 @@
-package techlemm
+package jargon
 
 import (
 	"fmt"
