@@ -1,6 +1,7 @@
 package techlemm
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -19,21 +20,19 @@ func TestNormalize(t *testing.T) {
 	}
 }
 
+var testTags = []string{"Node.js", "ASP.net"}
+var testSynonyms = map[string]string{
+	"io.js":      "Node.js",
+	"ECMAScript": "JavaScript",
+}
+var testDict = NewDictionary(testTags, testSynonyms)
+var testLem = NewLemmatizer(testDict)
+
 func TestLemmatizer(t *testing.T) {
 	// Intended to narrowly test that the values have been added to the data structure
-
-	tags := []string{"Node.js", "ASP.net"}
-	synonyms := map[string]string{
-		"io.js":      "Node.js",
-		"ECMAScript": "JavaScript",
-	}
-	d := NewDictionary(tags, synonyms)
-
-	lem := NewLemmatizer(d)
-
-	for _, value := range tags {
+	for _, value := range testTags {
 		key := normalize(value)
-		got, exists := lem.values[key]
+		got, exists := testLem.values[key]
 		if !exists {
 			t.Errorf("Given added tag %q, expected exists to be true, but got %t", value, exists)
 		}
@@ -42,9 +41,9 @@ func TestLemmatizer(t *testing.T) {
 		}
 	}
 
-	for synonym, canonical := range synonyms {
+	for synonym, canonical := range testSynonyms {
 		key := normalize(synonym)
-		got, exists := lem.values[key]
+		got, exists := testLem.values[key]
 		if !exists {
 			t.Errorf("Given added tag %q, expected exists to be true, but got %t", canonical, exists)
 		}
@@ -54,16 +53,7 @@ func TestLemmatizer(t *testing.T) {
 	}
 }
 
-func TestGet(t *testing.T) {
-	tags := []string{"Node.js", "ASP.net"}
-	synonyms := map[string]string{
-		"io.js":      "Node.js",
-		"ECMAScript": "JavaScript",
-	}
-	d := NewDictionary(tags, synonyms)
-
-	lem := NewLemmatizer(d)
-
+func TestGetCanonical(t *testing.T) {
 	type test struct {
 		input, expected string
 		found           bool
@@ -76,12 +66,22 @@ func TestGet(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		got, found := lem.Get(test.input)
+		got, found := testLem.GetCanonical(test.input)
 		if found != test.found {
 			t.Errorf("Given input %q, expected found to be true, but got %t", test.input, found)
 		}
-		if got != test.expected {
+		if !test.found && got != test.expected { // if test doesn't expect it to be found, don't test value
 			t.Errorf("Given input %q, expected get %q, but got %q", test.input, test.expected, got)
 		}
+	}
+}
+
+func TestLemmatize(t *testing.T) {
+	tokens := strings.Split("This is the story of nodeJS and ASPNET", " ")
+	lemmatized := testLem.Lemmatize(tokens)
+	got := strings.Join(lemmatized, " ")
+	expected := "This is the story of Node.js and ASP.net"
+	if got != expected {
+		t.Errorf("Given tokens %v, expected get %q, but got %q", tokens, expected, got)
 	}
 }

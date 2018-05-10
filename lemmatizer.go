@@ -25,12 +25,26 @@ func NewLemmatizer(d *Dictionary) *Lemmatizer {
 	return result
 }
 
-// Get attempts to canonicalize a given input.
+// GetCanonical attempts to canonicalize a given input.
 // Returned string is the canonical, if found; returned bool indicates whether found
-func (lem *Lemmatizer) Get(s string) (string, bool) {
+func (lem *Lemmatizer) GetCanonical(s string) (string, bool) {
 	key := normalize(s)
 	canonical, found := lem.values[key]
 	return canonical, found
+}
+
+// Lemmatize takes a slice of tokens and returns canonicalized terms
+// Terms (tokens) that are not canonicalized are returned as-is
+func (lem *Lemmatizer) Lemmatize(tokens []string) []string {
+	result := make([]string, 0)
+	for _, token := range tokens {
+		if canonical, found := lem.GetCanonical(token); found {
+			result = append(result, canonical)
+		} else {
+			result = append(result, token)
+		}
+	}
+	return result
 }
 
 // normalize returns a string suitable as a key for tag lookup, removing dots and dashes and converting to lowercase
