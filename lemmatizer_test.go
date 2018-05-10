@@ -19,7 +19,7 @@ func TestNormalize(t *testing.T) {
 	}
 }
 
-func TestNewTagMap(t *testing.T) {
+func TestLemmatizer(t *testing.T) {
 	// Intended to narrowly test that the values have been added to the data structure
 
 	tags := []string{"Node.js", "ASP.net"}
@@ -29,11 +29,11 @@ func TestNewTagMap(t *testing.T) {
 	}
 	d := NewDictionary(tags, synonyms)
 
-	tagmap := NewTagMap(d)
+	lem := NewLemmatizer(d)
 
 	for _, value := range tags {
 		key := normalize(value)
-		got, exists := tagmap.values[key]
+		got, exists := lem.values[key]
 		if !exists {
 			t.Errorf("Given added tag %q, expected exists to be true, but got %t", value, exists)
 		}
@@ -44,7 +44,7 @@ func TestNewTagMap(t *testing.T) {
 
 	for synonym, canonical := range synonyms {
 		key := normalize(synonym)
-		got, exists := tagmap.values[key]
+		got, exists := lem.values[key]
 		if !exists {
 			t.Errorf("Given added tag %q, expected exists to be true, but got %t", canonical, exists)
 		}
@@ -62,7 +62,7 @@ func TestGet(t *testing.T) {
 	}
 	d := NewDictionary(tags, synonyms)
 
-	tagmap := NewTagMap(d)
+	lem := NewLemmatizer(d)
 
 	type test struct {
 		input, expected string
@@ -76,7 +76,7 @@ func TestGet(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		got, found := tagmap.Get(test.input)
+		got, found := lem.Get(test.input)
 		if found != test.found {
 			t.Errorf("Given input %q, expected found to be true, but got %t", test.input, found)
 		}

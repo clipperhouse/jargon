@@ -4,14 +4,14 @@ import (
 	"strings"
 )
 
-// TagMap is the main structure for looking up canonical tags
-type TagMap struct {
+// Lemmatizer is the main structure for looking up canonical tags
+type Lemmatizer struct {
 	values map[string]string
 }
 
-// NewTagMap creates and populates a new TagMap for the purpose of looking up canonical tags
-func NewTagMap(d *Dictionary) *TagMap {
-	result := &TagMap{
+// NewLemmatizer creates and populates a new Lemmatizer for the purpose of looking up canonical tags
+func NewLemmatizer(d *Dictionary) *Lemmatizer {
+	result := &Lemmatizer{
 		values: make(map[string]string),
 	}
 	for _, tag := range d.Tags {
@@ -25,22 +25,11 @@ func NewTagMap(d *Dictionary) *TagMap {
 	return result
 }
 
-// Dictionary is a structure for containing tags and synonyms, for easy passing around
-type Dictionary struct {
-	Tags     []string
-	Synonyms map[string]string
-}
-
-// NewDictionary instantiates a Dictionary pointer given tags and synonyms. Synonyms are a map of synonym (key) → canonical (value).
-func NewDictionary(tags []string, synonyms map[string]string) *Dictionary {
-	return &Dictionary{tags, synonyms}
-}
-
 // Get attempts to canonicalize a given input.
 // Returned string is the canonical, if found; returned bool indicates whether found
-func (t *TagMap) Get(s string) (string, bool) {
+func (lem *Lemmatizer) Get(s string) (string, bool) {
 	key := normalize(s)
-	canonical, found := t.values[key]
+	canonical, found := lem.values[key]
 	return canonical, found
 }
 
