@@ -1,7 +1,6 @@
 package jargon
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -48,9 +47,7 @@ func (lem *Lemmatizer) Lemmatize(tokens []string) []string {
 			}
 
 			ngram := strings.Join(tokens[i:i+g], "")
-			fmt.Printf("ngram is %q\n", ngram)
 			if canonical, found := lem.GetCanonical(ngram); found {
-				fmt.Printf("canonical is %q\n", canonical)
 				result = append(result, canonical)
 				i += g // consume tokens
 				break  // out of the grams loop, back to tokens loop
