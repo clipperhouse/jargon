@@ -12,11 +12,13 @@ A further problem is that some ngrams should be understood as a single term. We 
 **one** technology, but databases naively see three words.
 
 ## Prior art
-This is effectively a problem of synonyms. Search-oriented databases like Elastic handle this problem with analyzers.
+This is effectively a problem of synonyms. Search-oriented databases like Elastic handle this problem with [analyzers](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-analyzers.html).
 
-In NLP, it’s handled by stemmers or lemmatizers.
+In NLP, it’s handled by [stemmers](https://en.wikipedia.org/wiki/Stemming) or [lemmatizers](https://en.wikipedia.org/wiki/Lemmatisation).
 
-##Who’s it for?
+The approach is to process text, replacing variations of a term (manager, management, managing) with a canonical version.
+
+## Who’s it for?
 Dunno yet, but some ideas…
 
 - Data scientists doing NLP on unstructured data, who want to ensure consistency of terms
