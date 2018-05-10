@@ -1,6 +1,7 @@
 package techlemm
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -33,17 +34,35 @@ func (lem *Lemmatizer) GetCanonical(s string) (string, bool) {
 	return canonical, found
 }
 
-// Lemmatize takes a slice of tokens and returns canonicalized terms
-// Terms (tokens) that are not canonicalized are returned as-is
+// Lemmatize takes a slice of well-formed tokens and returns canonicalized terms. Terms (tokens) that are not canonicalized are returned as-is
 func (lem *Lemmatizer) Lemmatize(tokens []string) []string {
 	result := make([]string, 0)
-	for _, token := range tokens {
-		if canonical, found := lem.GetCanonical(token); found {
-			result = append(result, canonical)
-		} else {
-			result = append(result, token)
+	gramLengths := []int{3, 2, 1}
+
+	for i := 0; i < len(tokens); { // increment happens below
+		for _, g := range gramLengths {
+
+			// Don't go past the end of tokens slice
+			if i+g > len(tokens) {
+				continue
+			}
+
+			ngram := strings.Join(tokens[i:i+g], "")
+			fmt.Printf("ngram is %q\n", ngram)
+			if canonical, found := lem.GetCanonical(ngram); found {
+				fmt.Printf("canonical is %q\n", canonical)
+				result = append(result, canonical)
+				i += g // consume tokens
+				break  // out of the grams loop, back to tokens loop
+			}
+
+			if g == 1 {
+				result = append(result, tokens[i])
+				i++
+			}
 		}
 	}
+
 	return result
 }
 

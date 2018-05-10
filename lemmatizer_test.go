@@ -20,7 +20,7 @@ func TestNormalize(t *testing.T) {
 	}
 }
 
-var testTags = []string{"Node.js", "ASP.net"}
+var testTags = []string{"Node.js", "ASP.net", "ruby-on-rails"}
 var testSynonyms = map[string]string{
 	"io.js":      "Node.js",
 	"ECMAScript": "JavaScript",
@@ -77,11 +77,11 @@ func TestGetCanonical(t *testing.T) {
 }
 
 func TestLemmatize(t *testing.T) {
-	tokens := strings.Split("This is the story of nodeJS and ASPNET", " ")
+	tokens := strings.Split("This is the story of Ruby on Rails nodeJS and ASPNET", " ")
 	lemmatized := testLem.Lemmatize(tokens)
 	got := strings.Join(lemmatized, " ")
-	expected := "This is the story of Node.js and ASP.net"
+	expected := "This is the story of ruby-on-rails Node.js and ASP.net"
 	if got != expected {
-		t.Errorf("Given tokens %v, expected get %q, but got %q", tokens, expected, got)
+		t.Errorf("Given tokens %v, expected %q, but got %q", tokens, expected, got)
 	}
 }
