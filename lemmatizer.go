@@ -10,15 +10,17 @@ type Lemmatizer struct {
 }
 
 // NewLemmatizer creates and populates a new Lemmatizer for the purpose of looking up canonical tags
-func NewLemmatizer(d *Dictionary) *Lemmatizer {
+func NewLemmatizer(d Dictionary) *Lemmatizer {
 	result := &Lemmatizer{
 		values: make(map[string]string),
 	}
-	for _, tag := range d.Tags {
+	tags := d.GetTags()
+	for _, tag := range tags {
 		key := normalize(tag)
 		result.values[key] = tag
 	}
-	for synonym, canonical := range d.Synonyms {
+	synonyms := d.GetSynonyms()
+	for synonym, canonical := range synonyms {
 		key := normalize(synonym)
 		result.values[key] = canonical
 	}
@@ -27,8 +29,8 @@ func NewLemmatizer(d *Dictionary) *Lemmatizer {
 
 // GetCanonical attempts to canonicalize a given input.
 // Returned string is the canonical, if found; returned bool indicates whether found
-func (lem *Lemmatizer) GetCanonical(s string) (string, bool) {
-	key := normalize(s)
+func (lem *Lemmatizer) GetCanonical(token string) (string, bool) {
+	key := normalize(token)
 	canonical, found := lem.values[key]
 	return canonical, found
 }
