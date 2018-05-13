@@ -17,8 +17,9 @@ type techProse struct{}
 // It respects Unicode definitions of 'punctuation' and 'symbol', with a few hard-coded exceptions (below).
 // Symbols are treated as word characters (like alphanumerics), allowing things like email addresses, hashtags and @-handles to be understood as a single token.
 // Dots are allowed to lead words, and to appear mid-word, allowing things like .Net and Node.js. Trailing dots are considered end-of-sentence.
-// [@, #,-, *, %, /, \] hard-coded as symbols, even though Unicode specifies them as punctuation. See http://www.unicode.org/faq/punctuation_symbols.html
+// [@, #, -, *, %, /, \] are hard-coded as symbols, even though Unicode specifies them as punctuation. See http://www.unicode.org/faq/punctuation_symbols.html
 // All other punctuation terminates words, as does white space.
+// Like the other tokenizers in this package, it returns all tokens (including white space), so text can be reconstructed with fidelity. If callers don't want white space, they'll need to filter.
 // TODO: URLs
 // TODO: mid-word apostrophes?
 var TechProse = &techProse{}
@@ -100,6 +101,8 @@ Loop:
 		switch r := l.next(); {
 		case r == eof:
 			break Loop
+		case r == '.' && l.last(): // final dot
+			l.emit()
 		case r == '.': // leading dot is ok
 			return lexWord
 		case isPunct(r):
@@ -115,33 +118,33 @@ Loop:
 }
 
 func lexWord(l *lexer) stateFn {
+Loop:
 	for {
-		r := l.next()
-
-		if r == '.' {
-			// Look ahead
+		switch r := l.next(); {
+		case r == '.':
+			// Look ahead to see if it's a leading dot
 			if l.last() || isTerminator(l.peek()) {
-				// It's a legit terminator, not mid-word
+				// It's a legit terminator, not leading or mid-word (like ".net" or "Node.js")
+				// Emit the word
 				l.backup()
 				l.emit()
-				return lexMain
-			}
-			continue // skip following checks
-		}
 
-		if isTerminator(r) {
+				// Dot gets emitted in lexMain
+				break Loop
+			}
+			// Otherwise continue, it's a leading dot
+		case isTerminator(r):
 			// Always emit
 			l.backup()
 			l.emit()
-			return lexMain
-		}
-
-		if r == eof {
-			return lexMain
+			break Loop
+		case r == eof:
+			break Loop
 		}
 
 		// Otherwise absorb and continue
 	}
+	return lexMain
 }
 
 func isTerminator(r rune) bool {
@@ -159,6 +162,7 @@ var punctExceptions = map[rune]struct{}{
 	'@':  exists,
 	'*':  exists,
 	'%':  exists,
+	'_':  exists,
 	'/':  exists,
 	'\\': exists,
 }
