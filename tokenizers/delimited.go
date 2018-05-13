@@ -1,17 +1,12 @@
 package tokenizers
 
-// Delimited is a simple tokenizer for simple cases, such as whitespace
-type Delimited struct {
+// delimited is a simple tokenizer for simple cases, such as whitespace, without lookahead.
+// Intended as a 'base class', so to speak.
+type delimited struct {
 	isDelimiter func(rune) bool
 }
 
-func NewDelimited(isDelimiter func(rune) bool) *Delimited {
-	return &Delimited{
-		isDelimiter: isDelimiter,
-	}
-}
-
-func (d *Delimited) Tokenize(text string) []string {
+func (d *delimited) Tokenize(text string) []string {
 	var tokens []string
 
 	var current string

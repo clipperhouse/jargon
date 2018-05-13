@@ -11,7 +11,7 @@ This thing has  spaces and line breaks
 and a	tab
 `
 
-	got := WhiteSpaceDelimited.Tokenize(text)
+	got := WhiteSpace.Tokenize(text)
 	expected := []string{
 		"\n",
 		"This", " ", "thing", " ", "has", " ", " ", "spaces", " ", "and", " ", "line", " ", "breaks", "\n",
