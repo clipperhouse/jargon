@@ -1,4 +1,4 @@
-package tokenizers
+package jargon
 
 import (
 	"strings"

@@ -2,8 +2,6 @@ package jargon
 
 import (
 	"strings"
-
-	"github.com/clipperhouse/jargon/tokenizers"
 )
 
 // Lemmatizer is the main structure for looking up canonical tags
@@ -69,8 +67,8 @@ func (lem *Lemmatizer) Lemmatize(tokens []string) []string {
 
 var gramLengths = []int{3, 2, 1}
 
-func (lem *Lemmatizer) LemmatizeTokens(tokens []tokenizers.Token) []tokenizers.Token {
-	lemmatized := make([]tokenizers.Token, 0)
+func (lem *Lemmatizer) LemmatizeTokens(tokens []Token) []Token {
+	lemmatized := make([]Token, 0)
 	pos := 0
 
 	for pos < len(tokens) {
@@ -85,13 +83,13 @@ func (lem *Lemmatizer) LemmatizeTokens(tokens []tokenizers.Token) []tokenizers.T
 			for _, take := range gramLengths {
 				run, consumed, ok := wordrun(tokens, pos, take)
 				if ok {
-					gram := tokenizers.Join(run, tokenizers.Token.Value)
+					gram := Join(run, Token.Value)
 					key := normalize(gram)
 					canonical, found := lem.values[key]
 
 					if found {
 						// Emit token, replacing consumed tokens
-						token := tokenizers.NewToken(canonical, false, false)
+						token := NewToken(canonical, false, false)
 						lemmatized = append(lemmatized, token)
 						pos += consumed
 						break Grams
@@ -130,8 +128,8 @@ func normalize(s string) string {
 }
 
 // Analogous to tokens.Skip(skip).Take(take) in Linq
-func wordrun(tokens []tokenizers.Token, skip, take int) ([]tokenizers.Token, int, bool) {
-	taken := make([]tokenizers.Token, 0)
+func wordrun(tokens []Token, skip, take int) ([]Token, int, bool) {
+	taken := make([]Token, 0)
 	consumed := 0 // tokens consumed, not necessarily equal to take
 
 	for len(taken) < take {

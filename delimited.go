@@ -1,4 +1,4 @@
-package tokenizers
+package jargon
 
 // delimited is a simple tokenizer for simple cases, such as whitespace, without lookahead.
 // Intended as a 'base class', so to speak.
