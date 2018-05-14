@@ -47,7 +47,7 @@ It should—wait for it—break on things like em-dashes and "quotes" and it end
 	}
 }
 
-func contains(value string, tokens []token) bool {
+func contains(value string, tokens []Token) bool {
 	for _, t := range tokens {
 		if t.Value() == value {
 			return true

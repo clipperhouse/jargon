@@ -24,7 +24,7 @@ type techProse struct{}
 // TODO: mid-word apostrophes?
 var TechProse = &techProse{}
 
-func (t *techProse) Tokenize(text string) []token {
+func (t *techProse) Tokenize(text string) []Token {
 	lex := lex(text)
 	return lex.tokens
 }
@@ -41,7 +41,7 @@ type lexer struct {
 	pos    int     // current position in the input
 	start  int     // start position of this item
 	width  int     // width of last rune read from input
-	tokens []token // channel of scanned items
+	tokens []Token // channel of scanned items
 }
 
 // next returns the next rune in the input.
@@ -73,9 +73,9 @@ func (l *lexer) backup() {
 }
 
 // emit passes an item back to the client.
-func (l *lexer) emit(punct bool) {
+func (l *lexer) emit(punct, space bool) {
 	value := l.input[l.start:l.pos]
-	token := token{value, punct}
+	token := NewToken(value, punct, space)
 	l.tokens = append(l.tokens, token)
 	l.start = l.pos
 }
@@ -84,7 +84,7 @@ func (l *lexer) emit(punct bool) {
 func lex(input string) *lexer {
 	l := &lexer{
 		input:  input,
-		tokens: make([]token, 0),
+		tokens: make([]Token, 0),
 	}
 	l.run()
 	return l
@@ -104,13 +104,13 @@ Loop:
 		case r == eof:
 			break Loop
 		case r == '.' && l.last(): // final dot
-			l.emit(true)
+			l.emit(true, false)
 		case r == '.': // leading dot is ok
 			return lexWord
 		case isPunct(r):
-			l.emit(true)
+			l.emit(true, false)
 		case unicode.IsSpace(r):
-			l.emit(false)
+			l.emit(false, true)
 		default:
 			return lexWord
 		}
@@ -129,16 +129,20 @@ Loop:
 				// It's a legit terminator, not leading or mid-word (like ".net" or "Node.js")
 				// Emit the word
 				l.backup()
-				l.emit(false)
+				l.emit(false, false)
 
 				// Dot gets emitted in lexMain
 				break Loop
 			}
 			// Otherwise continue, it's a leading dot
+		case l.last():
+			// Always emit
+			l.emit(false, false)
+			break Loop
 		case isTerminator(r):
 			// Always emit
 			l.backup()
-			l.emit(false)
+			l.emit(false, false)
 			break Loop
 		case r == eof:
 			break Loop

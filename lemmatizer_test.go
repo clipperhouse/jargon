@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/clipperhouse/jargon/tokenizers"
+
 	"github.com/clipperhouse/jargon/stackexchange"
 )
 
@@ -76,5 +78,16 @@ func TestLemmatize(t *testing.T) {
 	expected := "This is the story of ruby-on-rails node.js and asp.net-mvc"
 	if got != expected {
 		t.Errorf("Given tokens %v, expected %q, but got %q", tokens, expected, got)
+	}
+}
+
+func TestLemmatizeTokens(t *testing.T) {
+	text := "This is the story of Ruby on Rails nodeJS and ASPNET mvc"
+	tokens := tokenizers.TechProse.Tokenize(text)
+	lemmatized := testLem.LemmatizeTokens(tokens)
+	got := tokenizers.Join(lemmatized, tokenizers.Token.Value)
+	expected := "This is the story of ruby-on-rails node.js and asp.net-mvc"
+	if got != expected {
+		t.Errorf("Given tokens %v, expected %q, but got %q", text, expected, got)
 	}
 }

@@ -2,6 +2,8 @@ package jargon
 
 import (
 	"strings"
+
+	"github.com/clipperhouse/jargon/tokenizers"
 )
 
 // Lemmatizer is the main structure for looking up canonical tags
@@ -65,6 +67,50 @@ func (lem *Lemmatizer) Lemmatize(tokens []string) []string {
 	return result
 }
 
+var gramLengths = []int{3, 2, 1}
+
+func (lem *Lemmatizer) LemmatizeTokens(tokens []tokenizers.Token) []tokenizers.Token {
+	lemmatized := make([]tokenizers.Token, 0)
+	pos := 0
+
+	for pos < len(tokens) {
+		switch current := tokens[pos]; {
+		case current.Punct() || current.Space():
+			// Emit it
+			lemmatized = append(lemmatized, current)
+			pos++
+		default:
+		Grams:
+			// Else it's a word, try n-grams
+			for _, take := range gramLengths {
+				run, consumed, ok := wordrun(tokens, pos, take)
+				if ok {
+					gram := tokenizers.Join(run, tokenizers.Token.Value)
+					key := normalize(gram)
+					canonical, found := lem.values[key]
+
+					if found {
+						// Emit token, replacing consumed tokens
+						token := tokenizers.NewToken(canonical, false, false)
+						lemmatized = append(lemmatized, token)
+						pos += consumed
+						break Grams
+					}
+
+					if take == 1 {
+						// No n-grams, just emit
+						token := tokens[pos]
+						lemmatized = append(lemmatized, token)
+						pos++
+					}
+				}
+			}
+		}
+	}
+
+	return lemmatized
+}
+
 // normalize returns a string suitable as a key for tag lookup, removing dots and dashes and converting to lowercase
 func normalize(s string) string {
 	result := make([]rune, 0)
@@ -81,4 +127,36 @@ func normalize(s string) string {
 		result = append(result, value)
 	}
 	return strings.ToLower(string(result))
+}
+
+// Analogous to tokens.Skip(skip).Take(take) in Linq
+func wordrun(tokens []tokenizers.Token, skip, take int) ([]tokenizers.Token, int, bool) {
+	taken := make([]tokenizers.Token, 0)
+	consumed := 0 // tokens consumed, not necessarily equal to take
+
+	for len(taken) < take {
+		end := skip + consumed
+		eof := end >= len(tokens)
+
+		if eof {
+			// Hard stop
+			return nil, 0, false
+		}
+
+		candidate := tokens[end]
+		switch {
+		case candidate.Punct():
+			// Hard stop
+			return nil, 0, false
+		case candidate.Space():
+			// Ignore and continue
+			consumed++
+		default:
+			// Found a word
+			taken = append(taken, candidate)
+			consumed++
+		}
+	}
+
+	return taken, consumed, true
 }
