@@ -14,9 +14,9 @@ A further problem is that some ngrams should be understood as a single term. We 
 ## Prior art
 This is effectively a problem of synonyms. Search-oriented databases like Elastic handle this problem with [analyzers](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-analyzers.html).
 
-In NLP, it’s handled by [stemmers](https://en.wikipedia.org/wiki/Stemming) or [lemmatizers](https://en.wikipedia.org/wiki/Lemmatisation).
+In NLP, it’s handled by [stemmers](https://en.wikipedia.org/wiki/Stemming) or [lemmatizers](https://en.wikipedia.org/wiki/Lemmatisation). There, the goal is to replace variations of a term (manager, management, managing) with a single canonical version.
 
-The approach is to process text, replacing variations of a term (manager, management, managing) with a canonical version.
+Recognizing mutli-words-as-a-single-term (“Ruby on Rails”) is [named-entity recognition](https://en.wikipedia.org/wiki/Named-entity_recognition).
 
 ## Who’s it for?
 Dunno yet, but some ideas…
