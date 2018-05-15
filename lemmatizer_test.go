@@ -1,7 +1,6 @@
 package jargon
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/clipperhouse/jargon/stackexchange"
@@ -43,39 +42,6 @@ func TestLemmatizer(t *testing.T) {
 		if !exists {
 			t.Errorf("Given added tag %q, expected exists to be true, but got %t", canonical, exists)
 		}
-	}
-}
-
-func TestGetCanonical(t *testing.T) {
-	type test struct {
-		input, expected string
-		found           bool
-	}
-
-	tests := []test{
-		{"nodejs", "Node.js", true},
-		{"IOjs", "Node.js", true},
-		{"foo", "", false},
-	}
-
-	for _, test := range tests {
-		got, found := testLem.GetCanonical(test.input)
-		if found != test.found {
-			t.Errorf("Given input %q, expected found to be true, but got %t", test.input, found)
-		}
-		if !test.found && got != test.expected { // if test doesn't expect it to be found, don't test value
-			t.Errorf("Given input %q, expected get %q, but got %q", test.input, test.expected, got)
-		}
-	}
-}
-
-func TestLemmatize(t *testing.T) {
-	tokens := strings.Split("This is the story of Ruby on Rails nodeJS and ASPNET mvc", " ")
-	lemmatized := testLem.Lemmatize(tokens)
-	got := strings.Join(lemmatized, " ")
-	expected := "This is the story of ruby-on-rails node.js and asp.net-mvc"
-	if got != expected {
-		t.Errorf("Given tokens %v, expected %q, but got %q", tokens, expected, got)
 	}
 }
 

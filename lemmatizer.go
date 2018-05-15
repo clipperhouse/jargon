@@ -27,46 +27,13 @@ func NewLemmatizer(d Dictionary) *Lemmatizer {
 	return result
 }
 
-// GetCanonical attempts to canonicalize a given input.
-// Returned string is the canonical, if found; returned bool indicates whether found
-func (lem *Lemmatizer) GetCanonical(token string) (string, bool) {
-	key := normalize(token)
-	canonical, found := lem.values[key]
-	return canonical, found
-}
-
-// Lemmatize takes a slice of well-formed tokens and returns canonicalized terms. Terms (tokens) that are not canonicalized are returned as-is
-func (lem *Lemmatizer) Lemmatize(tokens []string) []string {
-	result := make([]string, 0)
-	gramLengths := []int{3, 2, 1}
-
-	for i := 0; i < len(tokens); { // increment happens below
-		for _, g := range gramLengths {
-
-			// Don't go past the end of tokens slice
-			if i+g > len(tokens) {
-				continue
-			}
-
-			ngram := strings.Join(tokens[i:i+g], "")
-			if canonical, found := lem.GetCanonical(ngram); found {
-				result = append(result, canonical)
-				i += g // consume tokens
-				break  // out of the grams loop, back to tokens loop
-			}
-
-			if g == 1 {
-				result = append(result, tokens[i])
-				i++
-			}
-		}
-	}
-
-	return result
-}
-
 var gramLengths = []int{3, 2, 1}
 
+// LemmatizeTokens takes a slice of tokens and returns tokens with canonicalized terms.
+// Terms (tokens) that are not canonicalized are returned as-is, e.g.
+// ["I", " ", "think", " ", "Ruby", " ", "on", " ", "Rails", " ", "is", " ", "great"] →
+//    ["I", " ", "think", " ", "ruby-on-rails", " ", "is", " ", "great"]
+// Note that fewer tokens may be returned than were input.
 func (lem *Lemmatizer) LemmatizeTokens(tokens []Token) []Token {
 	lemmatized := make([]Token, 0)
 	pos := 0
