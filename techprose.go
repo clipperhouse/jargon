@@ -110,7 +110,10 @@ Loop:
 		case isPunct(r):
 			l.emit(true, false)
 		case unicode.IsSpace(r):
-			l.emit(false, true)
+			// For our purposes, newlines and tabs should be considered punctuation, i.e.,
+			// they break a word run. Lemmatizers should test for punct before testing for space.
+			punct := r == '\r' || r == '\n' || r == '\t'
+			l.emit(punct, true)
 		default:
 			return lexWord
 		}

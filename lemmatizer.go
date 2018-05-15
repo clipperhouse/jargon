@@ -143,6 +143,9 @@ func wordrun(tokens []Token, skip, take int) ([]Token, int, bool) {
 
 		candidate := tokens[end]
 		switch {
+		// Note: test for punct before space; newlines and tabs can be
+		// considered both punct and space (depending on the tokenizer!)
+		// and we want to treat them as breaking word runs.
 		case candidate.Punct():
 			// Hard stop
 			return nil, 0, false
