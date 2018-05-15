@@ -22,11 +22,11 @@ func (t Token) String() string {
 	return t.value
 }
 
-func (t Token) Punct() bool {
+func (t Token) IsPunct() bool {
 	return t.punct
 }
 
-func (t Token) Space() bool {
+func (t Token) IsSpace() bool {
 	return t.space
 }
 

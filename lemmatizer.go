@@ -40,7 +40,7 @@ func (lem *Lemmatizer) LemmatizeTokens(tokens []Token) []Token {
 
 	for pos < len(tokens) {
 		switch current := tokens[pos]; {
-		case current.Punct() || current.Space():
+		case current.IsPunct() || current.IsSpace():
 			// Emit it
 			lemmatized = append(lemmatized, current)
 			pos++
@@ -113,10 +113,10 @@ func wordrun(tokens []Token, skip, take int) ([]Token, int, bool) {
 		// Note: test for punct before space; newlines and tabs can be
 		// considered both punct and space (depending on the tokenizer!)
 		// and we want to treat them as breaking word runs.
-		case candidate.Punct():
+		case candidate.IsPunct():
 			// Hard stop
 			return nil, 0, false
-		case candidate.Space():
+		case candidate.IsSpace():
 			// Ignore and continue
 			consumed++
 		default:
