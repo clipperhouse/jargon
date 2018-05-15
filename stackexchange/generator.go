@@ -12,20 +12,57 @@ import (
 	"time"
 )
 
+var exists = struct{}{}
+
 func writeDictionary() error {
 	pages := 10
 	pageSize := 100
 
-	var items []item
-	for page := 1; page <= pages; page++ {
-		wrapper, err := fetchTags(page, pageSize)
-		if err != nil {
-			return err
-		}
-		items = append(items, wrapper.Items...)
+	// Temporary, for detecting duplicates
+	tagcheck := make(map[string]struct{})
 
-		if !wrapper.HasMore {
-			break
+	// Used in the template below
+	data := struct {
+		Tags     []string
+		Synonyms map[string]string
+	}{
+		Tags:     make([]string, 0),
+		Synonyms: make(map[string]string),
+	}
+
+	for _, site := range sites {
+		for page := 1; page <= pages; page++ {
+			wrapper, err := fetchTags(page, pageSize, site)
+			if err != nil {
+				return err
+			}
+
+			// Avoid duplicates; since we are querying multiple sites, duplication is common.
+			for _, item := range wrapper.Items {
+				if item.Moderator {
+					// We don't want those
+					continue
+				}
+
+				// Only append tags if they haven't been added already
+				if _, found := tagcheck[item.Name]; !found {
+					tagcheck[item.Name] = exists
+					data.Tags = append(data.Tags, item.Name)
+				}
+
+				// Only add synonyms if they haven't been added already
+				for _, key := range item.Synonyms {
+					if _, found := data.Synonyms[key]; !found {
+						data.Synonyms[key] = item.Name
+					}
+					// What if the same synonym points to multiple canonical tags?
+					// The above logic just uses the first one, maybe that's ok.
+				}
+			}
+
+			if !wrapper.HasMore {
+				break
+			}
 		}
 	}
 
@@ -48,28 +85,18 @@ func (d *dict) GetSynonyms() map[string]string {
 }
 
 // Dictionary is the main exported Dictionary of Stack Exchange tags and synonyms, fetched via api.stackexchange.com
-// It includes the most popular {{ . | len }} tags and their synonyms
+// It includes the most popular {{ .Tags | len }} tags and their synonyms
 var Dictionary = &dict{tags, synonyms}
 
-var tags = []string {
-	{{ range . -}}
-		"{{ .Name }}",
-	{{ end -}}
-}
+var tags = {{printf "%#v" .Tags}}
 
-var synonyms = map[string]string {
-{{ range $i, $tag := . -}}
-	{{ range .Synonyms -}}
-		"{{ . }}": "{{ $tag.Name }}",
-	{{ end -}}
-{{ end -}}
-}
+var synonyms = {{printf "%#v" .Synonyms}}
 	
 `
 	t := template.Must(template.New("dict").Parse(tmpl))
 
 	var source bytes.Buffer
-	tmplErr := t.Execute(&source, items)
+	tmplErr := t.Execute(&source, data)
 	if tmplErr != nil {
 		return tmplErr
 	}
@@ -95,13 +122,14 @@ var synonyms = map[string]string {
 	return nil
 }
 
-var tagsURL = "http://api.stackexchange.com/2.2/tags?page=%d&pagesize=%d&order=desc&sort=popular&site=stackoverflow&filter=!4-J-du8hXSkh2Is1a&page=%d"
+var sites = []string{"stackoverflow", "serverfault"}
+var tagsURL = "http://api.stackexchange.com/2.2/tags?page=%d&pagesize=%d&order=desc&sort=popular&site=%s&filter=!4-J-du8hXSkh2Is1a&page=%d"
 var client = http.Client{
 	Timeout: time.Second * 2, // Maximum of 2 secs
 }
 var empty = wrapper{}
 
-func fetchTags(page int, pageSize int) (wrapper, error) {
+func fetchTags(page, pageSize int, site string) (wrapper, error) {
 	if page == 0 {
 		page = 1
 	}
@@ -110,7 +138,7 @@ func fetchTags(page int, pageSize int) (wrapper, error) {
 		pageSize = 100
 	}
 
-	url := fmt.Sprintf(tagsURL, page, pageSize)
+	url := fmt.Sprintf(tagsURL, page, pageSize, site)
 	r, httpErr := client.Get(url)
 	if httpErr != nil {
 		return empty, httpErr
