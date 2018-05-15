@@ -50,7 +50,7 @@ func (lem *Lemmatizer) LemmatizeTokens(tokens []Token) []Token {
 			for _, take := range gramLengths {
 				run, consumed, ok := wordrun(tokens, pos, take)
 				if ok {
-					gram := Join(run, Token.String)
+					gram := Join(run)
 					key := normalize(gram)
 					canonical, found := lem.values[key]
 

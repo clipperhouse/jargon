@@ -49,7 +49,7 @@ func TestLemmatizeTokens(t *testing.T) {
 	text := "This is the story of Ruby on Rails nodeJS and ASPNET mvc plus TCP/IP."
 	tokens := TechProse.Tokenize(text)
 	lemmatized := testLem.LemmatizeTokens(tokens)
-	got := Join(lemmatized, Token.String)
+	got := Join(lemmatized)
 	expected := "This is the story of ruby-on-rails node.js and asp.net-mvc plus tcp."
 	if got != expected {
 		t.Errorf("Given tokens %v, expected %q, but got %q", text, expected, got)
