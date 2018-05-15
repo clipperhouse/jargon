@@ -11,10 +11,6 @@ type Token struct {
 	space bool
 }
 
-func (t Token) Value() string {
-	return t.value
-}
-
 func (t Token) String() string {
 	return t.value
 }
@@ -30,7 +26,7 @@ func (t Token) IsSpace() bool {
 func Join(tokens []Token, f func(Token) string) string {
 	joined := make([]string, 0)
 	for _, t := range tokens {
-		joined = append(joined, t.Value())
+		joined = append(joined, t.String())
 	}
 	return strings.Join(joined, "")
 }
