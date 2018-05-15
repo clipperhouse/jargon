@@ -56,7 +56,11 @@ func (lem *Lemmatizer) LemmatizeTokens(tokens []Token) []Token {
 
 					if found {
 						// Emit token, replacing consumed tokens
-						token := NewToken(canonical, false, false)
+						token := Token{
+							value: canonical,
+							space: false,
+							punct: false,
+						}
 						lemmatized = append(lemmatized, token)
 						pos += consumed
 						break Grams

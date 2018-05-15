@@ -75,7 +75,11 @@ func (l *lexer) backup() {
 // emit passes an item back to the client.
 func (l *lexer) emit(punct, space bool) {
 	value := l.input[l.start:l.pos]
-	token := NewToken(value, punct, space)
+	token := Token{
+		value: value,
+		punct: punct,
+		space: space,
+	}
 	l.tokens = append(l.tokens, token)
 	l.start = l.pos
 }

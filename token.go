@@ -4,14 +4,11 @@ import (
 	"strings"
 )
 
+// Token represents a piece of text with metadata.
 type Token struct {
 	value string
 	punct bool
 	space bool
-}
-
-func NewToken(value string, punct, space bool) Token {
-	return Token{value, punct, space}
 }
 
 func (t Token) Value() string {
