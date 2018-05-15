@@ -153,9 +153,9 @@ Loop:
 			break Loop
 		case r == eof:
 			break Loop
+		default:
+			// Otherwise absorb and continue
 		}
-
-		// Otherwise absorb and continue
 	}
 	return lexMain
 }
