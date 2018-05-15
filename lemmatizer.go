@@ -76,7 +76,7 @@ func (lem *Lemmatizer) LemmatizeTokens(tokens []Token) []Token {
 	return lemmatized
 }
 
-// normalize returns a string suitable as a key for tag lookup, removing dots and dashes and converting to lowercase
+// normalize returns a string suitable as a key for tag lookup, removing dots, dashes and forward slashes, and converting to lowercase
 func normalize(s string) string {
 	result := make([]rune, 0)
 
@@ -86,7 +86,7 @@ func normalize(s string) string {
 			result = append(result, value)
 			continue
 		}
-		if value == '.' || value == '-' {
+		if value == '.' || value == '-' || value == '/' {
 			continue
 		}
 		result = append(result, value)
