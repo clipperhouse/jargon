@@ -105,12 +105,6 @@ func wordrun(tokens []Token, skip, take int) ([]Token, int, bool) {
 
 	for len(taken) < take {
 		end := skip + consumed
-		eof := end >= len(tokens)
-
-		if eof {
-			// Hard stop
-			return nil, 0, false
-		}
 
 		candidate := tokens[end]
 		switch {

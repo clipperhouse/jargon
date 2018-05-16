@@ -151,8 +151,6 @@ Loop:
 			l.backup()
 			l.emit(false, false)
 			break Loop
-		case r == eof:
-			break Loop
 		default:
 			// Otherwise absorb and continue
 		}
