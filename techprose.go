@@ -107,13 +107,14 @@ Loop:
 		switch r := l.next(); {
 		case r == eof:
 			break Loop
-		case r == '.' && l.last(): // final dot
+		case isLeadingPunct(r) && l.last():
+			// Final dot
 			l.emit(true, false)
-		case r == '.': // leading dot is ok
+		case isLeadingPunct(r):
+			// Leading dot might be ok
 			return lexWord
 		case isPunct(r):
 			l.emit(true, false)
-			// Leading apostrophe is punctuation; mid-word is ok, and is handled by lexWord.
 		case unicode.IsSpace(r):
 			// For our purposes, newlines and tabs should be considered punctuation, i.e.,
 			// they break a word run. Lemmatizers should test for punct before testing for space.
@@ -132,7 +133,7 @@ func lexWord(l *lexer) stateFn {
 Loop:
 	for {
 		switch r := l.next(); {
-		case r == '.' || r == '\'' || r == '’':
+		case isLeadingPunct(r) || isMidPunct(r):
 			// Could be a leading or mid-word dot,
 			// or a mid-word apostrophe
 
@@ -175,6 +176,8 @@ func isPunct(r rune) bool {
 
 var exists = struct{}{}
 var punctExceptions = map[rune]struct{}{
+	// In some cases, we want to consider it a symbol, even though Unicode defines it as punctuation
+	// See See http://www.unicode.org/faq/punctuation_symbols.html
 	'-':  exists,
 	'#':  exists,
 	'@':  exists,
@@ -187,5 +190,27 @@ var punctExceptions = map[rune]struct{}{
 
 func isPunctException(r rune) bool {
 	_, ok := punctExceptions[r]
+	return ok
+}
+
+var leadingPunct = map[rune]struct{}{
+	// Punctuation that can lead a word, like .Net
+	'.': exists,
+}
+
+func isLeadingPunct(r rune) bool {
+	_, ok := leadingPunct[r]
+	return ok
+}
+
+var midPunct = map[rune]struct{}{
+	// Punctuation that can appear mid-word
+	'.':  exists,
+	'\'': exists,
+	'’':  exists,
+}
+
+func isMidPunct(r rune) bool {
+	_, ok := midPunct[r]
 	return ok
 }
