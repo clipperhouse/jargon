@@ -6,13 +6,15 @@ import (
 
 // Lemmatizer is the main structure for looking up canonical tags
 type Lemmatizer struct {
-	values map[string]string
+	values        map[string]string
+	maxGramLength int
 }
 
 // NewLemmatizer creates and populates a new Lemmatizer for the purpose of looking up canonical tags
 func NewLemmatizer(d Dictionary) *Lemmatizer {
 	result := &Lemmatizer{
-		values: make(map[string]string),
+		values:        make(map[string]string),
+		maxGramLength: d.MaxGramLength(),
 	}
 	tags := d.GetTags()
 	for _, tag := range tags {
@@ -26,8 +28,6 @@ func NewLemmatizer(d Dictionary) *Lemmatizer {
 	}
 	return result
 }
-
-var gramLengths = []int{3, 2, 1}
 
 // LemmatizeTokens takes a slice of tokens and returns tokens with canonicalized terms.
 // Terms (tokens) that are not canonicalized are returned as-is, e.g.
@@ -47,7 +47,7 @@ func (lem *Lemmatizer) LemmatizeTokens(tokens []Token) []Token {
 		default:
 		Grams:
 			// Else it's a word, try n-grams
-			for _, take := range gramLengths {
+			for take := lem.maxGramLength; take > 0; take-- {
 				run, consumed, ok := wordrun(tokens, pos, take)
 				if ok {
 					gram := Join(run)
