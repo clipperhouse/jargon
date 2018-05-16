@@ -113,6 +113,7 @@ Loop:
 			return lexWord
 		case isPunct(r):
 			l.emit(true, false)
+			// Leading apostrophe is punctuation; mid-word is ok, and is handled by lexWord.
 		case unicode.IsSpace(r):
 			// For our purposes, newlines and tabs should be considered punctuation, i.e.,
 			// they break a word run. Lemmatizers should test for punct before testing for space.
@@ -126,14 +127,19 @@ Loop:
 	return nil
 }
 
+// Important that this function only gets entered from the lexMain loop; lexMain determines 'word start'
 func lexWord(l *lexer) stateFn {
 Loop:
 	for {
 		switch r := l.next(); {
-		case r == '.':
-			// Look ahead to see if it's a leading dot
+		case r == '.' || r == '\'' || r == '’':
+			// Could be a leading or mid-word dot,
+			// or a mid-word apostrophe
+
+			// Look ahead to see if dot or apostrophe is acting as punctuation,
+			// by being the last char, or being followed by space or more punctuation.
+			// (Test last before testing peek, peek will throw if eof)
 			if l.last() || isTerminator(l.peek()) {
-				// It's a legit terminator, not leading or mid-word (like ".net" or "Node.js")
 				// Emit the word
 				l.backup()
 				l.emit(false, false)
@@ -141,13 +147,14 @@ Loop:
 				// Dot gets emitted in lexMain
 				break Loop
 			}
-			// Otherwise continue, it's a leading dot
+			// Otherwise continue, it's a leading or mid-word dot, or mid-word apostrophe
 		case l.last():
 			// Always emit
 			l.emit(false, false)
 			break Loop
 		case isTerminator(r):
 			// Always emit
+			// Terminator will be handled by lexMain
 			l.backup()
 			l.emit(false, false)
 			break Loop
