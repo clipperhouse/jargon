@@ -12,3 +12,17 @@ func TestWriteDictionary(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestTrailingVersion(t *testing.T) {
+	tests := map[string]string{
+		"ruby-on-3-rails-4": "ruby-on-3-rails",
+		"python-2.7":        "python",
+		"html5":             "html5", // considered part of the name, not a trailing version per se
+	}
+	for given, expected := range tests {
+		got := trailingVersion.ReplaceAllString(given, "")
+		if got != expected {
+			t.Errorf("Given %q, expected trim trailing version number to be %q, got %q", given, expected, got)
+		}
+	}
+}
