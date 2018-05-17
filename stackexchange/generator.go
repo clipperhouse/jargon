@@ -70,13 +70,13 @@ func writeDictionary() error {
 	t := template.Must(template.New("dict").Parse(tmpl))
 
 	var source bytes.Buffer
+
 	tmplErr := t.Execute(&source, data)
 	if tmplErr != nil {
 		return tmplErr
 	}
 
 	formatted, fmtErr := format.Source(source.Bytes())
-
 	if fmtErr != nil {
 		return fmtErr
 	}
@@ -88,7 +88,6 @@ func writeDictionary() error {
 	defer f.Close()
 
 	_, writeErr := f.Write(formatted)
-
 	if writeErr != nil {
 		return writeErr
 	}
