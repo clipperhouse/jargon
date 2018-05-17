@@ -1,5 +1,9 @@
 package jargon
 
+import (
+	"github.com/clipperhouse/jargon/stackexchange"
+)
+
 // Lemmatizer is the main structure for looking up canonical tags
 type Lemmatizer struct {
 	values        map[string]string
@@ -7,7 +11,30 @@ type Lemmatizer struct {
 	normalize     func(string) string
 }
 
-// NewLemmatizer creates and populates a new Lemmatizer for the purpose of looking up canonical tags
+var stackExchange = NewLemmatizer(stackexchange.Dictionary)
+
+// Lemmatize will process text using the Stack Exchange dictionary of tags & synonyms,
+// replacing tech terms and phrases like Python and Ruby on Rails with canonical tags,
+// like python and ruby-on-rails.
+// It returns the original text, with white space preserved, differeing only by the above replacements.
+func Lemmatize(text string) string {
+	tokens := TechProse.Tokenize(text)
+	lemmatized := stackExchange.LemmatizeTokens(tokens)
+	return Join(lemmatized)
+}
+
+// LemmatizeHTML will process HTML text using the Stack Exchange dictionary of tags & synonyms,
+// replacing tech terms and phrases like Python and Ruby on Rails with canonical tags,
+// like python and ruby-on-rails.
+// It returns the original HTML, with white space preserved, differeing only by the above replacements.
+func LemmatizeHTML(text string) string {
+	tokens := TechHTML.Tokenize(text)
+	lemmatized := stackExchange.LemmatizeTokens(tokens)
+	return Join(lemmatized)
+}
+
+// NewLemmatizer creates and populates a new Lemmatizer for the purpose of looking up canonical tags.
+// Data and rules mostly live in the Dictionary interface, which is usually imported.
 func NewLemmatizer(d Dictionary) *Lemmatizer {
 	lem := &Lemmatizer{
 		values:        make(map[string]string),
@@ -32,6 +59,7 @@ func NewLemmatizer(d Dictionary) *Lemmatizer {
 // ["I", " ", "think", " ", "Ruby", " ", "on", " ", "Rails", " ", "is", " ", "great"] →
 //    ["I", " ", "think", " ", "ruby-on-rails", " ", "is", " ", "great"]
 // Note that fewer tokens may be returned than were input.
+// A lot depends on the original tokenization, so make sure that it's right!
 func (lem *Lemmatizer) LemmatizeTokens(tokens []Token) []Token {
 	lemmatized := make([]Token, 0)
 	pos := 0
