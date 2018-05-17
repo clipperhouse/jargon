@@ -1,32 +1,30 @@
 package jargon
 
-import (
-	"strings"
-)
-
 // Lemmatizer is the main structure for looking up canonical tags
 type Lemmatizer struct {
 	values        map[string]string
 	maxGramLength int
+	normalize     func(string) string
 }
 
 // NewLemmatizer creates and populates a new Lemmatizer for the purpose of looking up canonical tags
 func NewLemmatizer(d Dictionary) *Lemmatizer {
-	result := &Lemmatizer{
+	lem := &Lemmatizer{
 		values:        make(map[string]string),
 		maxGramLength: d.MaxGramLength(),
+		normalize:     d.Normalize,
 	}
 	tags := d.GetTags()
 	for _, tag := range tags {
-		key := normalize(tag)
-		result.values[key] = tag
+		key := lem.normalize(tag)
+		lem.values[key] = tag
 	}
 	synonyms := d.GetSynonyms()
 	for synonym, canonical := range synonyms {
-		key := normalize(synonym)
-		result.values[key] = canonical
+		key := lem.normalize(synonym)
+		lem.values[key] = canonical
 	}
-	return result
+	return lem
 }
 
 // LemmatizeTokens takes a slice of tokens and returns tokens with canonicalized terms.
@@ -51,7 +49,7 @@ func (lem *Lemmatizer) LemmatizeTokens(tokens []Token) []Token {
 				run, consumed, ok := wordrun(tokens, pos, take)
 				if ok {
 					gram := Join(run)
-					key := normalize(gram)
+					key := lem.normalize(gram)
 					canonical, found := lem.values[key]
 
 					if found {
@@ -78,24 +76,6 @@ func (lem *Lemmatizer) LemmatizeTokens(tokens []Token) []Token {
 	}
 
 	return lemmatized
-}
-
-// normalize returns a string suitable as a key for tag lookup, removing dots, dashes and forward slashes, and converting to lowercase
-func normalize(s string) string {
-	result := make([]rune, 0)
-
-	for index, value := range s {
-		if index == 0 {
-			// Leading dots are meaningful and should not be removed, for example ".net"
-			result = append(result, value)
-			continue
-		}
-		if value == '.' || value == '-' || value == '/' {
-			continue
-		}
-		result = append(result, value)
-	}
-	return strings.ToLower(string(result))
 }
 
 // Analogous to tokens.Skip(skip).Take(take) in Linq

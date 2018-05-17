@@ -6,4 +6,5 @@ type Dictionary interface {
 	GetSynonyms() map[string]string
 	// What is the longest n-gram (word run) to try to canonicalize
 	MaxGramLength() int
+	Normalize(string) string
 }
