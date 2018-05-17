@@ -21,7 +21,6 @@ var trailingVersion = regexp.MustCompile(`-[\d.]+$`)
 
 // run this in generator_test.go
 func writeDictionary() error {
-	pages := 10
 	pageSize := 100
 
 	// Temporary, for detecting duplicates
@@ -36,7 +35,8 @@ func writeDictionary() error {
 		Synonyms: make(map[string]string),
 	}
 
-	for _, site := range sites {
+	for site, count := range sites {
+		pages := count / pageSize
 		for page := 1; page <= pages; page++ {
 			wrapper, err := fetchTags(page, pageSize, site)
 			if err != nil {
@@ -122,7 +122,13 @@ var tags = {{ printf "%#v" .Tags }}
 var synonyms = {{ printf "%#v" .Synonyms }}
 `
 
-var sites = []string{"stackoverflow", "serverfault"}
+// sites to query, with the number of tags to get, based on eyeballing how many of the top x are 'interesting'
+var sites = map[string]int{
+	"stackoverflow": 2000,
+	"serverfault":   600,
+	"gamedev":       300,
+	"datascience":   200,
+}
 var tagsURL = "http://api.stackexchange.com/2.2/tags?page=%d&pagesize=%d&order=desc&sort=popular&site=%s&filter=!4-J-du8hXSkh2Is1a&page=%d"
 var client = http.Client{
 	Timeout: time.Second * 2, // Maximum of 2 secs
