@@ -40,3 +40,36 @@ func TestLemmatizeTokens(t *testing.T) {
 		t.Errorf("Given tokens %v, expected %q, but got %q", text, expected, got)
 	}
 }
+
+func TestCSV(t *testing.T) {
+	text := `"Ruby on Rails", 3.4, "foo"
+"bar",42, "java script"
+`
+	tokens := TechProse.Tokenize(text)
+	lemmatized := testLem.LemmatizeTokens(tokens)
+	got := Join(lemmatized)
+	expected := `"ruby-on-rails", 3.4, "foo"
+"bar",42, "javascript"
+`
+
+	if got != expected {
+		t.Errorf("Given tokens %v, expected %q, but got %q", text, expected, got)
+	}
+}
+
+func TestTabs(t *testing.T) {
+	text := `Ruby on Rails	3.4	foo
+ASPNET	MVC
+bar	42	java script`
+
+	tokens := TechProse.Tokenize(text)
+	lemmatized := testLem.LemmatizeTokens(tokens)
+	got := Join(lemmatized)
+	expected := `ruby-on-rails	3.4	foo
+asp.net	model-view-controller
+bar	42	javascript`
+
+	if got != expected {
+		t.Errorf("Given tokens %v, expected %q, but got %q", text, expected, got)
+	}
+}

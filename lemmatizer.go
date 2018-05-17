@@ -17,6 +17,8 @@ var stackExchange = NewLemmatizer(stackexchange.Dictionary)
 // replacing tech terms and phrases like Python and Ruby on Rails with canonical tags,
 // like python and ruby-on-rails.
 // It returns the original text, with white space preserved, differeing only by the above replacements.
+// Because the tokenizer is non-destructive, it should work well not just on prose, but delimited text
+// such as CSV and tabs.
 func Lemmatize(text string) string {
 	tokens := TechProse.Tokenize(text)
 	lemmatized := stackExchange.LemmatizeTokens(tokens)
@@ -113,6 +115,12 @@ func wordrun(tokens []Token, skip, take int) ([]Token, int, bool) {
 
 	for len(taken) < take {
 		end := skip + consumed
+		eof := end >= len(tokens)
+
+		if eof {
+			// Hard stop
+			return nil, 0, false
+		}
 
 		candidate := tokens[end]
 		switch {
