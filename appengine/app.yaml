@@ -1,0 +1,15 @@
+runtime: go
+api_version: go1
+
+handlers:
+- url: /css
+  static_dir: css
+
+- url: /js
+  static_dir: js
+
+- url: /img
+  static_dir: img
+
+- url: /.*
+  script: _go_app
