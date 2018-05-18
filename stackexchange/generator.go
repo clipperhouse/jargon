@@ -73,6 +73,22 @@ func writeDictionary() error {
 			if !wrapper.HasMore {
 				break
 			}
+
+			if wrapper.Backoff > 10 {
+				// That's too much for this run
+				err := fmt.Errorf("Abort: received a message to backoff %d seconds from api.stackexchange.com. That's too much, try again later. See http://api.stackexchange.com/docs/throttle", wrapper.Backoff)
+				return err
+		}
+
+			// Try to avoid throttling
+			if wrapper.Backoff > 0 {
+				backoff := time.Duration(wrapper.Backoff) * time.Second
+				log.Printf("Backing off %d seconds, per backoff message from api.stackexchange.com. See http://api.stackexchange.com/docs/throttle", wrapper.Backoff)
+				time.Sleep(backoff)
+	}
+			// A little extra to be safe
+			// Guideline in the documentation is 30 requests/sec: http://api.stackexchange.com/docs/throttle
+			time.Sleep(50 * time.Millisecond)
 		}
 	}
 
@@ -129,9 +145,11 @@ var sites = map[string]int{
 	"gamedev":       300,
 	"datascience":   200,
 }
-var tagsURL = "http://api.stackexchange.com/2.2/tags?page=%d&pagesize=%d&order=desc&sort=popular&site=%s&filter=!4-J-du8hXSkh2Is1a&page=%d"
+var tagsURL = "http://api.stackexchange.com/2.2/tags?page=%d&pagesize=%d&order=desc&sort=popular&site=%s&filter=!4-J-du8hXSkh2Is1a&key=%s"
+var stackExchangeAPIKey = "*AbAX7kb)BKJTlmKgb*Tkw(("
+
 var client = http.Client{
-	Timeout: time.Second * 2, // Maximum of 2 secs
+	Timeout: time.Second * 3, // Maximum of 2 secs
 }
 var empty = wrapper{}
 
@@ -144,7 +162,7 @@ func fetchTags(page, pageSize int, site string) (wrapper, error) {
 		pageSize = 100
 	}
 
-	url := fmt.Sprintf(tagsURL, page, pageSize, site)
+	url := fmt.Sprintf(tagsURL, page, pageSize, site, stackExchangeAPIKey)
 	r, httpErr := client.Get(url)
 	if httpErr != nil {
 		return empty, httpErr
