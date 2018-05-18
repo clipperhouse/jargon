@@ -18,8 +18,9 @@ A further problem is that some ngrams should be understood as a single term. We 
 package main
 
 import (
-    “fmt”
-    “github.com/clipperhouse/jargon”
+    "fmt"
+    
+    "github.com/clipperhouse/jargon"
 )
 
 func main() {
