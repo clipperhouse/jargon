@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"go/format"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -52,6 +53,11 @@ func writeDictionary() error {
 
 				// Trailing versions (like ruby-on-rails-4) are not interesting for our purposes
 				name := trailingVersion.ReplaceAllString(item.Name, "")
+
+				if isStopWord(name) {
+					continue // skip it
+				}
+
 				// Only append tags if they haven't been added already
 				if _, found := tagcheck[name]; !found {
 					tagcheck[name] = exists
@@ -61,6 +67,9 @@ func writeDictionary() error {
 				// Only add synonyms if they haven't been added already
 				for _, synonym := range item.Synonyms {
 					key := trailingVersion.ReplaceAllString(synonym, "")
+					if isStopWord(key) {
+						continue // skip it
+					}
 					_, found := data.Synonyms[key]
 					if !found && key != name {
 						data.Synonyms[synonym] = name
@@ -78,14 +87,14 @@ func writeDictionary() error {
 				// That's too much for this run
 				err := fmt.Errorf("Abort: received a message to backoff %d seconds from api.stackexchange.com. That's too much, try again later. See http://api.stackexchange.com/docs/throttle", wrapper.Backoff)
 				return err
-		}
+			}
 
 			// Try to avoid throttling
 			if wrapper.Backoff > 0 {
 				backoff := time.Duration(wrapper.Backoff) * time.Second
 				log.Printf("Backing off %d seconds, per backoff message from api.stackexchange.com. See http://api.stackexchange.com/docs/throttle", wrapper.Backoff)
 				time.Sleep(backoff)
-	}
+			}
 			// A little extra to be safe
 			// Guideline in the documentation is 30 requests/sec: http://api.stackexchange.com/docs/throttle
 			time.Sleep(50 * time.Millisecond)
@@ -181,6 +190,10 @@ func fetchTags(page, pageSize int, site string) (wrapper, error) {
 		return empty, jsonErr
 	}
 
+	if len(wrapper.ErrorName) > 0 || len(wrapper.ErrorMessage) > 0 {
+		return wrapper, fmt.Errorf("%s: %s", wrapper.ErrorName, wrapper.ErrorMessage)
+	}
+
 	return wrapper, nil
 }
 
@@ -191,6 +204,10 @@ type item struct {
 }
 
 type wrapper struct {
-	Items   []item `json:"items"`
-	HasMore bool   `json:"has_more"`
+	Items        []item `json:"items"`
+	HasMore      bool   `json:"has_more"`
+	ErrorName    string `json:"error_name"`
+	ErrorMessage string `json:"error_message"`
+	// In seconds
+	Backoff int `json:"backoff"`
 }
