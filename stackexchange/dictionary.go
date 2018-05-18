@@ -9,11 +9,11 @@ type dictionary struct {
 	synonyms map[string]string
 }
 
-func (d *dictionary) GetTags() []string {
+func (d *dictionary) Lemmas() []string {
 	return d.tags
 }
 
-func (d *dictionary) GetSynonyms() map[string]string {
+func (d *dictionary) Synonyms() map[string]string {
 	return d.synonyms
 }
 

@@ -43,12 +43,12 @@ func NewLemmatizer(d Dictionary) *Lemmatizer {
 		maxGramLength: d.MaxGramLength(),
 		normalize:     d.Normalize,
 	}
-	tags := d.GetTags()
+	tags := d.Lemmas()
 	for _, tag := range tags {
 		key := lem.normalize(tag)
 		lem.values[key] = tag
 	}
-	synonyms := d.GetSynonyms()
+	synonyms := d.Synonyms()
 	for synonym, canonical := range synonyms {
 		key := lem.normalize(synonym)
 		lem.values[key] = canonical

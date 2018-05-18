@@ -11,7 +11,7 @@ var testLem = NewLemmatizer(testDict)
 
 func TestLemmatizer(t *testing.T) {
 	// Intended to narrowly test that the values have been added to the data structure
-	tags := testDict.GetTags()
+	tags := testDict.Lemmas()
 	for _, value := range tags {
 		key := testDict.Normalize(value)
 		_, exists := testLem.values[key]
@@ -20,7 +20,7 @@ func TestLemmatizer(t *testing.T) {
 		}
 	}
 
-	synonyms := testDict.GetSynonyms()
+	synonyms := testDict.Synonyms()
 	for synonym, canonical := range synonyms {
 		key := testDict.Normalize(synonym)
 		_, exists := testLem.values[key]

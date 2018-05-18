@@ -19,7 +19,7 @@ package main
 
 import (
     "fmt"
-    
+
     "github.com/clipperhouse/jargon"
 )
 
@@ -51,9 +51,9 @@ A lemmatizer is constructed using a Dictionary (below), which contains all the s
 ### Dictionary
 Dictionary is an interface with the following methods:
 
-`GetTags()` : The list of canonical terms
+`Lemmas()` : The list of canonical terms
 
-`GetSynonyms()` : A map of synonyms to their canonical terms
+`Synonyms()` : A map of synonyms to their canonical terms
 
 `MaxGramLength()` : The maximum number of individual words that the lemmatizer will attempt to join into a single term. For example, if we want to recognize Ruby on Rails, we’d want an n-gram length of 3.
 
@@ -62,7 +62,7 @@ Dictionary is an interface with the following methods:
 ### Tokenizers
 Before we can lemmatize text, we need it to separated into words and punctuation, which we call tokens. Getting this right matters! There are two built-in tokenizers.
 
-- TechProse: follows typical rules of English, where spaces and punctuation define the separation of words. It mostly relies on Unicode’s definitions. Not just prose, though: these rules should™️ work for delimited files like CSV.
+- TechProse: follows typical rules of English, where spaces and punctuation define the separation of words. It mostly relies on Unicode’s definitions. Not just prose, though: these rules should™️ work for delimited files like CSV and tabs.
 
 - TechHTML: Tokenizes HTML, and in turn, tokenizes text nodes using TechProse above.
 
