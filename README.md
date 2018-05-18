@@ -53,7 +53,7 @@ Dictionary is an interface with the following methods:
 
 `GetTags()` : The list of canonical terms
 
-`GetSynonyms()` : A map of synonyms to their canonical terms (lemmas)
+`GetSynonyms()` : A map of synonyms to their canonical terms
 
 `MaxGramLength()` : The maximum number of individual words that the lemmatizer will attempt to join into a single term. For example, if we want to recognize Ruby on Rails, we’d want an n-gram length of 3.
 
