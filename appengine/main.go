@@ -41,7 +41,15 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 		model.Original = demo
 	}
 
-	layout.Execute(w, model)
+	var tmpl *template.Template
+
+	if isAjax(r) {
+		tmpl = _result
+	} else {
+		tmpl = layout
+	}
+
+	tmpl.Execute(w, model)
 }
 
 type textModel struct {
