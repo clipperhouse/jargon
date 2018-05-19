@@ -54,7 +54,7 @@ var mainTmpl *template.Template
 
 func getTemplate() *template.Template {
 	if mainTmpl == nil {
-		t, err := template.ParseFiles("main.html")
+		t, err := template.ParseFiles("layout.html", "_result.html")
 		if err != nil {
 			panic(err)
 		}
