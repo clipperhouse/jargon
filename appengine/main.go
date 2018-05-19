@@ -28,7 +28,9 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	model := textModel{}
+	model := textModel{
+		Path: r.URL.Path,
+	}
 
 	if r.Method == "POST" {
 		text := r.PostFormValue("text")
@@ -43,6 +45,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type textModel struct {
+	Path     string
 	Original string
 	Result   string
 }
