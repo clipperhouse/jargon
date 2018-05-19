@@ -3,6 +3,7 @@ package main
 import (
 	"html/template"
 	"net/http"
+	"strings"
 
 	"github.com/clipperhouse/jargon"
 
@@ -10,7 +11,7 @@ import (
 )
 
 func main() {
-	getTemplate()
+	loadTemplates()
 	http.HandleFunc("/", mainHandler)
 	appengine.Main()
 }
@@ -40,8 +41,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 		model.Original = demo
 	}
 
-	tmpl := getTemplate()
-	tmpl.Execute(w, model)
+	layout.Execute(w, model)
 }
 
 type textModel struct {
@@ -50,16 +50,17 @@ type textModel struct {
 	Result   string
 }
 
-var mainTmpl *template.Template
+var layout, _result *template.Template
 
-func getTemplate() *template.Template {
-	if mainTmpl == nil {
-		t, err := template.ParseFiles("layout.html", "_result.html")
-		if err != nil {
-			panic(err)
-		}
-		mainTmpl = t
+func loadTemplates() {
+	t, err := template.ParseFiles("layout.html", "_result.html")
+	if err != nil {
+		panic(err)
 	}
+	layout = t.Lookup("layout")
+	_result = t.Lookup("_result")
+}
 
-	return mainTmpl
+func isAjax(r *http.Request) bool {
+	return strings.ToLower(r.Header.Get("X-Requested-With")) == "xmlhttprequest"
 }
