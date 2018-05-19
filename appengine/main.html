@@ -9,7 +9,7 @@
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <meta name="description" content="">
     <meta name="author" content="">
-    <link rel="icon" href="/img/favicon.ico">
+    <link rel="icon" href="img/favicon.ico">
 
     <title>jargon, a lemmatizer for Go</title>
 
@@ -20,7 +20,7 @@
     <!-- Optional theme -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
         crossorigin="anonymous">
-    <link rel="stylesheet" href="/css/theme.css">
+    <link rel="stylesheet" href="css/theme.css">
 </head>
 
 <body>
@@ -34,7 +34,7 @@
             <div id="navbar" class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
                     <li class="active">
-                        <a href="/">Demo</a>
+                        <a href="">Demo</a>
                     </li>
                     <li>
                         <a href="https://github.com/clipperhouse/jargon" target="_blank">Source + docs ↗</a>
@@ -49,8 +49,7 @@
         <h1>jargon</h1>
 
         <p class="lead">
-            <a href="https://github.com/clipperhouse/jargon">jargon</a> is a
-            <a href="https://en.wikipedia.org/wiki/Lemmatisation">lemmatizer</a>, useful for substituting canonical terms in text and HTML.
+            <a href="https://github.com/clipperhouse/jargon">jargon</a> is a lemmatizer, useful for substituting canonical terms in text and HTML.
         </p>
         <form method="POST" target="/text">
             <div class="form-group">
@@ -60,7 +59,7 @@
 
             <p>
                 <button type="submit" class="btn btn-primary mb-2">Lemmatize</button>
-                <a href="/" class="btn">reset</a>
+                <a href="" class="btn">reset</a>
             </p>
 
             {{ if .Result }}
