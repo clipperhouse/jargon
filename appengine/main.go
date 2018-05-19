@@ -25,13 +25,11 @@ Or some structured data:
 
 func mainHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
+		// http.NotFound(w, r)
+		// return
 	}
 
-	model := textModel{
-		Path: r.URL.Path,
-	}
+	model := textModel{}
 
 	if r.Method == "POST" {
 		text := r.PostFormValue("text")
