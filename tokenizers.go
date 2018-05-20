@@ -187,14 +187,14 @@ Loop:
 				break Loop
 			}
 			// Otherwise continue, it's a leading or mid-word dot, or mid-word apostrophe
-		case l.last():
-			// Always emit
-			l.emit(false, false)
-			break Loop
 		case isTerminator(r):
 			// Always emit
 			// Terminator will be handled by lexMain
 			l.backup()
+			l.emit(false, false)
+			break Loop
+		case l.last():
+			// Always emit
 			l.emit(false, false)
 			break Loop
 		default:
