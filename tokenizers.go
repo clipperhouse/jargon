@@ -1,5 +1,4 @@
 // Derived in part from https://golang.org/src/text/template/parse/lex.go
-
 // Copyright The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
@@ -7,8 +6,11 @@
 package jargon
 
 import (
+	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"golang.org/x/net/html"
 )
 
 type techProse struct{}
@@ -27,6 +29,42 @@ var TechProse = &techProse{}
 func (t *techProse) Tokenize(text string) []Token {
 	lex := lex(text)
 	return lex.tokens
+}
+
+type techHTML struct{}
+
+// TechHTML is a tokenizer for HTML text. Text nodes are tokenized using TechProse; tags and comments left verbatim.
+var TechHTML = &techHTML{}
+
+func (t *techHTML) Tokenize(text string) []Token {
+	result := make([]Token, 0)
+	r := strings.NewReader(text)
+	z := html.NewTokenizer(r)
+
+	for {
+		tt := z.Next()
+
+		if tt == html.ErrorToken {
+			// Presumably eof
+			break
+		}
+
+		switch tok := z.Token(); {
+		case tok.Type == html.TextToken:
+			words := TechProse.Tokenize(tok.Data)
+			result = append(result, words...)
+		default:
+			// Everything else is punct for our purposes
+			new := Token{
+				value: tok.String(),
+				punct: true,
+				space: false,
+			}
+			result = append(result, new)
+		}
+	}
+
+	return result
 }
 
 const eof = -1
