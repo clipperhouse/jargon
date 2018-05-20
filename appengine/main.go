@@ -34,7 +34,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		text := r.PostFormValue("text")
 		model.Original = text
-		model.Result = jargon.Lemmatize(text)
+		model.Result = jargon.StackExchange.Lemmatize(text)
 	} else {
 		model.Original = demo
 	}

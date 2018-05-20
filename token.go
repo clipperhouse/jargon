@@ -34,3 +34,12 @@ func Join(tokens []Token) string {
 	}
 	return strings.Join(joined, "")
 }
+
+// Strings is a convenience method for getting a slice containing the strings if tokens
+func Strings(tokens []Token) []string {
+	result := make([]string, 0)
+	for _, t := range tokens {
+		result = append(result, t.String())
+	}
+	return result
+}

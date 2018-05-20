@@ -11,7 +11,11 @@ type Lemmatizer struct {
 	normalize     func(string) string
 }
 
-var stackExchange = NewLemmatizer(stackexchange.Dictionary)
+// StackExchange is a &Lemmatizer, using tag and synonym data from the following Stack Exchange sites: Stack Overflow,
+// Server Fault, Game Dev and Data Science. It's indended to identify canonical tags (technologies),
+// e.g. Ruby on Rails (3 words) will be replaced with ruby-on-rails (1 word).
+// It looks for word runs (n-grams) up to length 3, ignoring spaces.
+var StackExchange = NewLemmatizer(stackexchange.Dictionary)
 
 // Lemmatize will process text using the Stack Exchange dictionary of tags & synonyms,
 // replacing tech terms and phrases like Python and Ruby on Rails with canonical tags,
@@ -19,9 +23,9 @@ var stackExchange = NewLemmatizer(stackexchange.Dictionary)
 // It returns the original text, with white space preserved, differeing only by the above replacements.
 // Because the tokenizer is non-destructive, it should work well not just on prose, but delimited text
 // such as CSV and tabs.
-func Lemmatize(text string) string {
+func (lem *Lemmatizer) Lemmatize(text string) string {
 	tokens := TechProse.Tokenize(text)
-	lemmatized := stackExchange.LemmatizeTokens(tokens)
+	lemmatized := lem.LemmatizeTokens(tokens)
 	return Join(lemmatized)
 }
 
@@ -29,9 +33,9 @@ func Lemmatize(text string) string {
 // replacing tech terms and phrases like Python and Ruby on Rails with canonical tags,
 // like python and ruby-on-rails.
 // It returns the original HTML, with white space preserved, differeing only by the above replacements.
-func LemmatizeHTML(text string) string {
+func (lem *Lemmatizer) LemmatizeHTML(text string) string {
 	tokens := TechHTML.Tokenize(text)
-	lemmatized := stackExchange.LemmatizeTokens(tokens)
+	lemmatized := lem.LemmatizeTokens(tokens)
 	return Join(lemmatized)
 }
 
