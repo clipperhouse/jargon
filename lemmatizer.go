@@ -77,7 +77,6 @@ func (lem *Lemmatizer) LemmatizeTokens(tokens []Token) []Token {
 			lemmatized = append(lemmatized, current)
 			pos++
 		default:
-		Grams:
 			// Else it's a word, try n-grams
 			for take := lem.maxGramLength; take > 0; take-- {
 				run, consumed, ok := wordrun(tokens, pos, take)
@@ -95,7 +94,7 @@ func (lem *Lemmatizer) LemmatizeTokens(tokens []Token) []Token {
 						}
 						lemmatized = append(lemmatized, token)
 						pos += consumed
-						break Grams
+						break
 					}
 
 					if take == 1 {
