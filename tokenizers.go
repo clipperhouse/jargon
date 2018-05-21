@@ -96,13 +96,11 @@ func (l *lexer) next() rune {
 
 // peek returns but does not consume the next rune in the input.
 func (l *lexer) peek() rune {
-	r := l.next()
-	l.backup()
+	if l.pos >= len(l.input) {
+		return eof
+	}
+	r, _ := utf8.DecodeRuneInString(l.input[l.pos:])
 	return r
-}
-
-func (l *lexer) last() bool {
-	return l.pos == len(l.input)
 }
 
 // backup steps back one rune. Can only be called once per call of next.
@@ -145,12 +143,15 @@ Loop:
 		switch r := l.next(); {
 		case r == eof:
 			break Loop
-		case isLeadingPunct(r) && l.last():
-			// Final dot
+		case mightBeLeadingPunct(r):
+			// Look to the next character
+			isLeadingPunct := !isTerminator(l.peek())
+			if isLeadingPunct {
+				// Treat it as a word
+				return lexWord
+			}
+			// Not leading punct, just regular punct
 			l.emit(true, false)
-		case isLeadingPunct(r):
-			// Leading dot might be ok
-			return lexWord
 		case isPunct(r):
 			l.emit(true, false)
 		case unicode.IsSpace(r):
@@ -168,44 +169,35 @@ Loop:
 
 // Important that this function only gets entered from the lexMain loop; lexMain determines 'word start'
 func lexWord(l *lexer) stateFn {
-Loop:
 	for {
 		switch r := l.next(); {
-		case isLeadingPunct(r) || isMidPunct(r):
-			// Could be a leading or mid-word dot,
-			// or a mid-word apostrophe
-
+		case mightBeMidPunct(r):
 			// Look ahead to see if dot or apostrophe is acting as punctuation,
 			// by being the last char, or being followed by space or more punctuation.
 			// (Test last before testing peek, peek will throw if eof)
-			if l.last() || isTerminator(l.peek()) {
+			if isTerminator(l.peek()) {
 				// Emit the word
 				l.backup()
 				l.emit(false, false)
 
-				// Dot gets emitted in lexMain
-				break Loop
+				// Punct will be handled by lexMain
+				return lexMain
 			}
-			// Otherwise continue, it's a leading or mid-word dot, or mid-word apostrophe
+			// Otherwise continue, it's a mid-word dot or apostrophe
 		case isTerminator(r):
 			// Always emit
-			// Terminator will be handled by lexMain
 			l.backup()
 			l.emit(false, false)
-			break Loop
-		case l.last():
-			// Always emit
-			l.emit(false, false)
-			break Loop
+			// Terminator will be handled by lexMain
+			return lexMain
 		default:
 			// Otherwise absorb and continue
 		}
 	}
-	return lexMain
 }
 
 func isTerminator(r rune) bool {
-	return isPunct(r) || unicode.IsSpace(r)
+	return r == eof || isPunct(r) || unicode.IsSpace(r)
 }
 
 func isPunct(r rune) bool {
@@ -236,7 +228,7 @@ var leadingPunct = map[rune]struct{}{
 	'.': exists,
 }
 
-func isLeadingPunct(r rune) bool {
+func mightBeLeadingPunct(r rune) bool {
 	_, ok := leadingPunct[r]
 	return ok
 }
@@ -248,7 +240,7 @@ var midPunct = map[rune]struct{}{
 	'’':  exists,
 }
 
-func isMidPunct(r rune) bool {
+func mightBeMidPunct(r rune) bool {
 	_, ok := midPunct[r]
 	return ok
 }
