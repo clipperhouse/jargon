@@ -29,6 +29,8 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 		// return
 	}
 
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	model := textModel{}
 
 	if r.Method == "POST" {
