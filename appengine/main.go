@@ -30,6 +30,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With")
 
 	model := textModel{}
 
