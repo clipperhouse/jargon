@@ -6,9 +6,8 @@ import (
 
 // Token represents a piece of text with metadata.
 type Token struct {
-	value string
-	punct bool
-	space bool
+	value               string
+	punct, space, lemma bool
 }
 
 // String is the string value of the token
@@ -24,6 +23,11 @@ func (t Token) IsPunct() bool {
 // IsSpace indicates that the token consists entirely of white space (as defined by the unicode package)
 func (t Token) IsSpace() bool {
 	return t.space
+}
+
+// IsLemma indicates that the token is a lemma, i.e., a canonical term that that replaced the original token.
+func (t Token) IsLemma() bool {
+	return t.lemma
 }
 
 // Join reconstructs a slice of tokens into their original string (assuming the tokens preserved fidelity of the original, esp white space!)

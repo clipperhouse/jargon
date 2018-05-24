@@ -89,3 +89,25 @@ func contains(value string, tokens []Token) bool {
 	}
 	return false
 }
+
+// Checks that value, punct and space are equal for two slices of token; deliberately does not check lemma
+func equals(a, b []Token) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		if a[i].String() != b[i].String() {
+			return false
+		}
+		if a[i].IsPunct() != b[i].IsPunct() {
+			return false
+		}
+		if a[i].IsSpace() != b[i].IsSpace() {
+			return false
+		}
+		// deliberately not checking for IsLemma(); use reflect.DeepEquals
+	}
+
+	return true
+}

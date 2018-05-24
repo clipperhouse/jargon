@@ -91,6 +91,7 @@ func (lem *Lemmatizer) LemmatizeTokens(tokens []Token) []Token {
 							value: canonical,
 							space: false,
 							punct: false,
+							lemma: true,
 						}
 						lemmatized = append(lemmatized, token)
 						pos += consumed

@@ -35,13 +35,28 @@ func TestLemmatizeTokens(t *testing.T) {
 	dict := stackexchange.Dictionary
 	lem := NewLemmatizer(dict)
 
-	original := `Here is the story of Ruby on Rails nodeJS, "Java Script" and ASPNET mvc plus TCP/IP.`
+	original := `Here is the story of Ruby on Rails nodeJS, "Java Script", html5 and ASPNET mvc plus TCP/IP.`
 	tokens := tok(original)
 	got := lem.LemmatizeTokens(tokens)
-	expected := tok(`Here is the story of ruby-on-rails node.js, "javascript" and asp.net-mvc plus tcp.`)
+	expected := tok(`Here is the story of ruby-on-rails node.js, "javascript", html5 and asp.net-mvc plus tcp.`)
 
-	if !reflect.DeepEqual(got, expected) {
+	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
+	}
+
+	lemmas := []string{"ruby-on-rails", "node.js", "javascript", "html5", "asp.net-mvc"}
+
+	lookup := make(map[string]Token)
+	for _, g := range got {
+		lookup[g.String()] = g
+	}
+	for _, lemma := range lemmas {
+		if !contains(lemma, got) {
+			t.Errorf("Expected to find lemma %q, but did not", lemma)
+		}
+		if !lookup[lemma].IsLemma() {
+			t.Errorf("Expected %q to be identified as a lemma, but it was not", lemma)
+		}
 	}
 }
 
@@ -57,7 +72,7 @@ func TestCSV(t *testing.T) {
 	expected := tok(`"ruby-on-rails", 3.4, "foo"
 "bar",42, "javascript"`)
 
-	if !reflect.DeepEqual(got, expected) {
+	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
 	}
 }
@@ -77,7 +92,7 @@ bar	42	java script`
 asp.net	model-view-controller
 bar	42	javascript`)
 
-	if !reflect.DeepEqual(got, expected) {
+	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
 	}
 }
