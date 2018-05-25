@@ -1,5 +1,7 @@
 # jargon
-A lemmatizer for technology terms in text or HTML, written in Go.
+Tokenizers and lemmatizers for Go.
+
+[GoDoc](https://godoc.org/github.com/clipperhouse/jargon)
 
 ## Problem
 When dealing with technology terms in text – say, a job listing or a resume or a document – 
@@ -11,8 +13,9 @@ This presents a problem when **searching** for such terms. _We_ know the above t
 A further problem is that some ngrams should be understood as a single term. We know that “Ruby on Rails” represents 
 **one** technology, but databases naively see three words.
 
-
 ## Try it
+
+[Playground](https://clipperhouse.com/jargon)
 
 ```go
 package main
@@ -25,7 +28,9 @@ import (
 
 func main() {
     text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
-    result := jargon.Lemmatize(text)
+    tokens := jargon.TechProse.Tokenize(text)
+    lemmatized := jargon.StackExchange.LemmatizeTokens(tokens)
+    result := jargon.Join(lemmatized)
     fmt.Println(result)
 }
 ```
@@ -45,6 +50,15 @@ Dunno yet, some ideas…
 
 ## How it works
 
+### Tokenizers
+Before we can lemmatize text, we need it to separated into words and punctuation, which we call tokens. Getting this right matters! There are two built-in tokenizers.
+
+- `TechProse`: follows typical rules of English, where spaces and punctuation define the separation of words. It mostly relies on Unicode’s definitions. Not just prose, though: these rules should™️ work for delimited files like CSV and tabs.
+
+- `TechHTML`: Tokenizes HTML, and in turn, tokenizes text nodes using TechProse above.
+
+Importantly, these tokenizers capture all of the text, including white space, so it can be reconstructed with fidelity.
+
 ### Lemmatizer
 A lemmatizer is constructed using a Dictionary (below), which contains all the synonym data, as well as some rules.
 
@@ -58,12 +72,3 @@ Dictionary is an interface with the following methods:
 `MaxGramLength()` : The maximum number of individual words that the lemmatizer will attempt to join into a single term. For example, if we want to recognize Ruby on Rails, we’d want an n-gram length of 3.
 
 `Normalize()` : Defines ‘insensitivity’ rules when matching words against their canonical versions. In the default case, we want the lookups to be case-insensitive, as well as insensitive to dots and dashes. So `NodeJS` and `node.js` are handled identically.
-
-### Tokenizers
-Before we can lemmatize text, we need it to separated into words and punctuation, which we call tokens. Getting this right matters! There are two built-in tokenizers.
-
-- TechProse: follows typical rules of English, where spaces and punctuation define the separation of words. It mostly relies on Unicode’s definitions. Not just prose, though: these rules should™️ work for delimited files like CSV and tabs.
-
-- TechHTML: Tokenizes HTML, and in turn, tokenizes text nodes using TechProse above.
-
-Importantly, these tokenizers capture all of the text, including white space, so it can be reconstructed with fidelity.

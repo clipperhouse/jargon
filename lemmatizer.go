@@ -1,3 +1,4 @@
+//jargon is a package with tokenizers and lemmatizers, for use in text processing and NLP
 package jargon
 
 import (
@@ -11,7 +12,7 @@ type Lemmatizer struct {
 	normalize     func(string) string
 }
 
-// StackExchange is a &Lemmatizer, using tag and synonym data from the following Stack Exchange sites: Stack Overflow,
+// StackExchange is a built-in *Lemmatizer, using tag and synonym data from the following Stack Exchange sites: Stack Overflow,
 // Server Fault, Game Dev and Data Science. It's indended to identify canonical tags (technologies),
 // e.g. Ruby on Rails (3 words) will be replaced with ruby-on-rails (1 word).
 // It looks for word runs (n-grams) up to length 3, ignoring spaces.

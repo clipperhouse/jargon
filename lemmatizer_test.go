@@ -118,11 +118,20 @@ func TestWordrun(t *testing.T) {
 
 	for _, take := range takes {
 		taken, consumed, ok := wordrun(tokens, 5, take) // 5 = start at the 'j' of 'java'
-		got := result{Strings(taken), consumed, ok}
+		got := result{strs(taken), consumed, ok}
 		expected, _ := expecteds[take]
 
 		if !reflect.DeepEqual(expected, got) {
 			t.Errorf("Attempting to take %d words, expected %v but got %v", take, expected, got)
 		}
 	}
+}
+
+// a convenience method for getting a slice of the string values of tokens
+func strs(tokens []Token) []string {
+	result := make([]string, 0)
+	for _, t := range tokens {
+		result = append(result, t.String())
+	}
+	return result
 }
