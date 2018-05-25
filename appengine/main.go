@@ -11,64 +11,33 @@ import (
 )
 
 func main() {
-	loadTemplates()
-	http.HandleFunc("/", mainHandler)
+	http.HandleFunc("/jargon", mainHandler)
 	appengine.Main()
 }
 
-var demo = `We might have some prose regarding Ruby on Rails or NODEJS, like a job description.
-
-Or some structured data:
-{
-    "language": "ObjC"
-}`
-
 func mainHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		// http.NotFound(w, r)
-		// return
+	if r.URL.Path != "/jargon" {
+		http.NotFound(w, r)
+		return
 	}
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With")
 
-	model := textModel{}
+	text := r.PostFormValue("text")
+	original := jargon.TechProse.Tokenize(text)
+	lemmatized := jargon.StackExchange.LemmatizeTokens(original)
 
-	if r.Method == "POST" {
-		text := r.PostFormValue("text")
-		model.Original = text
-		model.Result = jargon.StackExchange.Lemmatize(text)
-	} else {
-		model.Original = demo
+	for _, t := range lemmatized {
+		if t.IsLemma() {
+			span.Execute(w, t)
+		} else {
+			w.Write([]byte(t.String()))
+		}
 	}
-
-	var tmpl *template.Template
-
-	if isAjax(r) {
-		tmpl = _result
-	} else {
-		tmpl = layout
-	}
-
-	tmpl.Execute(w, model)
 }
 
-type textModel struct {
-	Path     string
-	Original string
-	Result   string
-}
-
-var layout, _result *template.Template
-
-func loadTemplates() {
-	t, err := template.ParseFiles("layout.html", "_result.html")
-	if err != nil {
-		panic(err)
-	}
-	layout = t.Lookup("layout")
-	_result = t.Lookup("_result")
-}
+var span = template.Must(template.New("span").Parse(`<span class="lemma">{{ .String }}</span>`))
 
 func isAjax(r *http.Request) bool {
 	return strings.ToLower(r.Header.Get("X-Requested-With")) == "xmlhttprequest"
