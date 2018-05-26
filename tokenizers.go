@@ -23,7 +23,6 @@ type techProse struct{}
 // All other punctuation terminates words, as does white space.
 // Like the other tokenizers in this package, it returns all tokens (including white space), so text can be reconstructed with fidelity. If callers don't want white space, they'll need to filter.
 // TODO: URLs
-// TODO: mid-word apostrophes?
 var TechProse = &techProse{}
 
 func (t *techProse) Tokenize(text string) []Token {

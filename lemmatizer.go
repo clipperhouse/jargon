@@ -63,8 +63,9 @@ func NewLemmatizer(d Dictionary) *Lemmatizer {
 
 // LemmatizeTokens takes a slice of tokens and returns tokens with canonicalized terms.
 // Terms (tokens) that are not canonicalized are returned as-is, e.g.
-// ["I", " ", "think", " ", "Ruby", " ", "on", " ", "Rails", " ", "is", " ", "great"] →
-//    ["I", " ", "think", " ", "ruby-on-rails", " ", "is", " ", "great"]
+//     ["I", " ", "think", " ", "Ruby", " ", "on", " ", "Rails", " ", "is", " ", "great"]
+// becomes
+//     ["I", " ", "think", " ", "ruby-on-rails", " ", "is", " ", "great"]
 // Note that fewer tokens may be returned than were input.
 // A lot depends on the original tokenization, so make sure that it's right!
 func (lem *Lemmatizer) LemmatizeTokens(tokens []Token) []Token {
