@@ -1,4 +1,4 @@
-//jargon is a package with tokenizers and lemmatizers, for use in text processing and NLP
+// Package jargon offers tokenizers and lemmatizers, for use in text processing and NLP
 package jargon
 
 import (

@@ -13,10 +13,10 @@ Similarly, #hashtag and @handle should work, as should an first.last+@example.co
 It should—wait for it—break on things like em-dashes and "quotes" and it ends.
 It'd be great it it’ll handle apostrophes.
 `
-	r := strings.NewReader(text)
-	b := newReader(r)
+	s := strings.NewReader(text)
+	b := newReader(s)
 
-	got := b.tokens
+	got := b.run()
 
 	expected := []string{
 		"Hi", "!",

@@ -6,10 +6,7 @@
 package jargon
 
 import (
-	"io"
 	"strings"
-	"unicode"
-	"unicode/utf8"
 
 	"golang.org/x/net/html"
 )
@@ -27,8 +24,9 @@ type techProse struct{}
 var TechProse = &techProse{}
 
 func (t *techProse) Tokenize(text string) []Token {
-	lex := lex(text)
-	return lex.tokens
+	s := strings.NewReader(text)
+	b := newReader(s)
+	return b.run()
 }
 
 type techHTML struct{}
@@ -65,186 +63,4 @@ func (t *techHTML) Tokenize(text string) []Token {
 	}
 
 	return result
-}
-
-const eof = -1
-
-// stateFn represents the state of the scanner as a function that returns the next state.
-type stateFn func(*lexer) stateFn
-
-// lexer holds the state of the scanner.
-type lexer struct {
-	input  string  // the string being scanned
-	state  stateFn // the next lexing function to enter
-	pos    int     // current position in the input
-	start  int     // start position of this item
-	width  int     // width of last rune read from input
-	tokens []Token // channel of scanned items
-}
-
-// next returns the next rune in the input.
-func (l *lexer) next() rune {
-	if l.pos >= len(l.input) {
-		l.width = 0
-		return eof
-	}
-	r, w := utf8.DecodeRuneInString(l.input[l.pos:])
-	l.width = w
-	l.pos += l.width
-	return r
-}
-
-// peek returns but does not consume the next rune in the input.
-func (l *lexer) peek() rune {
-	if l.pos >= len(l.input) {
-		return eof
-	}
-	r, _ := utf8.DecodeRuneInString(l.input[l.pos:])
-	return r
-}
-
-// backup steps back one rune. Can only be called once per call of next.
-func (l *lexer) backup() {
-	l.pos -= l.width
-}
-
-// emit passes an item back to the client.
-func (l *lexer) emit(punct, space bool) {
-	value := l.input[l.start:l.pos]
-	token := Token{
-		value: value,
-		punct: punct,
-		space: space,
-	}
-	l.tokens = append(l.tokens, token)
-	l.start = l.pos
-}
-
-// lex creates a new scanner for the input string.
-func lex(input string) *lexer {
-	l := &lexer{
-		input:  input,
-		tokens: make([]Token, 0),
-	}
-	l.run()
-	return l
-}
-
-// run runs the state machine for the lexer.
-func (l *lexer) run() {
-	for l.state = lexMain; l.state != nil; {
-		l.state = l.state(l)
-	}
-}
-
-func lexMain(l *lexer) stateFn {
-Loop:
-	for {
-		switch r := l.next(); {
-		case r == eof:
-			break Loop
-		case mightBeLeadingPunct(r):
-			// Look to the next character
-			isLeadingPunct := !isTerminator(l.peek())
-			if isLeadingPunct {
-				// Treat it as a word
-				return lexWord
-			}
-			// Not leading punct, just regular punct
-			l.emit(true, false)
-		case isPunct(r):
-			l.emit(true, false)
-		case unicode.IsSpace(r):
-			// For our purposes, newlines and tabs should be considered punctuation, i.e.,
-			// they break a word run. Lemmatizers should test for punct before testing for space.
-			punct := r == '\r' || r == '\n' || r == '\t'
-			l.emit(punct, true)
-		default:
-			return lexWord
-		}
-	}
-
-	return nil
-}
-
-// Important that this function only gets entered from the lexMain loop; lexMain determines 'word start'
-func lexWord(l *lexer) stateFn {
-	for {
-		switch r := l.next(); {
-		case mightBeMidPunct(r):
-			// Look ahead to see if dot or apostrophe is acting as punctuation,
-			// by being the last char, or being followed by space or more punctuation.
-			// (Test last before testing peek, peek will throw if eof)
-			if isTerminator(l.peek()) {
-				// Emit the word
-				l.backup()
-				l.emit(false, false)
-
-				// Punct will be handled by lexMain
-				return lexMain
-			}
-			// Otherwise continue, it's a mid-word dot or apostrophe
-		case isTerminator(r):
-			// Always emit
-			l.backup()
-			l.emit(false, false)
-			// Terminator will be handled by lexMain
-			return lexMain
-		default:
-			// Otherwise absorb and continue
-		}
-	}
-}
-
-func terminates(r rune, err error) bool {
-	return err == io.EOF || isPunct(r) || unicode.IsSpace(r)
-}
-
-func isTerminator(r rune) bool {
-	return r == eof || isPunct(r) || unicode.IsSpace(r)
-}
-
-func isPunct(r rune) bool {
-	return unicode.IsPunct(r) && !isPunctException(r)
-}
-
-var exists = struct{}{}
-var punctExceptions = map[rune]struct{}{
-	// In some cases, we want to consider it a symbol, even though Unicode defines it as punctuation
-	// See See http://www.unicode.org/faq/punctuation_symbols.html
-	'-':  exists,
-	'#':  exists,
-	'@':  exists,
-	'*':  exists,
-	'%':  exists,
-	'_':  exists,
-	'/':  exists,
-	'\\': exists,
-}
-
-func isPunctException(r rune) bool {
-	_, ok := punctExceptions[r]
-	return ok
-}
-
-var leadingPunct = map[rune]struct{}{
-	// Punctuation that can lead a word, like .Net
-	'.': exists,
-}
-
-func mightBeLeadingPunct(r rune) bool {
-	_, ok := leadingPunct[r]
-	return ok
-}
-
-var midPunct = map[rune]struct{}{
-	// Punctuation that can appear mid-word
-	'.':  exists,
-	'\'': exists,
-	'’':  exists,
-}
-
-func mightBeMidPunct(r rune) bool {
-	_, ok := midPunct[r]
-	return ok
 }

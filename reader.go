@@ -17,31 +17,36 @@ type reader struct {
 func (b *reader) PeekTerminator() bool {
 	r, _, err := b.ReadRune()
 
-	// Unread immediately!
+	if err != nil {
+		if err == io.EOF {
+			return true
+		}
+		panic(err)
+	}
+
+	// Unread ASAP!
 	if uerr := b.UnreadRune(); uerr != nil {
 		panic(uerr)
 	}
 
-	return err != nil || isTerminator(r)
+	return isPunct(r) || unicode.IsSpace(r)
 }
 
 type state func(*reader) state
 
 func newReader(r io.Reader) *reader {
-	b := &reader{
+	return &reader{
 		Reader: bufio.NewReader(r),
-		buffer: make([]rune, 0),
-		tokens: make([]Token, 0),
 	}
-	b.run()
-	return b
 }
 
-func (b *reader) run() {
+func (b *reader) run() []Token {
 	for b.state = readMain; b.state != nil; {
 		b.state = b.state(b)
 	}
+	return b.tokens
 }
+
 func (b *reader) accept(r rune) {
 	b.buffer = append(b.buffer, r)
 }
@@ -58,41 +63,37 @@ func (b *reader) emit() {
 		r := b.buffer[0]
 
 		// For our purposes, newlines and tabs should be considered punctuation, i.e.,
-		// they break a word run. Lemmatizers should test for punct before testing for space.
+		// they break a word run. Lemmatizers should test for punct *before* testing for space.
 		token.punct = isPunct(r) || r == '\r' || r == '\n' || r == '\t'
 		token.space = unicode.IsSpace(r)
 	}
 	b.tokens = append(b.tokens, token)
-	b.buffer = make([]rune, 0)
+	b.buffer = nil
 }
 
 func readMain(b *reader) state {
 	for {
-		r, _, err := b.ReadRune()
-		switch {
-		case err == io.EOF:
-			return nil
-		case mightBeLeadingPunct(r):
-			// Look to the next character
-			if !b.PeekTerminator() {
-				// Treat it as a word
-				b.accept(r)
-				return readWord
+		switch r, _, err := b.ReadRune(); {
+		case err != nil:
+			if err == io.EOF {
+				// No problem
+				return nil
 			}
-			// Not leading punct, just regular punct
-			b.accept(r)
-			b.emit()
-		case isPunct(r):
-			b.accept(r)
-			b.emit()
-		case unicode.IsSpace(r):
-			// For our purposes, newlines and tabs should be considered punctuation, i.e.,
-			// they break a word run. Lemmatizers should test for punct before testing for space.
+			// Problem
+			panic(err)
+		case isPunct(r) || unicode.IsSpace(r):
+			if mightBeLeadingPunct(r) {
+				// Look to the next character
+				if !b.PeekTerminator() {
+					// Treat it as a word
+					b.accept(r)
+					return readWord
+				}
+			}
 			b.accept(r)
 			b.emit()
 		default:
-			// Punt to readWord
-			b.UnreadRune()
+			b.accept(r)
 			return readWord
 		}
 	}
@@ -121,7 +122,7 @@ func readWord(b *reader) state {
 				return readMain
 			}
 			// Otherwise accept, it's a mid-word dot or apostrophe
-		case isTerminator(r):
+		case isPunct(r) || unicode.IsSpace(r):
 			// Emit the word
 			b.emit()
 
@@ -133,4 +134,49 @@ func readWord(b *reader) state {
 		// Otherwise accept and continue
 		b.accept(r)
 	}
+}
+
+func isPunct(r rune) bool {
+	return unicode.IsPunct(r) && !isPunctException(r)
+}
+
+var exists = struct{}{}
+var punctExceptions = map[rune]struct{}{
+	// In some cases, we want to consider it a symbol, even though Unicode defines it as punctuation
+	// See See http://www.unicode.org/faq/punctuation_symbols.html
+	'-':  exists,
+	'#':  exists,
+	'@':  exists,
+	'*':  exists,
+	'%':  exists,
+	'_':  exists,
+	'/':  exists,
+	'\\': exists,
+}
+
+func isPunctException(r rune) bool {
+	_, ok := punctExceptions[r]
+	return ok
+}
+
+var leadingPunct = map[rune]struct{}{
+	// Punctuation that can lead a word, like .Net
+	'.': exists,
+}
+
+func mightBeLeadingPunct(r rune) bool {
+	_, ok := leadingPunct[r]
+	return ok
+}
+
+var midPunct = map[rune]struct{}{
+	// Punctuation that can appear mid-word
+	'.':  exists,
+	'\'': exists,
+	'’':  exists,
+}
+
+func mightBeMidPunct(r rune) bool {
+	_, ok := midPunct[r]
+	return ok
 }
