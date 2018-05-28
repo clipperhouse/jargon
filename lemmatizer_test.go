@@ -36,9 +36,10 @@ func TestLemmatizeTokens(t *testing.T) {
 	lem := NewLemmatizer(dict)
 
 	original := `Here is the story of Ruby on Rails nodeJS, "Java Script", html5 and ASPNET mvc plus TCP/IP.`
-	tokens := tok(original)
+	tokens := collect(tok(original))
+
 	got := lem.LemmatizeTokens(tokens)
-	expected := tok(`Here is the story of ruby-on-rails node.js, "javascript", html5 and asp.net-mvc plus tcp.`)
+	expected := collect(tok(`Here is the story of ruby-on-rails node.js, "javascript", html5 and asp.net-mvc plus tcp.`))
 
 	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
@@ -67,10 +68,10 @@ func TestCSV(t *testing.T) {
 
 	original := `"Ruby on Rails", 3.4, "foo"
 "bar",42, "java script"`
-	tokens := tok(original)
+	tokens := collect(tok(original))
 	got := lem.LemmatizeTokens(tokens)
-	expected := tok(`"ruby-on-rails", 3.4, "foo"
-"bar",42, "javascript"`)
+	expected := collect(tok(`"ruby-on-rails", 3.4, "foo"
+"bar",42, "javascript"`))
 
 	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
@@ -86,11 +87,11 @@ func TestTSV(t *testing.T) {
 ASPNET	MVC
 bar	42	java script`
 
-	tokens := tok(original)
+	tokens := collect(tok(original))
 	got := lem.LemmatizeTokens(tokens)
-	expected := tok(`ruby-on-rails	3.4	foo
+	expected := collect(tok(`ruby-on-rails	3.4	foo
 asp.net	model-view-controller
-bar	42	javascript`)
+bar	42	javascript`))
 
 	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
@@ -100,7 +101,7 @@ bar	42	javascript`)
 func TestWordrun(t *testing.T) {
 	tok := TechProse.Tokenize
 	original := `Things and "java script"`
-	tokens := tok(original)
+	tokens := collect(tok(original))
 
 	type result struct {
 		expect   []string
@@ -132,6 +133,14 @@ func strs(tokens []Token) []string {
 	result := make([]string, 0)
 	for _, t := range tokens {
 		result = append(result, t.String())
+	}
+	return result
+}
+
+func collect(tokens chan Token) []Token {
+	result := make([]Token, 0)
+	for t := range tokens {
+		result = append(result, t)
 	}
 	return result
 }

@@ -26,7 +26,11 @@ var StackExchange = NewLemmatizer(stackexchange.Dictionary)
 // such as CSV and tabs.
 func (lem *Lemmatizer) Lemmatize(text string) string {
 	tokens := TechProse.Tokenize(text)
-	lemmatized := lem.LemmatizeTokens(tokens)
+	all := make([]Token, 0)
+	for t := range tokens {
+		all = append(all, t)
+	}
+	lemmatized := lem.LemmatizeTokens(all)
 	return Join(lemmatized)
 }
 
@@ -36,7 +40,11 @@ func (lem *Lemmatizer) Lemmatize(text string) string {
 // It returns the original HTML, with white space preserved, differeing only by the above replacements.
 func (lem *Lemmatizer) LemmatizeHTML(text string) string {
 	tokens := TechHTML.Tokenize(text)
-	lemmatized := lem.LemmatizeTokens(tokens)
+	all := make([]Token, 0)
+	for t := range tokens {
+		all = append(all, t)
+	}
+	lemmatized := lem.LemmatizeTokens(all)
 	return Join(lemmatized)
 }
 

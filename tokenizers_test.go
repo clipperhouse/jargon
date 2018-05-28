@@ -13,7 +13,7 @@ Similarly, #hashtag and @handle should work, as should an first.last+@example.co
 It should—wait for it—break on things like em-dashes and "quotes" and it ends.
 It'd be great it it’ll handle apostrophes.
 `
-	got := TechProse.Tokenize(text)
+	got := collect(TechProse.Tokenize(text))
 
 	expected := []string{
 		"Hi", "!",
@@ -63,7 +63,7 @@ Hi! Let's talk Ruby on Rails.
 </p>
 </html>
 `
-	got := TechHTML.Tokenize(h)
+	got := collect(TechHTML.Tokenize(h))
 
 	expected := []string{
 		`<p foo="bar">`, // tags kept whole

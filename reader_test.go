@@ -16,7 +16,7 @@ It'd be great it it’ll handle apostrophes.
 	s := strings.NewReader(text)
 	b := newReader(s)
 
-	got := b.run()
+	got := collect(b.tokens)
 
 	expected := []string{
 		"Hi", "!",

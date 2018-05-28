@@ -26,7 +26,13 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 
 	text := r.PostFormValue("text")
 	original := jargon.TechProse.Tokenize(text)
-	lemmatized := jargon.StackExchange.LemmatizeTokens(original)
+	tokens := make([]jargon.Token, 0)
+
+	for t := range original {
+		tokens = append(tokens, t)
+	}
+
+	lemmatized := jargon.StackExchange.LemmatizeTokens(tokens)
 
 	for _, t := range lemmatized {
 		if t.IsLemma() {

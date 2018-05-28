@@ -9,7 +9,7 @@ import (
 type reader struct {
 	*bufio.Reader
 	buffer []rune
-	tokens []Token
+	tokens chan Token
 	state  state
 }
 
@@ -35,16 +35,19 @@ func (b *reader) PeekTerminator() bool {
 type state func(*reader) state
 
 func newReader(r io.Reader) *reader {
-	return &reader{
+	b := &reader{
 		Reader: bufio.NewReader(r),
+		tokens: make(chan Token, 0),
 	}
+	go b.run()
+	return b
 }
 
-func (b *reader) run() []Token {
+func (b *reader) run() {
 	for b.state = readMain; b.state != nil; {
 		b.state = b.state(b)
 	}
-	return b.tokens
+	close(b.tokens)
 }
 
 func (b *reader) accept(r rune) {
@@ -67,7 +70,8 @@ func (b *reader) emit() {
 		token.punct = isPunct(r) || r == '\r' || r == '\n' || r == '\t'
 		token.space = unicode.IsSpace(r)
 	}
-	b.tokens = append(b.tokens, token)
+
+	b.tokens <- token
 	b.buffer = nil
 }
 

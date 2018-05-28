@@ -23,10 +23,15 @@ type techProse struct{}
 // TODO: URLs
 var TechProse = &techProse{}
 
-func (t *techProse) Tokenize(text string) []Token {
+// Tokenize returns a channel of Tokens, intended to be ranged over thus:
+//	tokens := TechProse.Tokenize(string)
+//	for t := range tokens {
+// 		// do stuff
+//	}
+func (t *techProse) Tokenize(text string) chan Token {
 	s := strings.NewReader(text)
 	b := newReader(s)
-	return b.run()
+	return b.tokens
 }
 
 type techHTML struct{}
@@ -34,33 +39,43 @@ type techHTML struct{}
 // TechHTML is a tokenizer for HTML text. Text nodes are tokenized using TechProse; tags and comments left verbatim.
 var TechHTML = &techHTML{}
 
-func (t *techHTML) Tokenize(text string) []Token {
-	result := make([]Token, 0)
+// Tokenize returns a channel of Tokens, intended to be ranged over thus:
+//	tokens := TechHTML.Tokenize(string)
+//	for t := range tokens {
+// 		// do stuff
+//	}
+func (t *techHTML) Tokenize(text string) chan Token {
+	result := make(chan Token, 0)
 	r := strings.NewReader(text)
 	z := html.NewTokenizer(r)
 
-	for {
-		tt := z.Next()
+	go func() {
+		for {
+			tt := z.Next()
 
-		if tt == html.ErrorToken {
-			// Presumably eof
-			break
-		}
-
-		switch tok := z.Token(); {
-		case tok.Type == html.TextToken:
-			words := TechProse.Tokenize(tok.Data)
-			result = append(result, words...)
-		default:
-			// Everything else is punct for our purposes
-			new := Token{
-				value: tok.String(),
-				punct: true,
-				space: false,
+			if tt == html.ErrorToken {
+				// Presumably eof
+				close(result)
+				break
 			}
-			result = append(result, new)
+
+			switch tok := z.Token(); {
+			case tok.Type == html.TextToken:
+				words := TechProse.Tokenize(tok.Data)
+				for w := range words {
+					result <- w
+				}
+			default:
+				// Everything else is punct for our purposes
+				new := Token{
+					value: tok.String(),
+					punct: true,
+					space: false,
+				}
+				result <- new
+			}
 		}
-	}
+	}()
 
 	return result
 }
