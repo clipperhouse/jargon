@@ -6,6 +6,7 @@
 package jargon
 
 import (
+	"io"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -193,6 +194,10 @@ func lexWord(l *lexer) stateFn {
 			// Otherwise absorb and continue
 		}
 	}
+}
+
+func terminates(r rune, err error) bool {
+	return err == io.EOF || isPunct(r) || unicode.IsSpace(r)
 }
 
 func isTerminator(r rune) bool {
