@@ -103,7 +103,7 @@ func readMain(b *reader) state {
 	}
 }
 
-// Important that this function only gets entered from the lexMain loop; lexMain determines 'word start'
+// Important that this function only gets entered from the readMain loop; readMain determines 'word start'
 func readWord(b *reader) state {
 	for {
 		r, _, err := b.ReadRune()
