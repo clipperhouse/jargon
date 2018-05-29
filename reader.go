@@ -144,18 +144,18 @@ func isPunct(r rune) bool {
 	return unicode.IsPunct(r) && !isPunctException(r)
 }
 
-var exists = struct{}{}
+var ok = struct{}{} // like a bool for maps, but with no allocation
 var punctExceptions = map[rune]struct{}{
-	// In some cases, we want to consider it a symbol, even though Unicode defines it as punctuation
-	// See See http://www.unicode.org/faq/punctuation_symbols.html
-	'-':  exists,
-	'#':  exists,
-	'@':  exists,
-	'*':  exists,
-	'%':  exists,
-	'_':  exists,
-	'/':  exists,
-	'\\': exists,
+	// In some cases, we want to consider a rune a symbol, even though Unicode defines it as punctuation
+	// See http://www.unicode.org/faq/punctuation_symbols.html
+	'-':  ok,
+	'#':  ok,
+	'@':  ok,
+	'*':  ok,
+	'%':  ok,
+	'_':  ok,
+	'/':  ok,
+	'\\': ok,
 }
 
 func isPunctException(r rune) bool {
@@ -165,7 +165,7 @@ func isPunctException(r rune) bool {
 
 var leadingPunct = map[rune]struct{}{
 	// Punctuation that can lead a word, like .Net
-	'.': exists,
+	'.': ok,
 }
 
 func mightBeLeadingPunct(r rune) bool {
@@ -175,9 +175,9 @@ func mightBeLeadingPunct(r rune) bool {
 
 var midPunct = map[rune]struct{}{
 	// Punctuation that can appear mid-word
-	'.':  exists,
-	'\'': exists,
-	'’':  exists,
+	'.':  ok,
+	'\'': ok,
+	'’':  ok,
 }
 
 func mightBeMidPunct(r rune) bool {
