@@ -25,16 +25,11 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With")
 
 	text := r.PostFormValue("text")
-	original := jargon.TechProse.Tokenize(text)
-	tokens := make([]jargon.Token, 0)
-
-	for t := range original {
-		tokens = append(tokens, t)
-	}
+	tokens := jargon.TechProse.Tokenize(text)
 
 	lemmatized := jargon.StackExchange.LemmatizeTokens(tokens)
 
-	for _, t := range lemmatized {
+	for t := range lemmatized {
 		if t.IsLemma() {
 			span.Execute(w, t)
 		} else {
