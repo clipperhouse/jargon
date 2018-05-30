@@ -117,10 +117,9 @@ func TestWordrun(t *testing.T) {
 		1: {[]string{"java"}, 1, true},                  // attempting to get 1 should work, and consume only that token
 	}
 
-	lem := &Lemmatizer{}
 	sc := newScanner(tokens)
 	for _, take := range takes {
-		taken, consumed, ok := lem.wordrun(sc, take)
+		taken, consumed, ok := sc.wordrun(take)
 		got := result{strs(taken), consumed, ok}
 		expected, _ := expecteds[take]
 

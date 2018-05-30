@@ -81,7 +81,7 @@ func (lem *Lemmatizer) run(sc *scanner) {
 		default:
 			// Else it's a word, try n-grams, longest to shortest (greedy)
 			for take := lem.maxGramLength; take > 0; take-- {
-				run, consumed, ok := lem.wordrun(sc, take)
+				run, consumed, ok := sc.wordrun(take)
 				if ok {
 					gram := Join(run)
 					key := lem.normalize(gram)
@@ -137,7 +137,7 @@ func (sc *scanner) fill(count int) bool {
 }
 
 // Analogous to tokens.Take(take) in Linq
-func (lem *Lemmatizer) wordrun(sc *scanner, take int) ([]Token, int, bool) {
+func (sc *scanner) wordrun(take int) ([]Token, int, bool) {
 	taken := make([]Token, 0)
 	count := 0 // tokens consumed, not necessarily equal to take
 
