@@ -36,9 +36,9 @@ func TestLemmatizeTokens(t *testing.T) {
 	lem := NewLemmatizer(dict)
 
 	original := `Here is the story of Ruby on Rails nodeJS, "Java Script", html5 and ASPNET mvc plus TCP/IP.`
-	tokens := collect(tok(original))
+	tokens := tok(original)
 
-	got := lem.LemmatizeTokens(tokens)
+	got := collect(lem.LemmatizeTokens(tokens))
 	expected := collect(tok(`Here is the story of ruby-on-rails node.js, "javascript", html5 and asp.net-mvc plus tcp.`))
 
 	if !equals(got, expected) {
@@ -68,8 +68,8 @@ func TestCSV(t *testing.T) {
 
 	original := `"Ruby on Rails", 3.4, "foo"
 "bar",42, "java script"`
-	tokens := collect(tok(original))
-	got := lem.LemmatizeTokens(tokens)
+	tokens := tok(original)
+	got := collect(lem.LemmatizeTokens(tokens))
 	expected := collect(tok(`"ruby-on-rails", 3.4, "foo"
 "bar",42, "javascript"`))
 
@@ -87,8 +87,8 @@ func TestTSV(t *testing.T) {
 ASPNET	MVC
 bar	42	java script`
 
-	tokens := collect(tok(original))
-	got := lem.LemmatizeTokens(tokens)
+	tokens := tok(original)
+	got := collect(lem.LemmatizeTokens(tokens))
 	expected := collect(tok(`ruby-on-rails	3.4	foo
 asp.net	model-view-controller
 bar	42	javascript`))
@@ -99,9 +99,8 @@ bar	42	javascript`))
 }
 
 func TestWordrun(t *testing.T) {
-	tok := TechProse.Tokenize
-	original := `Things and "java script"`
-	tokens := collect(tok(original))
+	original := `java script and`
+	tokens := TechProse.Tokenize(original)
 
 	type result struct {
 		expect   []string
@@ -112,13 +111,15 @@ func TestWordrun(t *testing.T) {
 	takes := []int{3, 2, 1}
 
 	expecteds := map[int]result{
-		3: {[]string{}, 0, false},                // attempting to get 3 should fail
-		2: {[]string{"java", "script"}, 3, true}, // attempting to get 2 should work, consuming 3 tokens (incl the space)
-		1: {[]string{"java"}, 1, true},           // attempting to get 1 should work, and consume only that token
+		4: {[]string{}, 0, false},                       // attempting to get 3 should fail
+		3: {[]string{"java", "script", "and"}, 5, true}, // attempting to get 3 should work, consuming 5
+		2: {[]string{"java", "script"}, 3, true},        // attempting to get 2 should work, consuming 3 tokens (incl the space)
+		1: {[]string{"java"}, 1, true},                  // attempting to get 1 should work, and consume only that token
 	}
 
+	lem := &Lemmatizer{}
 	for _, take := range takes {
-		taken, consumed, ok := wordrun(tokens, 5, take) // 5 = start at the 'j' of 'java'
+		taken, consumed, ok := lem.wordrun(tokens, take)
 		got := result{strs(taken), consumed, ok}
 		expected, _ := expecteds[take]
 
