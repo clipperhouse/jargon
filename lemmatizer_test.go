@@ -118,8 +118,9 @@ func TestWordrun(t *testing.T) {
 	}
 
 	lem := &Lemmatizer{}
+	sc := newScanner(tokens)
 	for _, take := range takes {
-		taken, consumed, ok := lem.wordrun(tokens, take)
+		taken, consumed, ok := lem.wordrun(sc, take)
 		got := result{strs(taken), consumed, ok}
 		expected, _ := expecteds[take]
 

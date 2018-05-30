@@ -10,8 +10,6 @@ type Lemmatizer struct {
 	values        map[string]string
 	maxGramLength int
 	normalize     func(string) string
-	buffer        []Token
-	tokens        chan Token
 }
 
 // StackExchange is a built-in *Lemmatizer, using tag and synonym data from the following Stack Exchange sites: Stack Overflow,
@@ -49,29 +47,41 @@ func NewLemmatizer(d Dictionary) *Lemmatizer {
 // Note that fewer tokens may be returned than were input.
 // A lot depends on the original tokenization, so make sure that it's right!
 func (lem *Lemmatizer) LemmatizeTokens(tokens chan Token) chan Token {
-	lem.tokens = make(chan Token, 0)
-	go lem.scan(tokens)
-	return lem.tokens
+	sc := newScanner(tokens)
+	go lem.run(sc)
+	return sc.outgoing
 }
 
-func (lem *Lemmatizer) scan(tokens chan Token) {
-	lem.buffer = make([]Token, 0)
-	for {
-		lem.fill(tokens, 1) // ok to ignore this error
+type scanner struct {
+	incoming, outgoing chan Token
+	buffer             []Token
+}
 
-		if len(lem.buffer) == 0 {
+func newScanner(tokens chan Token) *scanner {
+	return &scanner{
+		incoming: tokens,
+		outgoing: make(chan Token, 0),
+		buffer:   make([]Token, 0),
+	}
+}
+
+func (lem *Lemmatizer) run(sc *scanner) {
+	for {
+		sc.fill(1) // ok to ignore this error
+
+		if len(sc.buffer) == 0 {
 			break
 		}
 
-		switch t := lem.buffer[0]; {
+		switch t := sc.buffer[0]; {
 		case t.IsPunct() || t.IsSpace():
 			// Emit it
-			lem.emit(t)
-			lem.drop(1)
+			sc.emit(t)
+			sc.drop(1)
 		default:
 			// Else it's a word, try n-grams, longest to shortest (greedy)
 			for take := lem.maxGramLength; take > 0; take-- {
-				run, consumed, ok := lem.wordrun(tokens, take)
+				run, consumed, ok := lem.wordrun(sc, take)
 				if ok {
 					gram := Join(run)
 					key := lem.normalize(gram)
@@ -85,61 +95,61 @@ func (lem *Lemmatizer) scan(tokens chan Token) {
 							punct: false,
 							lemma: true,
 						}
-						lem.emit(lemma)
-						lem.drop(consumed) // discard the incoming tokens that comprised the lemma
+						sc.emit(lemma)
+						sc.drop(consumed) // discard the incoming tokens that comprised the lemma
 						break
 					}
 
 					if take == 1 {
 						// No n-grams, just emit
-						lem.emit(t)
-						lem.drop(1)
+						sc.emit(t)
+						sc.drop(1)
 					}
 				}
 			}
 		}
 	}
-	lem.buffer = nil
-	close(lem.tokens)
+	sc.buffer = nil
+	close(sc.outgoing)
 }
 
-func (lem *Lemmatizer) emit(t Token) {
-	lem.tokens <- t
+func (sc *scanner) emit(t Token) {
+	sc.outgoing <- t
 }
 
 // drop (truncate) the first `n` elements of the buffer
 // remember, a token being in the buffer does not imply that we will emit it
-func (lem *Lemmatizer) drop(n int) {
-	lem.buffer = lem.buffer[n:]
+func (sc *scanner) drop(n int) {
+	sc.buffer = sc.buffer[n:]
 }
 
 // ensure that the buffer contains at least `count` elements; returns false if channel is exhausted before achieving the count
-func (lem *Lemmatizer) fill(tokens chan Token, count int) bool {
-	for count >= len(lem.buffer) {
-		token, ok := <-tokens
+func (sc *scanner) fill(count int) bool {
+	for count >= len(sc.buffer) {
+		token, ok := <-sc.incoming
 		if !ok {
 			// Incoming token channel is closed
 			return false
 		}
-		lem.buffer = append(lem.buffer, token)
+		sc.buffer = append(sc.buffer, token)
 	}
 	return true
 }
 
 // Analogous to tokens.Take(take) in Linq
-func (lem *Lemmatizer) wordrun(tokens chan Token, take int) ([]Token, int, bool) {
+func (lem *Lemmatizer) wordrun(sc *scanner, take int) ([]Token, int, bool) {
 	taken := make([]Token, 0)
 	count := 0 // tokens consumed, not necessarily equal to take
 
 	for len(taken) < take {
-		ok := lem.fill(tokens, count)
+		ok := sc.fill(count)
 		if !ok {
 			// Not enough (buffered) tokens to continue
 			// So, a word run of length `take` is impossible
 			return nil, 0, false
 		}
 
-		token := lem.buffer[count]
+		token := sc.buffer[count]
 		switch {
 		// Note: test for punct before space; newlines and tabs can be
 		// considered both punct and space (depending on the tokenizer!)
