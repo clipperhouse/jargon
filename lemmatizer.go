@@ -27,8 +27,6 @@ func NewLemmatizer(d Dictionary) *Lemmatizer {
 		values:        make(map[string]string),
 		maxGramLength: d.MaxGramLength(),
 		normalize:     d.Normalize,
-		buffer:        make([]Token, 0),
-		tokens:        make(chan Token, 0),
 	}
 	tags := d.Lemmas()
 	for _, tag := range tags {
@@ -51,58 +49,81 @@ func NewLemmatizer(d Dictionary) *Lemmatizer {
 // Note that fewer tokens may be returned than were input.
 // A lot depends on the original tokenization, so make sure that it's right!
 func (lem *Lemmatizer) LemmatizeTokens(tokens chan Token) chan Token {
-	go func() {
-		for {
-			current, ok := <-tokens
-			if ok {
-				lem.buffer = append(lem.buffer, current)
-			}
-			if len(lem.buffer) == 0 {
-				break
-			}
+	lem.tokens = make(chan Token, 0)
+	go lem.scan(tokens)
+	return lem.tokens
+}
 
-			switch t := lem.buffer[0]; {
-			case t.IsPunct() || t.IsSpace():
-				// Emit it
-				lem.tokens <- t
-				lem.buffer = lem.buffer[1:]
-			default:
-				// Else it's a word, try n-grams, longest to shortest (greedy)
-				for take := lem.maxGramLength; take > 0; take-- {
-					run, consumed, ok := lem.wordrun(tokens, take)
-					if ok {
-						gram := Join(run)
-						key := lem.normalize(gram)
-						canonical, found := lem.values[key]
+func (lem *Lemmatizer) scan(tokens chan Token) {
+	lem.buffer = make([]Token, 0)
+	for {
+		lem.fill(tokens, 1) // ok to ignore this error
 
-						if found {
-							// Emit token, replacing consumed tokens
-							lemma := Token{
-								value: canonical,
-								space: false,
-								punct: false,
-								lemma: true,
-							}
-							lem.tokens <- lemma
-							// Discard the incoming tokens that comprise the lemma
-							lem.buffer = lem.buffer[consumed:]
-							break
+		if len(lem.buffer) == 0 {
+			break
+		}
+
+		switch t := lem.buffer[0]; {
+		case t.IsPunct() || t.IsSpace():
+			// Emit it
+			lem.emit(t)
+			lem.drop(1)
+		default:
+			// Else it's a word, try n-grams, longest to shortest (greedy)
+			for take := lem.maxGramLength; take > 0; take-- {
+				run, consumed, ok := lem.wordrun(tokens, take)
+				if ok {
+					gram := Join(run)
+					key := lem.normalize(gram)
+					canonical, found := lem.values[key]
+
+					if found {
+						// Emit new token, replacing consumed tokens
+						lemma := Token{
+							value: canonical,
+							space: false,
+							punct: false,
+							lemma: true,
 						}
+						lem.emit(lemma)
+						lem.drop(consumed) // discard the incoming tokens that comprised the lemma
+						break
+					}
 
-						if take == 1 {
-							// No n-grams, just emit
-							lem.tokens <- lem.buffer[0]
-							lem.buffer = lem.buffer[1:]
-						}
+					if take == 1 {
+						// No n-grams, just emit
+						lem.emit(t)
+						lem.drop(1)
 					}
 				}
 			}
 		}
-		lem.buffer = nil
-		close(lem.tokens)
-	}()
+	}
+	lem.buffer = nil
+	close(lem.tokens)
+}
 
-	return lem.tokens
+func (lem *Lemmatizer) emit(t Token) {
+	lem.tokens <- t
+}
+
+// drop (truncate) the first `n` elements of the buffer
+// remember, a token being in the buffer does not imply that we will emit it
+func (lem *Lemmatizer) drop(n int) {
+	lem.buffer = lem.buffer[n:]
+}
+
+// ensure that the buffer contains at least `count` elements; returns false if channel is exhausted before achieving the count
+func (lem *Lemmatizer) fill(tokens chan Token, count int) bool {
+	for count >= len(lem.buffer) {
+		token, ok := <-tokens
+		if !ok {
+			// Incoming token channel is closed
+			return false
+		}
+		lem.buffer = append(lem.buffer, token)
+	}
+	return true
 }
 
 // Analogous to tokens.Take(take) in Linq
@@ -111,14 +132,11 @@ func (lem *Lemmatizer) wordrun(tokens chan Token, take int) ([]Token, int, bool)
 	count := 0 // tokens consumed, not necessarily equal to take
 
 	for len(taken) < take {
-		for count >= len(lem.buffer) {
-			token, ok := <-tokens
-			if !ok {
-				// Incoming token channel is closed
-				// Hard stop
-				return nil, 0, false
-			}
-			lem.buffer = append(lem.buffer, token)
+		ok := lem.fill(tokens, count)
+		if !ok {
+			// Not enough (buffered) tokens to continue
+			// So, a word run of length `take` is impossible
+			return nil, 0, false
 		}
 
 		token := lem.buffer[count]
