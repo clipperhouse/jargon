@@ -52,19 +52,6 @@ func (lem *Lemmatizer) LemmatizeTokens(tokens chan Token) chan Token {
 	return sc.outgoing
 }
 
-type scanner struct {
-	incoming, outgoing chan Token
-	buffer             []Token
-}
-
-func newScanner(tokens chan Token) *scanner {
-	return &scanner{
-		incoming: tokens,
-		outgoing: make(chan Token, 0),
-		buffer:   make([]Token, 0),
-	}
-}
-
 func (lem *Lemmatizer) run(sc *scanner) {
 	for {
 		sc.fill(1) // ok to ignore this error
@@ -79,40 +66,60 @@ func (lem *Lemmatizer) run(sc *scanner) {
 			sc.emit(t)
 			sc.drop(1)
 		default:
-			// Else it's a word, try n-grams, longest to shortest (greedy)
-			for take := lem.maxGramLength; take > 0; take-- {
-				run, consumed, ok := sc.wordrun(take)
-				if ok {
-					gram := Join(run)
-					key := lem.normalize(gram)
-					canonical, found := lem.values[key]
-
-					if found {
-						// Emit new token, replacing consumed tokens
-						lemma := Token{
-							value: canonical,
-							space: false,
-							punct: false,
-							lemma: true,
-						}
-						sc.emit(lemma)
-						sc.drop(consumed) // discard the incoming tokens that comprised the lemma
-						break
-					}
-
-					if take == 1 {
-						// No n-grams, just emit
-						sc.emit(t)
-						sc.drop(1)
-					}
-				}
-			}
+			// Else it's a word
+			lem.ngrams(sc)
 		}
 	}
 	sc.buffer = nil
 	close(sc.outgoing)
 }
 
+func (lem *Lemmatizer) ngrams(sc *scanner) {
+	// Try n-grams, longest to shortest (greedy)
+	for take := lem.maxGramLength; take > 0; take-- {
+		run, consumed, ok := sc.wordrun(take)
+
+		if !ok {
+			continue // on to the next n-gram
+		}
+
+		gram := Join(run)
+		key := lem.normalize(gram)
+		canonical, found := lem.values[key]
+
+		if found {
+			// Emit new token, replacing consumed tokens
+			lemma := Token{
+				value: canonical,
+				space: false,
+				punct: false,
+				lemma: true,
+			}
+			sc.emit(lemma)
+			sc.drop(consumed) // discard the incoming tokens that comprised the lemma
+			break
+		}
+
+		if take == 1 {
+			// No n-grams, just emit
+			sc.emit(run[0])
+			sc.drop(1)
+		}
+	}
+}
+
+type scanner struct {
+	incoming, outgoing chan Token
+	buffer             []Token
+}
+
+func newScanner(tokens chan Token) *scanner {
+	return &scanner{
+		incoming: tokens,
+		outgoing: make(chan Token, 0),
+		buffer:   make([]Token, 0),
+	}
+}
 func (sc *scanner) emit(t Token) {
 	sc.outgoing <- t
 }
