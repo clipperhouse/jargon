@@ -1,8 +1,3 @@
-// Derived in part from https://golang.org/src/text/template/parse/lex.go
-// Copyright The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package jargon
 
 import (

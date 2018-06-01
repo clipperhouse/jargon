@@ -54,6 +54,33 @@ It'd be great it it’ll handle apostrophes.
 	}
 }
 
+func TestURLs(t *testing.T) {
+	// We mostly get lucky on URLs due to punct rules
+
+	tests := map[string]string{
+		`http://www.google.com`:                     `http://www.google.com`,                     // as-is
+		`http://www.google.com.`:                    `http://www.google.com`,                     // "."" should be considered trailing punct
+		`http://www.google.com/`:                    `http://www.google.com/`,                    // trailing slash OK
+		`http://www.google.com/?`:                   `http://www.google.com/`,                    // "?" should be considered trailing punct
+		`http://www.google.com/?foo=bar`:            `http://www.google.com/?foo=bar`,            // "?" is querystring
+		`http://www.google.com/?foo=bar.`:           `http://www.google.com/?foo=bar`,            // trailing "."
+		`http://www.google.com/?foo=bar&qaz=qux`:    `http://www.google.com/?foo=bar&qaz=qux`,    // "?" with &
+		`http://www.google.com/?foo=bar&qaz=q%20ux`: `http://www.google.com/?foo=bar&qaz=q%20ux`, // with encoding
+		`//www.google.com`:                          `//www.google.com`,                          // scheme-relative
+		`/usr/local/bin/foo.bar`:                    `/usr/local/bin/foo.bar`,
+		`c:\windows\notepad.exe`:                    `c:\windows\notepad.exe`,
+	}
+
+	for input, expected := range tests {
+		got := collect(TechProse.Tokenize(input))[0]
+
+		if got.String() != expected {
+			t.Errorf("Expected URL %s to result in %s, but got %s", input, expected, got)
+		}
+
+	}
+}
+
 func TestTechHTML(t *testing.T) {
 	h := `
 <html>

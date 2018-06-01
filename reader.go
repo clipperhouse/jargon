@@ -178,6 +178,9 @@ var midPunct = map[rune]struct{}{
 	'.':  ok,
 	'\'': ok,
 	'’':  ok,
+	':':  ok,
+	'?':  ok,
+	'&':  ok,
 }
 
 func mightBeMidPunct(r rune) bool {
