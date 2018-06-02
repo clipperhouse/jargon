@@ -72,12 +72,11 @@ func TestURLs(t *testing.T) {
 	}
 
 	for input, expected := range tests {
-		got := collect(TechProse.Tokenize(input))[0]
+		got := <-TechProse.Tokenize(input) // just take the first token
 
 		if got.String() != expected {
 			t.Errorf("Expected URL %s to result in %s, but got %s", input, expected, got)
 		}
-
 	}
 }
 
