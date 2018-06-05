@@ -34,8 +34,8 @@ func main() {
     r := strings.NewReader(text)
     tokens := jargon.Tokenize(r)
 
-	dict := stackexchange.Dictionary
-	lem := jargon.NewLemmatizer(dict)
+    dict := stackexchange.Dictionary
+    lem := jargon.NewLemmatizer(dict)
     lemmatized := lem.Lemmatize(tokens)
     for t := range lemmatized {
         fmt.Print(t)
