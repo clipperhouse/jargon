@@ -3,8 +3,6 @@ package jargon
 
 import (
 	"strings"
-
-	"github.com/clipperhouse/jargon/stackexchange"
 )
 
 // Lemmatizer is the main structure for looking up canonical tags
@@ -13,12 +11,6 @@ type Lemmatizer struct {
 	maxGramLength int
 	normalize     func(string) string
 }
-
-// StackExchange is a built-in *Lemmatizer, using tag and synonym data from the following Stack Exchange sites: Stack Overflow,
-// Server Fault, Game Dev and Data Science. It's indended to identify canonical tags (technologies),
-// e.g. Ruby on Rails (3 words) will be replaced with ruby-on-rails (1 word).
-// It looks for word runs (n-grams) up to length 3, ignoring spaces.
-var StackExchange = NewLemmatizer(stackexchange.Dictionary)
 
 // NewLemmatizer creates and populates a new Lemmatizer for the purpose of looking up canonical tags.
 // Data and rules mostly live in the Dictionary interface, which is usually imported.
@@ -41,14 +33,13 @@ func NewLemmatizer(d Dictionary) *Lemmatizer {
 	return lem
 }
 
-// LemmatizeTokens takes a slice of tokens and returns tokens with canonicalized terms.
-// Terms (tokens) that are not canonicalized are returned as-is, e.g.
-//     ["I", " ", "think", " ", "Ruby", " ", "on", " ", "Rails", " ", "is", " ", "great"]
+// Lemmatize transforms a stream of tokens to their canonicalized terms.
+// Tokens that are not canonicalized are returned as-is, e.g.
+//     "I", " ", "think", " ", "Ruby", " ", "on", " ", "Rails", " ", "is", " ", "great"
 // becomes
-//     ["I", " ", "think", " ", "ruby-on-rails", " ", "is", " ", "great"]
-// Note that fewer tokens may be returned than were input.
-// A lot depends on the original tokenization, so make sure that it's right!
-func (lem *Lemmatizer) LemmatizeTokens(tokens chan Token) chan Token {
+//     "I", " ", "think", " ", "ruby-on-rails", " ", "is", " ", "great"
+// Note that fewer tokens may be returned than were input, and that correct lemmatization depends on correct tokenization!
+func (lem *Lemmatizer) Lemmatize(tokens chan Token) chan Token {
 	sc := newScanner(tokens)
 	go lem.run(sc)
 	return sc.outgoing

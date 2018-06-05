@@ -1,9 +1,12 @@
+// A demo of jargon for use on Google App Engine
 package main
 
 import (
 	"html/template"
 	"net/http"
 	"strings"
+
+	"github.com/clipperhouse/jargon/stackexchange"
 
 	"github.com/clipperhouse/jargon"
 
@@ -27,7 +30,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch route := parts[1]; {
-	case route == "text" || route == "jargon":
+	case route == "text":
 		textHandler(w, r)
 	default:
 		http.NotFound(w, r)
@@ -41,7 +44,8 @@ func textHandler(w http.ResponseWriter, r *http.Request) {
 		r := strings.NewReader(text)
 		tokens := jargon.Tokenize(r)
 
-		lemmatized := jargon.StackExchange.LemmatizeTokens(tokens)
+		lem := jargon.NewLemmatizer(stackexchange.Dictionary)
+		lemmatized := lem.Lemmatize(tokens)
 
 		for t := range lemmatized {
 			if t.IsLemma() {

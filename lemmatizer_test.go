@@ -31,7 +31,7 @@ func TestNewLemmatizer(t *testing.T) {
 	}
 }
 
-func TestLemmatizeTokens(t *testing.T) {
+func TestLemmatize(t *testing.T) {
 	dict := stackexchange.Dictionary
 	lem := NewLemmatizer(dict)
 
@@ -39,7 +39,7 @@ func TestLemmatizeTokens(t *testing.T) {
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got := collect(lem.LemmatizeTokens(tokens))
+	got := collect(lem.Lemmatize(tokens))
 	r2 := strings.NewReader(`Here is the story of ruby-on-rails node.js, "javascript", html5 and asp.net-mvc plus tcp.`)
 	expected := collect(Tokenize(r2))
 
@@ -72,7 +72,7 @@ func TestCSV(t *testing.T) {
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got := collect(lem.LemmatizeTokens(tokens))
+	got := collect(lem.Lemmatize(tokens))
 	r2 := strings.NewReader(`"ruby-on-rails", 3.4, "foo"
 "bar",42, "javascript"`)
 	expected := collect(Tokenize(r2))
@@ -92,7 +92,7 @@ bar	42	java script`
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got := collect(lem.LemmatizeTokens(tokens))
+	got := collect(lem.Lemmatize(tokens))
 	r2 := strings.NewReader(`ruby-on-rails	3.4	foo
 asp.net	model-view-controller
 bar	42	javascript`)

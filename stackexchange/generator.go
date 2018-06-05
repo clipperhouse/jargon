@@ -134,8 +134,10 @@ package stackexchange
 
 // This file is generated. Best not to modify it, as it will likely be overwritten.
 
-// Dictionary is the main exported Dictionary of Stack Exchange tags and synonyms, fetched via api.stackexchange.com
-// It includes the most popular {{ .Tags | len }} tags and their {{ .Synonyms | len }} synonyms
+// Dictionary is the main exported Dictionary of Stack Exchange tags and synonyms, from the following Stack Exchange sites: Stack Overflow,
+// Server Fault, Game Dev and Data Science. It's indended to identify canonical tags (technologies),
+// e.g. Ruby on Rails (3 words) will be replaced with ruby-on-rails (1 word).
+// It includes the most popular {{ .Tags | len }} tags and {{ .Synonyms | len }} synonyms
 var Dictionary = &dictionary{ 
 	tags: tags, 
 	synonyms: synonyms,

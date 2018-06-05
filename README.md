@@ -1,21 +1,23 @@
 # jargon
+
 Tokenizers and lemmatizers for Go.
 
 [GoDoc](https://godoc.org/github.com/clipperhouse/jargon)
 
 ## Problem
-When dealing with technology terms in text – say, a job listing or a resume or a document – 
+
+When dealing with technology terms in text – say, a job listing or a resume or a document –
 it’s easy to use different words for the same thing. This is acute for things like “react” where it’s not obvious
 what the canonical term is. Is it React or reactjs or react.js?
 
 This presents a problem when **searching** for such terms. _We_ know the above terms are synonymous but databases don’t.
 
-A further problem is that some ngrams should be understood as a single term. We know that “Ruby on Rails” represents 
+A further problem is that some ngrams should be understood as a single term. We know that “Ruby on Rails” represents
 **one** technology, but databases naively see three words.
 
 ## Try it
 
-[Playground](https://clipperhouse.com/jargon)
+[Demo](https://clipperhouse.com/jargon)
 
 ```go
 package main
@@ -28,14 +30,17 @@ import (
 
 func main() {
     text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
-    tokens := jargon.TechProse.Tokenize(text)
+    r := strings.NewReader(text)
+    tokens := jargon.Tokenize(r)
     lemmatized := jargon.StackExchange.LemmatizeTokens(tokens)
-    result := jargon.Join(lemmatized)
-    fmt.Println(result)
+    for t := range lemmatized {
+        fmt.Print(t)
+    }
 }
 ```
 
 ## Prior art
+
 This is effectively a problem of synonyms. Search-oriented databases like Elastic handle this problem with [analyzers](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-analyzers.html).
 
 In NLP, it’s handled by [stemmers](https://en.wikipedia.org/wiki/Stemming) or [lemmatizers](https://en.wikipedia.org/wiki/Lemmatisation). There, the goal is to replace variations of a term (manager, management, managing) with a single canonical version.
@@ -43,6 +48,7 @@ In NLP, it’s handled by [stemmers](https://en.wikipedia.org/wiki/Stemming) or 
 Recognizing mutli-words-as-a-single-term (“Ruby on Rails”) is [named-entity recognition](https://en.wikipedia.org/wiki/Named-entity_recognition).
 
 ## Who’s it for?
+
 Dunno yet, some ideas…
 
 - Data scientists doing NLP on unstructured data, who want to ensure consistency of vocabulary, for statistical analysis.
@@ -51,6 +57,7 @@ Dunno yet, some ideas…
 ## How it works
 
 ### Tokenizers
+
 Before we can lemmatize text, we need it to separated into words and punctuation, which we call tokens. Getting this right matters! There are two built-in tokenizers.
 
 - `TechProse`: follows typical rules of English, where spaces and punctuation define the separation of words. It mostly relies on Unicode’s definitions. Not just prose, though: these rules should™️ work for delimited files like CSV and tabs.
@@ -60,9 +67,11 @@ Before we can lemmatize text, we need it to separated into words and punctuation
 Importantly, these tokenizers capture all of the text, including white space, so it can be reconstructed with fidelity.
 
 ### Lemmatizer
+
 A lemmatizer is constructed using a Dictionary (below), which contains all the synonym data, as well as some rules.
 
 ### Dictionary
+
 Dictionary is an interface with the following methods:
 
 `Lemmas()` : The list of canonical terms
