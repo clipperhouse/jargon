@@ -23,41 +23,41 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With")
 
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) == 1 {
+	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
-
-	switch route := parts[1]; {
-	case route == "text":
-		textHandler(w, r)
-	default:
-		http.NotFound(w, r)
-	}
+	jargonHandler(w, r)
 }
 
-func textHandler(w http.ResponseWriter, r *http.Request) {
+var lemmatizer = jargon.NewLemmatizer(stackexchange.Dictionary)
+
+func jargonHandler(w http.ResponseWriter, r *http.Request) {
 	text := r.PostFormValue("text")
+	html := r.PostFormValue("html")
 
-	if len(strings.TrimSpace(text)) > 0 {
+	var tokens chan jargon.Token
+	if len(text) > 0 {
 		r := strings.NewReader(text)
-		tokens := jargon.Tokenize(r)
+		tokens = jargon.Tokenize(r)
+	} else {
+		r := strings.NewReader(html)
+		tokens = jargon.TokenizeHTML(r)
+	}
 
-		lem := jargon.NewLemmatizer(stackexchange.Dictionary)
-		lemmatized := lem.Lemmatize(tokens)
+	lemmatized := lemmatizer.Lemmatize(tokens)
 
-		for t := range lemmatized {
-			if t.IsLemma() {
-				lemma.Execute(w, t)
-			} else {
-				w.Write([]byte(t.String()))
-			}
+	for t := range lemmatized {
+		if t.IsLemma() {
+			lemma.Execute(w, t)
+		} else {
+			plain.Execute(w, t)
 		}
 	}
 }
 
-var lemma = template.Must(template.New("span").Parse(`<span class="lemma">{{ .String }}</span>`))
+var lemma = template.Must(template.New("lemma").Parse(`<span class="lemma">{{ . }}</span>`))
+var plain = template.Must(template.New("plain").Parse(`{{ . }}`))
 
 func isAjax(r *http.Request) bool {
 	return strings.ToLower(r.Header.Get("X-Requested-With")) == "xmlhttprequest"
