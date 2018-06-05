@@ -26,13 +26,17 @@ import (
     "fmt"
 
     "github.com/clipperhouse/jargon"
+    "github.com/clipperhouse/jargon/stackexchange"
 )
 
 func main() {
     text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
     r := strings.NewReader(text)
     tokens := jargon.Tokenize(r)
-    lemmatized := jargon.StackExchange.LemmatizeTokens(tokens)
+
+	dict := stackexchange.Dictionary
+	lem := jargon.NewLemmatizer(dict)
+    lemmatized := lem.Lemmatize(tokens)
     for t := range lemmatized {
         fmt.Print(t)
     }
