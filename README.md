@@ -1,21 +1,22 @@
-# jargon
+# Jargon
 
-Tokenizers and lemmatizers for Go.
+Jargon offers a **tokenizer** for Go, with an emphasis on handling technology terms correctly:
 
-[GoDoc](https://godoc.org/github.com/clipperhouse/jargon)
+- C++, ASP.net, and other non-alphanumeric terms are recognized as single tokens
+- #hashtags and @handles
+- Simple URLs and email address are handled _pretty well_, though can be notoriously hard to get right
 
-## Problem
+There is also an HTML tokenizer, which applies the above to text nodes in markup.
 
-When dealing with technology terms in text – say, a job listing or a resume or a document –
-it’s easy to use different words for the same thing. This is acute for things like “react” where it’s not obvious
-what the canonical term is. Is it React or reactjs or react.js?
+The tokenizer preserves all tokens verbatim, so that the original text can be reconstructed with fidelity (“round tripped”).
 
-This presents a problem when **searching** for such terms. _We_ know the above terms are synonymous but databases don’t.
+In turn, Jargon offers a **lemmatizer**, for recognizing canonical and synonymous terms. For example the n-gram “Ruby on Rails” becomes ruby-on-rails. It implements “insensitivity” to spaces, dots and dashes.
 
-A further problem is that some ngrams should be understood as a single term. We know that “Ruby on Rails” represents
-**one** technology, but databases naively see three words.
+(It turns out™️ that the above rules apply well to structured text such as CSV and JSON.)
 
 ## Try it
+
+[GoDoc](https://godoc.org/github.com/clipperhouse/jargon)
 
 [Demo](https://clipperhouse.com/jargon)
 
@@ -43,9 +44,22 @@ func main() {
 }
 ```
 
+## Problem
+
+When dealing with technology terms in text – say, a job listing or a resume –
+it’s easy to use different words for the same thing. This is acute for things like “react” where it’s not obvious
+what the canonical term is. Is it React or reactjs or react.js?
+
+This presents a problem when **searching** for such terms. _We_ know the above terms are synonymous but databases don’t.
+
+A further problem is that some n-grams should be understood as a single term. We know that “Objective C” represents
+**one** technology, but databases naively see two words.
+
 ## Prior art
 
-This is effectively a problem of synonyms. Search-oriented databases like Elastic handle this problem with [analyzers](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-analyzers.html).
+Existing tokenizers (such as Treebank), appear not to be round-trippable, i.e., are destructive. They also take a hard line on punctuation, so “ASP.net” would come out as two tokens instead of one. Of course I’d like to be corrected or pointed to other implementations.
+
+Search-oriented databases like Elastic handle synonyms with [analyzers](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-analyzers.html).
 
 In NLP, it’s handled by [stemmers](https://en.wikipedia.org/wiki/Stemming) or [lemmatizers](https://en.wikipedia.org/wiki/Lemmatisation). There, the goal is to replace variations of a term (manager, management, managing) with a single canonical version.
 
@@ -55,33 +69,6 @@ Recognizing mutli-words-as-a-single-term (“Ruby on Rails”) is [named-entity 
 
 Dunno yet, some ideas…
 
-- Data scientists doing NLP on unstructured data, who want to ensure consistency of vocabulary, for statistical analysis.
+- Recognition of domain terms appearing in text
+- NLP on unstructured data, when we wish to ensure consistency of vocabulary, for statistical analysis.
 - Search applications, where searches for “Ruby on Rails” are understood as an entity, instead of three unrelated words, or to ensure that “React” and “reactjs” and “react.js” and handled synonmously.
-
-## How it works
-
-### Tokenizers
-
-Before we can lemmatize text, we need it to separated into words and punctuation, which we call tokens. Getting this right matters! There are two built-in tokenizers.
-
-- `TechProse`: follows typical rules of English, where spaces and punctuation define the separation of words. It mostly relies on Unicode’s definitions. Not just prose, though: these rules should™️ work for delimited files like CSV and tabs.
-
-- `TechHTML`: Tokenizes HTML, and in turn, tokenizes text nodes using TechProse above.
-
-Importantly, these tokenizers capture all of the text, including white space, so it can be reconstructed with fidelity.
-
-### Lemmatizer
-
-A lemmatizer is constructed using a Dictionary (below), which contains all the synonym data, as well as some rules.
-
-### Dictionary
-
-Dictionary is an interface with the following methods:
-
-`Lemmas()` : The list of canonical terms
-
-`Synonyms()` : A map of synonyms to their canonical terms
-
-`MaxGramLength()` : The maximum number of individual words that the lemmatizer will attempt to join into a single term. For example, if we want to recognize Ruby on Rails, we’d want an n-gram length of 3.
-
-`Normalize()` : Defines ‘insensitivity’ rules when matching words against their canonical versions. In the default case, we want the lookups to be case-insensitive, as well as insensitive to dots and dashes. So `NodeJS` and `node.js` are handled identically.
