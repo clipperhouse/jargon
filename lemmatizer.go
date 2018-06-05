@@ -2,6 +2,8 @@
 package jargon
 
 import (
+	"strings"
+
 	"github.com/clipperhouse/jargon/stackexchange"
 )
 
@@ -83,7 +85,7 @@ func (lem *Lemmatizer) ngrams(sc *scanner) {
 			continue // on to the next n-gram
 		}
 
-		gram := Join(run)
+		gram := join(run)
 		key := lem.normalize(gram)
 		canonical, found := lem.values[key]
 
@@ -106,6 +108,14 @@ func (lem *Lemmatizer) ngrams(sc *scanner) {
 			sc.drop(1)
 		}
 	}
+}
+
+func join(tokens []Token) string {
+	joined := make([]string, 0)
+	for _, t := range tokens {
+		joined = append(joined, t.String())
+	}
+	return strings.Join(joined, "")
 }
 
 type scanner struct {
