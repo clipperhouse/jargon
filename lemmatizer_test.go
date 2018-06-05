@@ -2,6 +2,7 @@ package jargon
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/clipperhouse/jargon/stackexchange"
@@ -31,15 +32,16 @@ func TestNewLemmatizer(t *testing.T) {
 }
 
 func TestLemmatizeTokens(t *testing.T) {
-	tok := TechProse.Tokenize
 	dict := stackexchange.Dictionary
 	lem := NewLemmatizer(dict)
 
 	original := `Here is the story of Ruby on Rails nodeJS, "Java Script", html5 and ASPNET mvc plus TCP/IP.`
-	tokens := tok(original)
+	r1 := strings.NewReader(original)
+	tokens := Tokenize(r1)
 
 	got := collect(lem.LemmatizeTokens(tokens))
-	expected := collect(tok(`Here is the story of ruby-on-rails node.js, "javascript", html5 and asp.net-mvc plus tcp.`))
+	r2 := strings.NewReader(`Here is the story of ruby-on-rails node.js, "javascript", html5 and asp.net-mvc plus tcp.`)
+	expected := collect(Tokenize(r2))
 
 	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
@@ -62,16 +64,18 @@ func TestLemmatizeTokens(t *testing.T) {
 }
 
 func TestCSV(t *testing.T) {
-	tok := TechProse.Tokenize
 	dict := stackexchange.Dictionary
 	lem := NewLemmatizer(dict)
 
 	original := `"Ruby on Rails", 3.4, "foo"
 "bar",42, "java script"`
-	tokens := tok(original)
+	r1 := strings.NewReader(original)
+	tokens := Tokenize(r1)
+
 	got := collect(lem.LemmatizeTokens(tokens))
-	expected := collect(tok(`"ruby-on-rails", 3.4, "foo"
-"bar",42, "javascript"`))
+	r2 := strings.NewReader(`"ruby-on-rails", 3.4, "foo"
+"bar",42, "javascript"`)
+	expected := collect(Tokenize(r2))
 
 	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
@@ -79,19 +83,20 @@ func TestCSV(t *testing.T) {
 }
 
 func TestTSV(t *testing.T) {
-	tok := TechProse.Tokenize
 	dict := stackexchange.Dictionary
 	lem := NewLemmatizer(dict)
 
 	original := `Ruby on Rails	3.4	foo
 ASPNET	MVC
 bar	42	java script`
+	r1 := strings.NewReader(original)
+	tokens := Tokenize(r1)
 
-	tokens := tok(original)
 	got := collect(lem.LemmatizeTokens(tokens))
-	expected := collect(tok(`ruby-on-rails	3.4	foo
+	r2 := strings.NewReader(`ruby-on-rails	3.4	foo
 asp.net	model-view-controller
-bar	42	javascript`))
+bar	42	javascript`)
+	expected := collect(Tokenize(r2))
 
 	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
@@ -100,7 +105,8 @@ bar	42	javascript`))
 
 func TestWordrun(t *testing.T) {
 	original := `java script and`
-	tokens := TechProse.Tokenize(original)
+	r := strings.NewReader(original)
+	tokens := Tokenize(r)
 
 	type result struct {
 		expect   []string

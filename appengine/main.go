@@ -38,7 +38,8 @@ func textHandler(w http.ResponseWriter, r *http.Request) {
 	text := r.PostFormValue("text")
 
 	if len(strings.TrimSpace(text)) > 0 {
-		tokens := jargon.TechProse.Tokenize(text)
+		r := strings.NewReader(text)
+		tokens := jargon.Tokenize(r)
 
 		lemmatized := jargon.StackExchange.LemmatizeTokens(tokens)
 

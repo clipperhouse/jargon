@@ -13,7 +13,8 @@ Similarly, #hashtag and @handle should work, as should an first.last+@example.co
 It should—wait for it—break on things like em-dashes and "quotes" and it ends.
 It'd be great it it’ll handle apostrophes.
 `
-	got := collect(TechProse.Tokenize(text))
+	r := strings.NewReader(text)
+	got := collect(Tokenize(r))
 
 	expected := []string{
 		"Hi", "!",
@@ -72,7 +73,8 @@ func TestURLs(t *testing.T) {
 	}
 
 	for input, expected := range tests {
-		got := <-TechProse.Tokenize(input) // just take the first token
+		r := strings.NewReader(input)
+		got := <-Tokenize(r) // just take the first token
 
 		if got.String() != expected {
 			t.Errorf("Expected URL %s to result in %s, but got %s", input, expected, got)
@@ -89,7 +91,8 @@ Hi! Let's talk Ruby on Rails.
 </p>
 </html>
 `
-	got := collect(TechHTML.Tokenize(h))
+	r := strings.NewReader(h)
+	got := collect(TokenizeHTML(r))
 
 	expected := []string{
 		`<p foo="bar">`, // tags kept whole
