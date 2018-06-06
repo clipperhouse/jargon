@@ -34,6 +34,8 @@ func main() {
     text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
     r := strings.NewReader(text)
     tokens := jargon.Tokenize(r)
+    
+    // iterate over the resulting tokens, or pass on to the lemmatizer...
 
     dict := stackexchange.Dictionary
     lem := jargon.NewLemmatizer(dict)
@@ -43,6 +45,8 @@ func main() {
     }
 }
 ```
+
+Jargon uses a streaming API – reader in, channel out.
 
 ## Problem
 
