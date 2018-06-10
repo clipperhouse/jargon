@@ -16,9 +16,9 @@ In turn, Jargon offers a **lemmatizer**, for recognizing canonical and synonymou
 
 ## Try it
 
-[GoDoc](https://godoc.org/github.com/clipperhouse/jargon)
-
 [Demo](https://clipperhouse.com/jargon)
+
+[GoDoc](https://godoc.org/github.com/clipperhouse/jargon)
 
 ```go
 package main
@@ -34,7 +34,7 @@ func main() {
     text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
     r := strings.NewReader(text)
     tokens := jargon.Tokenize(r)
-    
+
     // iterate over the resulting tokens, or pass on to the lemmatizer...
 
     dict := stackexchange.Dictionary
