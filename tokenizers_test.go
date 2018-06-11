@@ -55,6 +55,19 @@ It'd be great it it’ll handle apostrophes.
 	}
 }
 
+func BenchmarkProse(b *testing.B) {
+	text := `Hi! This is a test of tech terms.
+	It should consider F#, C++, .net, Node.JS and 3.141592 to be their own tokens. 
+	Similarly, #hashtag and @handle should work, as should an first.last+@example.com.
+	It should—wait for it—break on things like em-dashes and "quotes" and it ends.
+	It'd be great it it’ll handle apostrophes.
+	`
+	for i := 0; i < b.N; i++ {
+		r := strings.NewReader(text)
+		collect(Tokenize(r))
+	}
+}
+
 func TestURLs(t *testing.T) {
 	// We mostly get lucky on URLs due to punct rules
 
