@@ -1,6 +1,7 @@
 package jargon
 
 import (
+	"bufio"
 	"io"
 	"strings"
 
@@ -35,7 +36,8 @@ func Tokenize(r io.Reader) chan Token {
 // It returns all tokens (including white space), so text can be reconstructed with fidelity. Ignoring (say) whitespace is a decision for the caller.
 func TokenizeHTML(r io.Reader) chan Token {
 	result := make(chan Token, 20)
-	z := html.NewTokenizer(r)
+	b := bufio.NewReader(r)
+	z := html.NewTokenizer(b)
 
 	go func() {
 		for {

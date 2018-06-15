@@ -56,12 +56,16 @@ It'd be great it it’ll handle apostrophes.
 }
 
 func BenchmarkProse(b *testing.B) {
-	text := `Hi! This is a test of tech terms.
-	It should consider F#, C++, .net, Node.JS and 3.141592 to be their own tokens. 
-	Similarly, #hashtag and @handle should work, as should an first.last+@example.com.
-	It should—wait for it—break on things like em-dashes and "quotes" and it ends.
-	It'd be great it it’ll handle apostrophes.
-	`
+	text := `Maximize, bleeding-edge cultivate engage B2B ecologies rich-clientAPIs viral embrace engage integrated systems morph, ecologies, scalable user-contributed. Redefine synergies, architectures redefine value; empower Cluetrain capture eyeballs optimize scale tag architect, addelivery. Out-of-the-box monetize; best-of-breed rich; webservices architectures impactful social exploit open-source mashups sexy morph, harness; killer initiatives benchmark e-business infomediaries channels enable e-business, eyeballs functionalities end-to-end transform remix applications empower reinvent. Action-items synergistic: networkeffects citizen-media platforms. Communities, intuitive, efficient tag synergistic post integrate weblogs networkeffects embedded impactful--deliverables peer-to-peer wikis strategize out-of-the-box, capture--syndicate engineer holistic! Monetize collaborative productize solutions enterprise webservices 24/7 data-driven blogospheres implement incentivize citizen-media value-added morph methodologies benchmark networkeffects, intuitive synergies user-contributed 24/365 granular sticky leverage. Extensible ROI convergence innovate turn-key; markets ubiquitous mindshare: networking, platforms."
+
+	Global compelling metrics markets morph communities capture webservices leading-edge B2B iterate enhance. Best-of-breed exploit scalable, B2C synergies web services mindshare seamless semantic deliver, productize rich maximize! Partnerships implement mindshare dot-com engineer e-business, solutions. Front-end aggregate enterprise visionary communities incubate, ubiquitous addelivery innovative markets engage.
+	
+	Platforms technologies visionary--value, supply-chains B2B infomediaries repurpose monetize methodologies front-end, functionalities; share empower users. Real-time impactful reinvent share, grow orchestrate syndicate rich synergies, global convergence, "seize front-end, widgets data-driven one-to-one networks convergence value infrastructures clicks-and-mortar transition." Whiteboard transparent interactive blogging peer-to-peer deliver web-readiness communities integrate optimize compelling: action-items value leading-edge supply-chains design. Semantic magnetic maximize rich infrastructures value-added plug-and-play sexy networking implement enhance communities aggregate, frictionless. Optimize architect long-tail channels blogospheres, "vortals e-business functionalities." Mindshare e-business remix webservices user-contributed integrate holistic eyeballs vertical, 24/365 e-enable, niches, users niches reinvent recontextualize.
+	
+	Monetize, matrix bleeding-edge syndicate engineer drive e-business synthesize embrace revolutionary share podcasts repurpose: impactful convergence, dynamic vortals global harness. Initiatives integrate, strategize visualize; metrics seamless clicks-and-mortar customized strategize webservices user-centric impactful integrate mindshare.
+	
+	Platforms efficient supply-chains supply-chains, "life-hacks networking design integrated beta-test technologies e-commerce!" Matrix cross-platform proactive rss-capable portals B2C value-added reinvent strategic enable scalable. Webservices evolve share redefine empower cross-platform communities recontextualize webservices visualize, viral relationships widgets robust methodologies aggregate peer-to-peer integrated. Scalable robust web-enabled remix blogospheres magnetic: seamless revolutionize life-hacks bricks-and-clicks portals supply-chains, disintermediate mindshare. Reinvent channels, authentic citizen-media social leading-edge deliver, dynamic; niches action-items action-items, methodologies, cultivate revolutionize integrated standards-compliant, e-markets, peer-to-peer enterprise matrix mindshare. B2C architectures leverage seamless turn-key open-source, orchestrate syndicate seize! Harness, cultivate, integrate; networks, embedded, "networks expedite semantic; viral beta-test one-to-one evolve interactive real-time B2C."`
+
 	for i := 0; i < b.N; i++ {
 		r := strings.NewReader(text)
 		collect(Tokenize(r))
