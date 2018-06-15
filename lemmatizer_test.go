@@ -8,39 +8,16 @@ import (
 	"github.com/clipperhouse/jargon/stackexchange"
 )
 
-func TestNewLemmatizer(t *testing.T) {
-	// Intended to narrowly test that the values have been added to the data structure
-
-	dict := stackexchange.Dictionary
-	lem := NewLemmatizer(dict)
-
-	for _, value := range dict.Lemmas() {
-		key := dict.Normalize(value)
-		_, exists := lem.values[key]
-		if !exists {
-			t.Errorf("Given added tag %q, expected exists to be true, but got %t", value, exists)
-		}
-	}
-
-	for synonym, canonical := range dict.Synonyms() {
-		key := dict.Normalize(synonym)
-		_, exists := lem.values[key]
-		if !exists {
-			t.Errorf("Given added tag %q, expected exists to be true, but got %t", canonical, exists)
-		}
-	}
-}
-
 func TestLemmatize(t *testing.T) {
 	dict := stackexchange.Dictionary
-	lem := NewLemmatizer(dict)
+	lem := NewLemmatizer(dict, 3)
 
 	original := `Here is the story of Ruby on Rails nodeJS, "Java Script", html5 and ASPNET mvc plus TCP/IP.`
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
 	got := collect(lem.Lemmatize(tokens))
-	r2 := strings.NewReader(`Here is the story of ruby-on-rails node.js, "javascript", html5 and asp.net-mvc plus tcp.`)
+	r2 := strings.NewReader(`Here is the story of ruby-on-rails node.js, "javascript", html5 and asp.net-mvc plus tcpip.`)
 	expected := collect(Tokenize(r2))
 
 	if !equals(got, expected) {
@@ -65,7 +42,7 @@ func TestLemmatize(t *testing.T) {
 
 func TestCSV(t *testing.T) {
 	dict := stackexchange.Dictionary
-	lem := NewLemmatizer(dict)
+	lem := NewLemmatizer(dict, 3)
 
 	original := `"Ruby on Rails", 3.4, "foo"
 "bar",42, "java script"`
@@ -84,7 +61,7 @@ func TestCSV(t *testing.T) {
 
 func TestTSV(t *testing.T) {
 	dict := stackexchange.Dictionary
-	lem := NewLemmatizer(dict)
+	lem := NewLemmatizer(dict, 3)
 
 	original := `Ruby on Rails	3.4	foo
 ASPNET	MVC

@@ -24,15 +24,12 @@ var trailingVersion = regexp.MustCompile(`-[\d.]+$`)
 func writeDictionary() error {
 	pageSize := 100
 
-	// Temporary, for detecting duplicates
-	tagcheck := make(map[string]struct{})
-
 	// Used in the template below
 	data := struct {
-		Tags     []string
+		Tags     map[string]string
 		Synonyms map[string]string
 	}{
-		Tags:     make([]string, 0),
+		Tags:     make(map[string]string),
 		Synonyms: make(map[string]string),
 	}
 
@@ -52,30 +49,34 @@ func writeDictionary() error {
 				}
 
 				// Trailing versions (like ruby-on-rails-4) are not interesting for our purposes
-				name := trailingVersion.ReplaceAllString(item.Name, "")
+				canonical := trailingVersion.ReplaceAllString(item.Name, "")
 
-				if isStopWord(name) {
+				if isStopWord(canonical) {
 					continue // skip it
 				}
 
+				key := normalize(canonical)
 				// Only append tags if they haven't been added already
-				if _, found := tagcheck[name]; !found {
-					tagcheck[name] = exists
-					data.Tags = append(data.Tags, name)
+				if _, found := data.Tags[key]; !found {
+					data.Tags[key] = canonical
 				}
 
 				// Only add synonyms if they haven't been added already
-				for _, synonym := range item.Synonyms {
-					key := trailingVersion.ReplaceAllString(synonym, "")
-					if isStopWord(key) {
+				for _, s := range item.Synonyms {
+					synonym := trailingVersion.ReplaceAllString(s, "")
+
+					if synonym == canonical {
 						continue // skip it
 					}
-					_, found := data.Synonyms[key]
-					if !found && key != name {
-						data.Synonyms[synonym] = name
+
+					if isStopWord(synonym) {
+						continue // skip it
 					}
-					// What if the same synonym points to multiple canonical tags?
-					// The above logic just uses the first one, maybe that's ok.
+
+					key := normalize(synonym)
+					if _, found := data.Synonyms[key]; !found {
+						data.Synonyms[key] = canonical
+					}
 				}
 			}
 
@@ -141,7 +142,6 @@ package stackexchange
 var Dictionary = &dictionary{ 
 	tags: tags, 
 	synonyms: synonyms,
-	// MaxGramLength is hard-coded in dictionary.go
 }
 
 var tags = {{ printf "%#v" .Tags }}

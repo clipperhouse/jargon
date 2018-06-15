@@ -30,7 +30,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	jargonHandler(w, r)
 }
 
-var lemmatizer = jargon.NewLemmatizer(stackexchange.Dictionary)
+var lemmatizer = jargon.NewLemmatizer(stackexchange.Dictionary, 3)
 
 func jargonHandler(w http.ResponseWriter, r *http.Request) {
 	text := r.PostFormValue("text")

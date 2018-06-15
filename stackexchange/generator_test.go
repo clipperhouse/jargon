@@ -32,6 +32,7 @@ func TestNormalize(t *testing.T) {
 		"foo.js":      "foojs",
 		".net":        ".net",
 		"asp.net-mvc": "aspnetmvc",
+		"os/2":        "os2",
 	}
 
 	for given, expected := range tests {

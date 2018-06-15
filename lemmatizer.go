@@ -7,28 +7,15 @@ import (
 
 // Lemmatizer is the main structure for looking up canonical tags
 type Lemmatizer struct {
-	values        map[string]string
+	Dictionary
 	maxGramLength int
-	normalize     func(string) string
 }
 
-// NewLemmatizer creates and populates a new Lemmatizer for the purpose of looking up canonical tags.
-// Data and rules mostly live in the Dictionary interface, which is usually imported.
-func NewLemmatizer(d Dictionary) *Lemmatizer {
+// NewLemmatizer creates and populates a new Lemmatizer for the purpose of looking up and replacing canonical tags.
+func NewLemmatizer(d Dictionary, maxGramLength int) *Lemmatizer {
 	lem := &Lemmatizer{
-		values:        make(map[string]string),
-		maxGramLength: d.MaxGramLength(),
-		normalize:     d.Normalize,
-	}
-	tags := d.Lemmas()
-	for _, tag := range tags {
-		key := lem.normalize(tag)
-		lem.values[key] = tag
-	}
-	synonyms := d.Synonyms()
-	for synonym, canonical := range synonyms {
-		key := lem.normalize(synonym)
-		lem.values[key] = canonical
+		Dictionary:    d,
+		maxGramLength: maxGramLength,
 	}
 	return lem
 }
@@ -77,8 +64,7 @@ func (lem *Lemmatizer) ngrams(sc *scanner) {
 		}
 
 		gram := join(run)
-		key := lem.normalize(gram)
-		canonical, found := lem.values[key]
+		canonical, found := lem.Lookup(gram)
 
 		if found {
 			// Emit new token, replacing consumed tokens

@@ -5,25 +5,20 @@ import "strings"
 // dictionary satisfies the jargon.Dictionary interface
 // Used in generated.go
 type dictionary struct {
-	tags     []string
+	tags     map[string]string
 	synonyms map[string]string
 }
 
-func (d *dictionary) Lemmas() []string {
-	return d.tags
-}
+func (d *dictionary) Lookup(s string) (string, bool) {
+	key := normalize(s)
+	canonical1, found1 := d.tags[key]
 
-func (d *dictionary) Synonyms() map[string]string {
-	return d.synonyms
-}
+	if found1 {
+		return canonical1, found1
+	}
 
-func (d *dictionary) MaxGramLength() int {
-	return 3
-}
-
-// Normalize returns a string suitable as a key for tag lookup, removing dots, dashes and forward slashes, and converting to lowercase
-func (d *dictionary) Normalize(s string) string {
-	return normalize(s)
+	canonical2, found2 := d.synonyms[key]
+	return canonical2, found2
 }
 
 func normalize(s string) string {
