@@ -37,7 +37,7 @@ type state func(*reader) state
 func newReader(r io.Reader) *reader {
 	b := &reader{
 		Reader: bufio.NewReader(r),
-		tokens: make(chan Token, 0),
+		tokens: make(chan Token, 20),
 	}
 	go b.run()
 	return b

@@ -34,7 +34,7 @@ func Tokenize(r io.Reader) chan Token {
 //
 // It returns all tokens (including white space), so text can be reconstructed with fidelity. Ignoring (say) whitespace is a decision for the caller.
 func TokenizeHTML(r io.Reader) chan Token {
-	result := make(chan Token, 0)
+	result := make(chan Token, 20)
 	z := html.NewTokenizer(r)
 
 	go func() {
