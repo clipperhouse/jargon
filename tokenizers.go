@@ -20,7 +20,7 @@ import (
 // All other punctuation terminates words, as does white space.
 //
 // It returns all tokens (including white space), so text can be reconstructed with fidelity. Ignoring (say) whitespace is a decision for the caller.
-func Tokenize(r io.Reader) chan Token {
+func Tokenize(r io.Reader) <-chan Token {
 	b := newReader(r)
 	return b.tokens
 }
@@ -33,7 +33,7 @@ func Tokenize(r io.Reader) chan Token {
 //	}
 //
 // It returns all tokens (including white space), so text can be reconstructed with fidelity. Ignoring (say) whitespace is a decision for the caller.
-func TokenizeHTML(r io.Reader) chan Token {
+func TokenizeHTML(r io.Reader) <-chan Token {
 	result := make(chan Token, 20)
 	z := html.NewTokenizer(r)
 

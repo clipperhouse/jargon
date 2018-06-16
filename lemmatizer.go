@@ -26,7 +26,7 @@ func NewLemmatizer(d Dictionary, maxGramLength int) *Lemmatizer {
 // becomes
 //     "I", " ", "think", " ", "ruby-on-rails", " ", "is", " ", "great"
 // Note that fewer tokens may be returned than were input, and that correct lemmatization depends on correct tokenization!
-func (lem *Lemmatizer) Lemmatize(tokens chan Token) chan Token {
+func (lem *Lemmatizer) Lemmatize(tokens <-chan Token) <-chan Token {
 	sc := newScanner(tokens)
 	go lem.run(sc)
 	return sc.outgoing
@@ -96,11 +96,12 @@ func join(tokens []Token) string {
 }
 
 type scanner struct {
-	incoming, outgoing chan Token
-	buffer             []Token
+	incoming <-chan Token
+	outgoing chan Token
+	buffer   []Token
 }
 
-func newScanner(tokens chan Token) *scanner {
+func newScanner(tokens <-chan Token) *scanner {
 	return &scanner{
 		incoming: tokens,
 		outgoing: make(chan Token, 0),

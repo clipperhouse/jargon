@@ -121,7 +121,7 @@ func strs(tokens []Token) []string {
 	return result
 }
 
-func collect(tokens chan Token) []Token {
+func collect(tokens <-chan Token) []Token {
 	result := make([]Token, 0)
 	for t := range tokens {
 		result = append(result, t)
@@ -129,7 +129,7 @@ func collect(tokens chan Token) []Token {
 	return result
 }
 
-func consume(tokens chan Token) {
+func consume(tokens <-chan Token) {
 	for range tokens {
 	}
 }
