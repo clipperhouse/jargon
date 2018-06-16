@@ -2,7 +2,9 @@
 package main
 
 import (
+	"bytes"
 	"html/template"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -44,7 +46,13 @@ func jargonHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch route {
 	case "text":
-		tokens = jargon.Tokenize(r.Body)
+		b, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		br := bytes.NewReader(b)
+		tokens = jargon.Tokenize(br)
 	case "html":
 		tokens = jargon.TokenizeHTML(r.Body)
 	default:
