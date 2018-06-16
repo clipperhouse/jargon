@@ -66,9 +66,10 @@ func BenchmarkProse(b *testing.B) {
 	
 	Platforms efficient supply-chains supply-chains, "life-hacks networking design integrated beta-test technologies e-commerce!" Matrix cross-platform proactive rss-capable portals B2C value-added reinvent strategic enable scalable. Webservices evolve share redefine empower cross-platform communities recontextualize webservices visualize, viral relationships widgets robust methodologies aggregate peer-to-peer integrated. Scalable robust web-enabled remix blogospheres magnetic: seamless revolutionize life-hacks bricks-and-clicks portals supply-chains, disintermediate mindshare. Reinvent channels, authentic citizen-media social leading-edge deliver, dynamic; niches action-items action-items, methodologies, cultivate revolutionize integrated standards-compliant, e-markets, peer-to-peer enterprise matrix mindshare. B2C architectures leverage seamless turn-key open-source, orchestrate syndicate seize! Harness, cultivate, integrate; networks, embedded, "networks expedite semantic; viral beta-test one-to-one evolve interactive real-time B2C."`
 
+	r := strings.NewReader(text)
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		r := strings.NewReader(text)
-		collect(Tokenize(r))
+		consume(Tokenize(r))
 	}
 }
 

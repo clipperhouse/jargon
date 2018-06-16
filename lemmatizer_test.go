@@ -128,3 +128,8 @@ func collect(tokens chan Token) []Token {
 	}
 	return result
 }
+
+func consume(tokens chan Token) {
+	for range tokens {
+	}
+}
