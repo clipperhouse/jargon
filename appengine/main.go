@@ -44,8 +44,7 @@ func jargonHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch route {
 	case "text":
-		tokens = jargon.TokenizeHTML(r.Body)
-		//		tokens = jargon.Tokenize(r.Body)
+		tokens = jargon.Tokenize(r.Body)
 	case "html":
 		tokens = jargon.TokenizeHTML(r.Body)
 	default:
