@@ -23,26 +23,29 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With")
 
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
 	jargonHandler(w, r)
 }
 
 var lemmatizer = jargon.NewLemmatizer(stackexchange.Dictionary, 3)
 
 func jargonHandler(w http.ResponseWriter, r *http.Request) {
-	text := r.PostFormValue("text")
-	html := r.PostFormValue("html")
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) < 2 {
+		http.NotFound(w, r)
+		return
+	}
+	route := parts[1]
 
 	var tokens chan jargon.Token
-	if len(text) > 0 {
-		r := strings.NewReader(text)
-		tokens = jargon.Tokenize(r)
-	} else {
-		r := strings.NewReader(html)
-		tokens = jargon.TokenizeHTML(r)
+
+	switch route {
+	case "text":
+		tokens = jargon.Tokenize(r.Body)
+	case "html":
+		tokens = jargon.TokenizeHTML(r.Body)
+	default:
+		http.NotFound(w, r)
+		return
 	}
 
 	lemmatized := lemmatizer.Lemmatize(tokens)
