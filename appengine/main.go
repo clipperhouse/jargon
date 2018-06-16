@@ -23,6 +23,10 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With")
 
+	if r.Method == "OPTIONS" {
+		return
+	}
+
 	jargonHandler(w, r)
 }
 
@@ -61,7 +65,3 @@ func jargonHandler(w http.ResponseWriter, r *http.Request) {
 
 var lemma = template.Must(template.New("lemma").Parse(`<span class="lemma">{{ . }}</span>`))
 var plain = template.Must(template.New("plain").Parse(`{{ . }}`))
-
-func isAjax(r *http.Request) bool {
-	return strings.ToLower(r.Header.Get("X-Requested-With")) == "xmlhttprequest"
-}
