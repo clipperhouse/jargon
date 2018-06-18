@@ -17,7 +17,8 @@ func main() {
 	if len(filePath) > 0 {
 		err := lemFile(filePath)
 		if err != nil {
-			panic(err)
+			fmt.Fprintln(os.Stderr, err.Error())
+			os.Exit(1)
 		}
 	}
 }
