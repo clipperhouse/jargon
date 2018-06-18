@@ -45,6 +45,8 @@ func init() {
 	flag.StringVar(&u, "u", "", "A URL to fetch and lemmatize")
 }
 
+var w = bufio.NewWriter(os.Stdout)
+
 func lemFile(filePath string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -90,6 +92,6 @@ func lem(r io.Reader) {
 	lemmas := lemmatizer.Lemmatize(tokens)
 
 	for l := range lemmas {
-		fmt.Print(l.String())
+		w.WriteString(l.String())
 	}
 }
