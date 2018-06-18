@@ -3,24 +3,36 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
+	"strings"
 
 	"github.com/clipperhouse/jargon"
 	"github.com/clipperhouse/jargon/stackexchange"
 )
 
-var lemmatizer = jargon.NewLemmatizer(stackexchange.Dictionary, 3)
-
 func main() {
 	flag.Parse()
 
-	if len(filePath) > 0 {
-		err := lemFile(filePath)
+	switch {
+	case len(f) > 0:
+		err := lemFile(f)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
+	case len(s) > 0:
+		lemString(s)
+	default:
+		flag.PrintDefaults()
 	}
+}
+
+var f, s string
+
+func init() {
+	flag.StringVar(&f, "f", "", "A file path to lemmatize")
+	flag.StringVar(&s, "s", "", "A (quoted) string to lemmatize")
 }
 
 func lemFile(filePath string) error {
@@ -28,19 +40,24 @@ func lemFile(filePath string) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
-	tokens := jargon.Tokenize(file)
+	lem(file)
+	return nil
+}
+
+func lemString(s string) {
+	r := strings.NewReader(s)
+	lem(r)
+}
+
+var lemmatizer = jargon.NewLemmatizer(stackexchange.Dictionary, 3)
+
+func lem(r io.Reader) {
+	tokens := jargon.Tokenize(r)
 	lemmas := lemmatizer.Lemmatize(tokens)
 
 	for l := range lemmas {
 		fmt.Print(l.String())
 	}
-
-	return nil
-}
-
-var filePath string
-
-func init() {
-	flag.StringVar(&filePath, "f", "", "")
 }
