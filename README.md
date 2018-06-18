@@ -44,6 +44,12 @@ Use `-s` to lemmatize a string and pipe to stdout
 jargon -s "Here is a string with Ruby and SQL"
 ```
 
+Use `-u` to fetch a URL and lemmatize, and pipe to stdout
+
+```bash
+jargon -u https://en.wikipedia.org/wiki/Programming_language
+```
+
 ### Online demo
 
 [https://clipperhouse.com/jargon](https://clipperhouse.com/jargon)

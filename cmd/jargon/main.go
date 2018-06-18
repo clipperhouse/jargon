@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"strings"
 
@@ -24,16 +26,19 @@ func main() {
 	case len(s) > 0:
 		lemString(s)
 		fmt.Print("\n")
+	case len(u) > 0:
+		lemURL(u)
 	default:
 		flag.PrintDefaults()
 	}
 }
 
-var f, s string
+var f, s, u string
 
 func init() {
 	flag.StringVar(&f, "f", "", "A file path to lemmatize")
 	flag.StringVar(&s, "s", "", "A (quoted) string to lemmatize")
+	flag.StringVar(&u, "u", "", "A URL to fetch and lemmatize")
 }
 
 func lemFile(filePath string) error {
@@ -52,10 +57,42 @@ func lemString(s string) {
 	lem(r)
 }
 
+func lemURL(u string) error {
+	resp, err := http.Get(u)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	r := bufio.NewReader(resp.Body)
+	b, err := r.Peek(512)
+	if err != nil {
+		return err
+	}
+
+	c := http.DetectContentType(b)
+	if strings.HasPrefix(c, "text/html") {
+		lemHTML(r)
+	} else {
+		lem(r)
+	}
+
+	return nil
+}
+
 var lemmatizer = jargon.NewLemmatizer(stackexchange.Dictionary, 3)
 
 func lem(r io.Reader) {
 	tokens := jargon.Tokenize(r)
+	lemmas := lemmatizer.Lemmatize(tokens)
+
+	for l := range lemmas {
+		fmt.Print(l.String())
+	}
+}
+
+func lemHTML(r io.Reader) {
+	tokens := jargon.TokenizeHTML(r)
 	lemmas := lemmatizer.Lemmatize(tokens)
 
 	for l := range lemmas {
