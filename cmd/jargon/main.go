@@ -27,7 +27,11 @@ func main() {
 		lemString(s)
 		fmt.Print("\n")
 	case len(u) > 0:
-		lemURL(u)
+		err := lemURL(u)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err.Error())
+			os.Exit(1)
+		}
 	default:
 		flag.PrintDefaults()
 	}
