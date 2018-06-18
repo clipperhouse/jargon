@@ -23,6 +23,7 @@ func main() {
 		}
 	case len(s) > 0:
 		lemString(s)
+		fmt.Print("\n")
 	default:
 		flag.PrintDefaults()
 	}
