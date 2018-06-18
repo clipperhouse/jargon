@@ -14,9 +14,41 @@ In turn, Jargon offers a **lemmatizer**, for recognizing canonical and synonymou
 
 (It turns out™️ that the above rules apply well to structured text such as CSV and JSON.)
 
-## Try it
+### Command line
 
-[Demo](https://clipperhouse.com/jargon)
+```bash
+go install github.com/clipperhouse/jargon/cmd/jargon
+```
+
+To display usage, simply type:
+
+```bash
+jargon
+```
+
+Use `-f` to lemmatize a file and pipe to stdout:
+
+```bash
+jargon -f file.txt
+```
+
+If you’re dealing with large files, you might wish to pipe the results into another file
+
+```bash
+jargon -f file.txt > result.txt
+```
+
+Use `-s` to lemmatize a string and pipe to stdout
+
+```bash
+jargon -s "Here is a string with Ruby and SQL"
+```
+
+### Online demo
+
+[https://clipperhouse.com/jargon](https://clipperhouse.com/jargon)
+
+### In your code
 
 [GoDoc](https://godoc.org/github.com/clipperhouse/jargon)
 
@@ -30,6 +62,8 @@ import (
     "github.com/clipperhouse/jargon/stackexchange"
 )
 
+var lem = jargon.NewLemmatizer(stackexchange.Dictionary)
+
 func main() {
     text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
     r := strings.NewReader(text)
@@ -37,8 +71,6 @@ func main() {
 
     // iterate over the resulting tokens, or pass on to the lemmatizer...
 
-    dict := stackexchange.Dictionary
-    lem := jargon.NewLemmatizer(dict)
     lemmatized := lem.Lemmatize(tokens)
     for t := range lemmatized {
         fmt.Print(t)
@@ -46,9 +78,9 @@ func main() {
 }
 ```
 
-Jargon uses a streaming API – reader in, channel out.
+Jargon uses a streaming API – reader in, channel out. This is good for avoiding blowing out memory on large files.
 
-## Problem
+## Background
 
 When dealing with technology terms in text – say, a job listing or a resume –
 it’s easy to use different words for the same thing. This is acute for things like “react” where it’s not obvious
