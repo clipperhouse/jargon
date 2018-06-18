@@ -64,35 +64,25 @@ func lemURL(u string) error {
 	}
 	defer resp.Body.Close()
 
-	r := bufio.NewReader(resp.Body)
-	b, err := r.Peek(512)
-	if err != nil {
-		return err
-	}
-
-	c := http.DetectContentType(b)
-	if strings.HasPrefix(c, "text/html") {
-		lemHTML(r)
-	} else {
-		lem(r)
-	}
-
+	lem(resp.Body)
 	return nil
 }
 
 var lemmatizer = jargon.NewLemmatizer(stackexchange.Dictionary, 3)
 
 func lem(r io.Reader) {
-	tokens := jargon.Tokenize(r)
-	lemmas := lemmatizer.Lemmatize(tokens)
+	br := bufio.NewReader(r)
+	b, _ := br.Peek(512) // ignore the error here, it usually means we can't get 512 bytes, but returns what is gotten anyway
+	c := http.DetectContentType(b)
 
-	for l := range lemmas {
-		fmt.Print(l.String())
+	var tokens <-chan jargon.Token
+
+	if strings.HasPrefix(c, "text/html") {
+		tokens = jargon.TokenizeHTML(br)
+	} else {
+		tokens = jargon.Tokenize(br)
 	}
-}
 
-func lemHTML(r io.Reader) {
-	tokens := jargon.TokenizeHTML(r)
 	lemmas := lemmatizer.Lemmatize(tokens)
 
 	for l := range lemmas {
