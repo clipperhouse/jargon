@@ -16,24 +16,23 @@ import (
 func main() {
 	flag.Parse()
 
+	var err error
+
 	switch {
 	case len(f) > 0:
-		err := lemFile(f)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
-			os.Exit(1)
-		}
+		err = lemFile(f)
 	case len(s) > 0:
 		lemString(s)
 		fmt.Print("\n")
 	case len(u) > 0:
-		err := lemURL(u)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
-			os.Exit(1)
-		}
+		err = lemURL(u)
 	default:
 		flag.PrintDefaults()
+	}
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
 	}
 }
 
@@ -45,6 +44,7 @@ func init() {
 	flag.StringVar(&u, "u", "", "A URL to fetch and lemmatize")
 }
 
+// turns out that buffering on the way out performs ~40% better, at least on my machine
 var w = bufio.NewWriter(os.Stdout)
 
 func lemFile(filePath string) error {
