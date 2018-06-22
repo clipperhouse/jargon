@@ -22,7 +22,7 @@ func main() {
 	case len(f) > 0:
 		err = lemFile(f)
 	case len(s) > 0:
-		lemString(s)
+		err = lemString(s)
 		fmt.Print("\n")
 	case len(u) > 0:
 		err = lemURL(u)
@@ -54,13 +54,12 @@ func lemFile(filePath string) error {
 	}
 	defer file.Close()
 
-	lem(file)
-	return nil
+	return lem(file)
 }
 
-func lemString(s string) {
+func lemString(s string) error {
 	r := strings.NewReader(s)
-	lem(r)
+	return lem(r)
 }
 
 func lemURL(u string) error {
@@ -70,13 +69,12 @@ func lemURL(u string) error {
 	}
 	defer resp.Body.Close()
 
-	lem(resp.Body)
-	return nil
+	return lem(resp.Body)
 }
 
 var lemmatizer = jargon.NewLemmatizer(stackexchange.Dictionary, 3)
 
-func lem(r io.Reader) {
+func lem(r io.Reader) error {
 	br := bufio.NewReader(r)
 	b, _ := br.Peek(512) // ignore the error here, it usually means we can't get 512 bytes, but returns what is gotten anyway
 	c := http.DetectContentType(b)
@@ -89,9 +87,11 @@ func lem(r io.Reader) {
 		tokens = jargon.Tokenize(br)
 	}
 
-	lemmas := lemmatizer.Lemmatize(tokens)
+	err := lemmatizer.LemmatizeAndWrite(tokens, w)
 
-	for l := range lemmas {
-		w.WriteString(l.String())
+	if err != nil {
+		return err
 	}
+
+	return nil
 }
