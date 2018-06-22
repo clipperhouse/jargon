@@ -2,6 +2,7 @@
 package jargon
 
 import (
+	"io"
 	"strings"
 )
 
@@ -27,9 +28,50 @@ func NewLemmatizer(d Dictionary, maxGramLength int) *Lemmatizer {
 //     "I", " ", "think", " ", "ruby-on-rails", " ", "is", " ", "great"
 // Note that fewer tokens may be returned than were input, and that correct lemmatization depends on correct tokenization!
 func (lem *Lemmatizer) Lemmatize(tokens <-chan Token) <-chan Token {
-	sc := newScanner(tokens)
-	go lem.run(sc)
-	return sc.outgoing
+	outgoing := make(chan Token, 0)
+	emit := func(t Token) {
+		outgoing <- t
+	}
+
+	sc := newScanner(tokens, emit)
+	go func() {
+		// Need closure to close outgoing channel on completion of run()
+		lem.run(sc)
+		close(outgoing)
+	}()
+
+	return outgoing
+}
+
+// LemmatizeAndWrite transforms a stream of tokens to their canonicalized terms, and writes them to w.
+// An error is returned if the writer returns an error
+// Tokens that are not canonicalized are returned as-is, e.g.
+//     "I", " ", "think", " ", "Ruby", " ", "on", " ", "Rails", " ", "is", " ", "great"
+// becomes
+//     "I", " ", "think", " ", "ruby-on-rails", " ", "is", " ", "great"
+// Note that fewer tokens may be returned than were input, and that correct lemmatization depends on correct tokenization!
+func (lem *Lemmatizer) LemmatizeAndWrite(tokens <-chan Token, w io.Writer) error {
+	errchan := make(chan error, 0)
+	emit := func(t Token) {
+		b := []byte(t.String())
+		_, err := w.Write(b)
+		if err != nil {
+			errchan <- err
+		}
+	}
+
+	sc := newScanner(tokens, emit)
+	go func() {
+		// Need closure to close error channel on completion of run()
+		lem.run(sc)
+		close(errchan)
+	}()
+
+	for err := range errchan {
+		return err
+	}
+
+	return nil
 }
 
 func (lem *Lemmatizer) run(sc *scanner) {
@@ -51,7 +93,6 @@ func (lem *Lemmatizer) run(sc *scanner) {
 		}
 	}
 	sc.buffer = nil
-	close(sc.outgoing)
 }
 
 func (lem *Lemmatizer) ngrams(sc *scanner) {
@@ -97,19 +138,16 @@ func join(tokens []Token) string {
 
 type scanner struct {
 	incoming <-chan Token
-	outgoing chan Token
 	buffer   []Token
+	emit     func(Token)
 }
 
-func newScanner(tokens <-chan Token) *scanner {
+func newScanner(incoming <-chan Token, emit func(Token)) *scanner {
 	return &scanner{
-		incoming: tokens,
-		outgoing: make(chan Token, 0),
+		incoming: incoming,
 		buffer:   make([]Token, 0),
+		emit:     emit,
 	}
-}
-func (sc *scanner) emit(t Token) {
-	sc.outgoing <- t
 }
 
 // drop (truncate) the first `n` elements of the buffer

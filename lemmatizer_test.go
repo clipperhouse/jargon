@@ -1,6 +1,7 @@
 package jargon
 
 import (
+	"bytes"
 	"reflect"
 	"strings"
 	"testing"
@@ -37,6 +38,28 @@ func TestLemmatize(t *testing.T) {
 		if !lookup[lemma].IsLemma() {
 			t.Errorf("Expected %q to be identified as a lemma, but it was not", lemma)
 		}
+	}
+}
+
+func TestLemmatizeAndWrite(t *testing.T) {
+	dict := stackexchange.Dictionary
+	lem := NewLemmatizer(dict, 3)
+
+	original := `Here is the story of Ruby on Rails nodeJS, "Java Script", html5 and ASPNET mvc plus TCP/IP.`
+	r1 := strings.NewReader(original)
+	tokens := Tokenize(r1)
+
+	var b bytes.Buffer
+	err := lem.LemmatizeAndWrite(tokens, &b)
+	if err != nil {
+		t.Error(err)
+	}
+	got := b.String()
+
+	expected := `Here is the story of ruby-on-rails node.js, "javascript", html5 and asp.net-mvc plus tcpip.`
+
+	if got != expected {
+		t.Errorf("Given %q, expected %q, got %q ", original, expected, got)
 	}
 }
 
@@ -100,7 +123,9 @@ func TestWordrun(t *testing.T) {
 		1: {[]string{"java"}, 1, true},                  // attempting to get 1 should work, and consume only that token
 	}
 
-	sc := newScanner(tokens)
+	noop := func(t Token) {}
+	sc := newScanner(tokens, noop)
+
 	for _, take := range takes {
 		taken, consumed, ok := sc.wordrun(take)
 		got := result{strs(taken), consumed, ok}
