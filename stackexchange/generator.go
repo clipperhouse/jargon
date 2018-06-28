@@ -102,11 +102,9 @@ func writeDictionary() error {
 		}
 	}
 
-	t := template.Must(template.New("dict").Parse(tmpl))
-
 	var source bytes.Buffer
 
-	tmplErr := t.Execute(&source, data)
+	tmplErr := tmpl.Execute(&source, data)
 	if tmplErr != nil {
 		return tmplErr
 	}
@@ -130,7 +128,7 @@ func writeDictionary() error {
 	return nil
 }
 
-var tmpl = `
+var tmpl = template.Must(template.New("").Parse(`
 package stackexchange
 
 // This file is generated. Best not to modify it, as it will likely be overwritten.
@@ -147,7 +145,7 @@ var Dictionary = &dictionary{
 var tags = {{ printf "%#v" .Tags }}
 
 var synonyms = {{ printf "%#v" .Synonyms }}
-`
+`))
 
 // sites to query, with the number of tags to get, based on eyeballing how many of the top x are 'interesting'
 var sites = map[string]int{
