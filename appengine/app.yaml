@@ -1,7 +1,7 @@
 runtime: go
-api_version: go1
+env: flex
 
-handlers:
-- url: /.*
-  secure: always
-  script: _go_app
+resources:
+  cpu: 1
+  memory_gb: 0.5
+  disk_size_gb: 10

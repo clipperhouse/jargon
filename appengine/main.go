@@ -2,22 +2,23 @@
 package main
 
 import (
-	"bytes"
+	"fmt"
 	"html/template"
-	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 
 	"github.com/clipperhouse/jargon/stackexchange"
 
 	"github.com/clipperhouse/jargon"
-
-	"google.golang.org/appengine"
 )
 
 func main() {
 	http.HandleFunc("/", mainHandler)
-	appengine.Main()
+	http.HandleFunc("/_ah/health", healthCheckHandler)
+
+	log.Print("Listening on port 8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func mainHandler(w http.ResponseWriter, r *http.Request) {
@@ -46,13 +47,7 @@ func jargonHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch route {
 	case "text":
-		b, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, err.Error(), 500)
-			return
-		}
-		br := bytes.NewReader(b)
-		tokens = jargon.Tokenize(br)
+		tokens = jargon.Tokenize(r.Body)
 	case "html":
 		tokens = jargon.TokenizeHTML(r.Body)
 	default:
@@ -73,3 +68,7 @@ func jargonHandler(w http.ResponseWriter, r *http.Request) {
 
 var lemma = template.Must(template.New("lemma").Parse(`<span class="lemma">{{ . }}</span>`))
 var plain = template.Must(template.New("plain").Parse(`{{ . }}`))
+
+func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "ok")
+}
