@@ -88,10 +88,10 @@ func lem(r io.Reader) error {
 	}
 
 	err := lemmatizer.LemmatizeAndWrite(tokens, w)
-
 	if err != nil {
 		return err
 	}
 
-	return nil
+	// Flush the buffer as a last step; return error if any
+	return w.Flush()
 }
