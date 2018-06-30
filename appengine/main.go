@@ -22,9 +22,7 @@ func main() {
 }
 
 func mainHandler(w http.ResponseWriter, r *http.Request) {
-	// CORS headers
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With")
+	cors(w)
 
 	if r.Method == "OPTIONS" {
 		return
@@ -70,5 +68,12 @@ var lemma = template.Must(template.New("lemma").Parse(`<span class="lemma">{{ . 
 var plain = template.Must(template.New("plain").Parse(`{{ . }}`))
 
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	cors(w)
 	fmt.Fprint(w, "ok")
+}
+
+func cors(w http.ResponseWriter) {
+	// CORS headers
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With")
 }
