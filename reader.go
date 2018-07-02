@@ -9,7 +9,7 @@ import (
 type reader struct {
 	*bufio.Reader
 	buffer []rune
-	tokens chan Token
+	tokens chan *Token
 	state  state
 }
 
@@ -37,7 +37,7 @@ type state func(*reader) state
 func newReader(r io.Reader) *reader {
 	b := &reader{
 		Reader: bufio.NewReader(r),
-		tokens: make(chan Token, 20),
+		tokens: make(chan *Token, 20),
 	}
 	go b.run()
 	return b
@@ -56,7 +56,7 @@ func (b *reader) accept(r rune) {
 
 func (b *reader) emit() {
 	value := string(b.buffer)
-	token := Token{
+	token := &Token{
 		value: value,
 	}
 

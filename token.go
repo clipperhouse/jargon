@@ -7,20 +7,20 @@ type Token struct {
 }
 
 // String is the string value of the token
-func (t Token) String() string {
+func (t *Token) String() string {
 	return t.value
 }
 
 // IsPunct indicates that the token should be considered 'breaking' of a run of words; a delimiter. Mostly determined
 // by the `unicode` package's definition, with some exceptions for our purposes.
-func (t Token) IsPunct() bool {
+func (t *Token) IsPunct() bool {
 	return t.punct
 }
 
 // IsSpace indicates that the token consists entirely of white space (as defined by the `unicode `package).
 //
 //A token can be both IsPunct and IsSpace -- line breaks and tabs to be punctuation for our purposes.
-func (t Token) IsSpace() bool {
+func (t *Token) IsSpace() bool {
 	return t.space
 }
 

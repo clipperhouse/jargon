@@ -27,9 +27,9 @@ func NewLemmatizer(d Dictionary, maxGramLength int) *Lemmatizer {
 // becomes
 //     "I", " ", "think", " ", "ruby-on-rails", " ", "is", " ", "great"
 // Note that fewer tokens may be returned than were input, and that correct lemmatization depends on correct tokenization!
-func (lem *Lemmatizer) Lemmatize(tokens <-chan Token) <-chan Token {
-	outgoing := make(chan Token, 0)
-	emit := func(t Token) {
+func (lem *Lemmatizer) Lemmatize(tokens <-chan *Token) <-chan *Token {
+	outgoing := make(chan *Token, 0)
+	emit := func(t *Token) {
 		outgoing <- t
 	}
 
@@ -50,9 +50,9 @@ func (lem *Lemmatizer) Lemmatize(tokens <-chan Token) <-chan Token {
 // becomes
 //     "I", " ", "think", " ", "ruby-on-rails", " ", "is", " ", "great"
 // Note that fewer tokens may be returned than were input, and that correct lemmatization depends on correct tokenization!
-func (lem *Lemmatizer) LemmatizeAndWrite(tokens <-chan Token, w io.Writer) error {
+func (lem *Lemmatizer) LemmatizeAndWrite(tokens <-chan *Token, w io.Writer) error {
 	errchan := make(chan error, 0)
-	emit := func(t Token) {
+	emit := func(t *Token) {
 		b := []byte(t.String())
 		_, err := w.Write(b)
 		if err != nil {
@@ -109,7 +109,7 @@ func (lem *Lemmatizer) ngrams(sc *scanner) {
 
 		if found {
 			// Emit new token, replacing consumed tokens
-			lemma := Token{
+			lemma := &Token{
 				value: canonical,
 				space: false,
 				punct: false,
@@ -128,7 +128,7 @@ func (lem *Lemmatizer) ngrams(sc *scanner) {
 	}
 }
 
-func join(tokens []Token) string {
+func join(tokens []*Token) string {
 	joined := make([]string, 0)
 	for _, t := range tokens {
 		joined = append(joined, t.String())
@@ -137,15 +137,15 @@ func join(tokens []Token) string {
 }
 
 type scanner struct {
-	incoming <-chan Token
-	buffer   []Token
-	emit     func(Token)
+	incoming <-chan *Token
+	buffer   []*Token
+	emit     func(*Token)
 }
 
-func newScanner(incoming <-chan Token, emit func(Token)) *scanner {
+func newScanner(incoming <-chan *Token, emit func(*Token)) *scanner {
 	return &scanner{
 		incoming: incoming,
-		buffer:   make([]Token, 0),
+		buffer:   make([]*Token, 0),
 		emit:     emit,
 	}
 }
@@ -170,8 +170,8 @@ func (sc *scanner) fill(count int) bool {
 }
 
 // Analogous to tokens.Take(take) in Linq
-func (sc *scanner) wordrun(take int) ([]Token, int, bool) {
-	taken := make([]Token, 0)
+func (sc *scanner) wordrun(take int) ([]*Token, int, bool) {
+	taken := make([]*Token, 0)
 	count := 0 // tokens consumed, not necessarily equal to take
 
 	for len(taken) < take {

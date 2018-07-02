@@ -79,7 +79,7 @@ func lem(r io.Reader) error {
 	b, _ := br.Peek(512) // ignore the error here, it usually means we can't get 512 bytes, but returns what is gotten anyway
 	c := http.DetectContentType(b)
 
-	var tokens <-chan jargon.Token
+	var tokens <-chan *jargon.Token
 
 	if strings.HasPrefix(c, "text/html") {
 		tokens = jargon.TokenizeHTML(br)
