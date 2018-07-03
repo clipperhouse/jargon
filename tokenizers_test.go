@@ -128,7 +128,7 @@ Hi! Let's talk Ruby on Rails.
 	}
 }
 
-func contains(value string, tokens []Token) bool {
+func contains(value string, tokens []*Token) bool {
 	for _, t := range tokens {
 		if t.String() == value {
 			return true
@@ -138,7 +138,7 @@ func contains(value string, tokens []Token) bool {
 }
 
 // Checks that value, punct and space are equal for two slices of token; deliberately does not check lemma
-func equals(a, b []Token) bool {
+func equals(a, b []*Token) bool {
 	if len(a) != len(b) {
 		return false
 	}

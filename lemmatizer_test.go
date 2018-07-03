@@ -27,7 +27,7 @@ func TestLemmatize(t *testing.T) {
 
 	lemmas := []string{"ruby-on-rails", "node.js", "javascript", "html5", "asp.net-mvc"}
 
-	lookup := make(map[string]Token)
+	lookup := make(map[string]*Token)
 	for _, g := range got {
 		lookup[g.String()] = g
 	}
@@ -123,7 +123,7 @@ func TestWordrun(t *testing.T) {
 		1: {[]string{"java"}, 1, true},                  // attempting to get 1 should work, and consume only that token
 	}
 
-	noop := func(t Token) {}
+	noop := func(t *Token) {}
 	sc := newScanner(tokens, noop)
 
 	for _, take := range takes {
@@ -138,7 +138,7 @@ func TestWordrun(t *testing.T) {
 }
 
 // a convenience method for getting a slice of the string values of tokens
-func strs(tokens []Token) []string {
+func strs(tokens []*Token) []string {
 	result := make([]string, 0)
 	for _, t := range tokens {
 		result = append(result, t.String())
@@ -146,15 +146,15 @@ func strs(tokens []Token) []string {
 	return result
 }
 
-func collect(tokens <-chan Token) []Token {
-	result := make([]Token, 0)
+func collect(tokens <-chan *Token) []*Token {
+	result := make([]*Token, 0)
 	for t := range tokens {
 		result = append(result, t)
 	}
 	return result
 }
 
-func consume(tokens <-chan Token) {
+func consume(tokens <-chan *Token) {
 	for range tokens {
 	}
 }
