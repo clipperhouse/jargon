@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"flag"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -23,7 +22,7 @@ func main() {
 		err = lemFile(f)
 	case len(s) > 0:
 		err = lemString(s)
-		fmt.Print("\n")
+		w.WriteByte('\n')
 	case len(u) > 0:
 		err = lemURL(u)
 	default:
@@ -31,7 +30,7 @@ func main() {
 	}
 
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
+		os.Stderr.WriteString(err.Error() + "\n")
 		os.Exit(1)
 	}
 }

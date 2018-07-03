@@ -2,7 +2,6 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -69,7 +68,7 @@ var plain = template.Must(template.New("plain").Parse(`{{ . }}`))
 
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	cors(w)
-	fmt.Fprint(w, "ok")
+	w.Write([]byte("ok"))
 }
 
 func cors(w http.ResponseWriter) {
