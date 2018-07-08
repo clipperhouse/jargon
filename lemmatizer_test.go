@@ -31,11 +31,12 @@ func TestLemmatize(t *testing.T) {
 	for _, g := range got {
 		lookup[g.String()] = g
 	}
+
 	for _, lemma := range lemmas {
 		if !contains(lemma, got) {
 			t.Errorf("Expected to find lemma %q, but did not", lemma)
 		}
-		if !lookup[lemma].IsLemma() {
+		if l, ok := lookup[lemma]; !ok || !l.IsLemma() {
 			t.Errorf("Expected %q to be identified as a lemma, but it was not", lemma)
 		}
 	}
