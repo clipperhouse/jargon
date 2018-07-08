@@ -145,7 +145,6 @@ type scanner struct {
 func newScanner(incoming <-chan *Token, emit func(*Token)) *scanner {
 	return &scanner{
 		incoming: incoming,
-		buffer:   make([]*Token, 0),
 		emit:     emit,
 	}
 }
@@ -153,7 +152,9 @@ func newScanner(incoming <-chan *Token, emit func(*Token)) *scanner {
 // drop (truncate) the first `n` elements of the buffer
 // remember, a token being in the buffer does not imply that we will emit it
 func (sc *scanner) drop(n int) {
-	sc.buffer = sc.buffer[n:]
+	var b []*Token
+	copy(b, sc.buffer[n:])
+	sc.buffer = b
 }
 
 // ensure that the buffer contains at least `count` elements; returns false if channel is exhausted before achieving the count
