@@ -152,10 +152,7 @@ func newScanner(incoming <-chan *Token, emit func(*Token)) *scanner {
 // drop (truncate) the first `n` elements of the buffer
 // remember, a token being in the buffer does not imply that we will emit it
 func (sc *scanner) drop(n int) {
-	l := len(sc.buffer[n:])
-	b := make([]*Token, l, 2*l)
-	copy(b, sc.buffer[n:])
-	sc.buffer = b
+	sc.buffer = sc.buffer[n:]
 }
 
 // ensure that the buffer contains at least `count` elements; returns false if channel is exhausted before achieving the count
