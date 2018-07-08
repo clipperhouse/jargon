@@ -1,6 +1,9 @@
 package stackexchange
 
-import "strings"
+import (
+	"bytes"
+	"strings"
+)
 
 // dictionary satisfies the jargon.Dictionary interface
 // Used in generated.go
@@ -22,18 +25,31 @@ func (d *dictionary) Lookup(s string) (string, bool) {
 }
 
 func normalize(s string) string {
-	result := make([]rune, 0)
-
-	for index, value := range s {
-		if index == 0 {
-			// Leading dots are meaningful and should not be removed, for example ".net"
-			result = append(result, value)
-			continue
+	needsRewrite := false
+loop:
+	for i, r := range s {
+		if i > 0 {
+			switch r {
+			case '.', '-', '/':
+				needsRewrite = true
+				break loop
+			}
 		}
-		if value == '.' || value == '-' || value == '/' {
-			continue
-		}
-		result = append(result, value)
 	}
-	return strings.ToLower(string(result))
+
+	if needsRewrite {
+		buf := new(bytes.Buffer)
+		for i, r := range s {
+			if i > 0 {
+				// Leading dots are meaningful and should not be removed, for example ".net"
+				switch r {
+				case '.', '-', '/':
+					continue
+				}
+			}
+			buf.WriteRune(r)
+		}
+		s = buf.String()
+	}
+	return strings.ToLower(s)
 }
