@@ -126,7 +126,7 @@ bar	42	javascript`)
 var noop = func(t *Token) {}
 
 func TestWordrun(t *testing.T) {
-	original := `java script and`
+	original := `java script and `
 	r := strings.NewReader(original)
 	tokens := Tokenize(r)
 
@@ -136,10 +136,8 @@ func TestWordrun(t *testing.T) {
 		ok       bool
 	}
 
-	takes := []int{3, 2, 1}
-
 	expecteds := map[int]result{
-		4: {[]string{}, 0, false},                       // attempting to get 3 should fail
+		4: {[]string{}, 0, false},                       // attempting to get 4 should fail
 		3: {[]string{"java", "script", "and"}, 5, true}, // attempting to get 3 should work, consuming 5
 		2: {[]string{"java", "script"}, 3, true},        // attempting to get 2 should work, consuming 3 tokens (incl the space)
 		1: {[]string{"java"}, 1, true},                  // attempting to get 1 should work, and consume only that token
@@ -147,10 +145,9 @@ func TestWordrun(t *testing.T) {
 
 	sc := newScanner(tokens, noop)
 
-	for _, take := range takes {
+	for take, expected := range expecteds {
 		taken, consumed, ok := sc.wordrun(take)
 		got := result{strs(taken), consumed, ok}
-		expected, _ := expecteds[take]
 
 		if !reflect.DeepEqual(expected, got) {
 			t.Errorf("Attempting to take %d words, expected %v but got %v", take, expected, got)
