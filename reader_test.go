@@ -1,6 +1,8 @@
 package jargon
 
 import (
+	"bytes"
+	"io/ioutil"
 	"strings"
 	"testing"
 	"unicode/utf8"
@@ -54,5 +56,20 @@ It'd be great it it’ll handle apostrophes.
 		if strings.HasSuffix(token.String(), ",") || strings.HasSuffix(token.String(), ".") {
 			t.Errorf("Found trailing punctuation in %q", token.String())
 		}
+	}
+}
+
+func BenchmarkReader(b *testing.B) {
+	file, err := ioutil.ReadFile("testdata/wikipedia.txt")
+
+	if err != nil {
+		b.Error(err)
+	}
+
+	br := bytes.NewReader(file)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		newReader(br)
 	}
 }
