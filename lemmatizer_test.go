@@ -2,6 +2,7 @@ package jargon
 
 import (
 	"bytes"
+	"io/ioutil"
 	"reflect"
 	"strings"
 	"testing"
@@ -39,6 +40,24 @@ func TestLemmatize(t *testing.T) {
 		if l, ok := lookup[lemma]; !ok || !l.IsLemma() {
 			t.Errorf("Expected %q to be identified as a lemma, but it was not", lemma)
 		}
+	}
+}
+
+func BenchmarkScanner(b *testing.B) {
+	dict := stackexchange.Dictionary
+	lem := NewLemmatizer(dict, 3)
+
+	file, err := ioutil.ReadFile("testdata/wikipedia.txt")
+
+	if err != nil {
+		b.Error(err)
+	}
+
+	r := bytes.NewReader(file)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tokens := Tokenize(r)
+		consume(lem.Lemmatize(tokens))
 	}
 }
 
@@ -104,6 +123,8 @@ bar	42	javascript`)
 	}
 }
 
+var noop = func(t *Token) {}
+
 func TestWordrun(t *testing.T) {
 	original := `java script and`
 	r := strings.NewReader(original)
@@ -124,7 +145,6 @@ func TestWordrun(t *testing.T) {
 		1: {[]string{"java"}, 1, true},                  // attempting to get 1 should work, and consume only that token
 	}
 
-	noop := func(t *Token) {}
 	sc := newScanner(tokens, noop)
 
 	for _, take := range takes {
