@@ -2,13 +2,14 @@ package jargon
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 	"unicode"
 )
 
 type reader struct {
 	*bufio.Reader
-	buffer []rune
+	buffer bytes.Buffer
 	tokens chan *Token
 	state  state
 }
@@ -51,19 +52,19 @@ func (b *reader) run() {
 }
 
 func (b *reader) accept(r rune) {
-	b.buffer = append(b.buffer, r)
+	b.buffer.WriteRune(r)
 }
 
 func (b *reader) emit() {
-	value := string(b.buffer)
+	value := b.buffer.String()
 	token := &Token{
 		value: value,
 	}
 
 	// Determine punct and/or space
-	if len(b.buffer) == 1 {
+	if len(value) == 1 {
 		// Punct and space are always one rune in our usage
-		r := b.buffer[0]
+		r := rune(value[0])
 
 		// For our purposes, newlines and tabs should be considered punctuation, i.e.,
 		// they break a word run. Lemmatizers should test for punct *before* testing for space.
@@ -72,7 +73,7 @@ func (b *reader) emit() {
 	}
 
 	b.tokens <- token
-	b.buffer = nil
+	b.buffer.Reset()
 }
 
 func readMain(b *reader) state {
