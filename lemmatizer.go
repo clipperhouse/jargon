@@ -28,7 +28,7 @@ func NewLemmatizer(d Dictionary, maxGramLength int) *Lemmatizer {
 //     "I", " ", "think", " ", "ruby-on-rails", " ", "is", " ", "great"
 // Note that fewer tokens may be returned than were input, and that correct lemmatization depends on correct tokenization!
 func (lem *Lemmatizer) Lemmatize(tokens <-chan *Token) <-chan *Token {
-	outgoing := make(chan *Token, 0)
+	outgoing := make(chan *Token, 100)
 	emit := func(t *Token) {
 		outgoing <- t
 	}
