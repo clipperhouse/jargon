@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	"golang.org/x/net/html"
 )
@@ -120,22 +121,22 @@ func (t *TextTokens) readWord() *Token {
 }
 
 func (t *TextTokens) token() *Token {
-	value := t.buffer.String()
-	if len(value) == 0 { // eof
+	b := t.buffer.Bytes()
+	if len(b) == 0 { // eof
 		return nil
 	}
 
 	token := &Token{
-		value: value,
+		value: string(b),
 	}
 
 	// Determine punct and/or space
-	if len(value) == 1 {
+	if utf8.RuneCount(b) == 1 {
 		// Punct and space are always one rune in our usage
-		r := rune(value[0])
+		r, _ := utf8.DecodeRune(b)
 
 		// For our purposes, newlines and tabs should be considered punctuation, i.e.,
-		// they break a word run. Lemmatizers should test for punct *before* testing for space.
+		// they break a word run. Consumers should test for punct *before* testing for space.
 		token.punct = isPunct(r) || r == '\r' || r == '\n' || r == '\t'
 		token.space = unicode.IsSpace(r)
 	}
