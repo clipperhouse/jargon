@@ -43,7 +43,7 @@ func TestLemmatize(t *testing.T) {
 	}
 }
 
-func BenchmarkScanner(b *testing.B) {
+func BenchmarkLemmatizer(b *testing.B) {
 	dict := stackexchange.Dictionary
 	lem := NewLemmatizer(dict, 3)
 
@@ -58,28 +58,6 @@ func BenchmarkScanner(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		tokens := Tokenize(r)
 		consume(lem.Lemmatize(tokens))
-	}
-}
-
-func TestLemmatizeAndWrite(t *testing.T) {
-	dict := stackexchange.Dictionary
-	lem := NewLemmatizer(dict, 3)
-
-	original := `Here is the story of Ruby on Rails nodeJS, "Java Script", html5 and ASPNET mvc plus TCP/IP.`
-	r1 := strings.NewReader(original)
-	tokens := Tokenize(r1)
-
-	var b bytes.Buffer
-	err := lem.LemmatizeAndWrite(tokens, &b)
-	if err != nil {
-		t.Error(err)
-	}
-	got := b.String()
-
-	expected := `Here is the story of ruby-on-rails node.js, "javascript", html5 and asp.net-mvc plus tcpip.`
-
-	if got != expected {
-		t.Errorf("Given %q, expected %q, got %q ", original, expected, got)
 	}
 }
 
@@ -143,7 +121,7 @@ func TestWordrun(t *testing.T) {
 		1: {[]string{"java"}, 1, true},                  // attempting to get 1 should work, and consume only that token
 	}
 
-	sc := newScanner(tokens, noop)
+	sc := newLemmaTokens(nil, tokens)
 
 	for take, expected := range expecteds {
 		taken, consumed, ok := sc.wordrun(take)
@@ -164,15 +142,23 @@ func strs(tokens []*Token) []string {
 	return result
 }
 
-func collect(tokens <-chan *Token) []*Token {
+func collect(tokens Tokens) []*Token {
 	result := make([]*Token, 0)
-	for t := range tokens {
+	for {
+		t := tokens.Next()
+		if t == nil {
+			break
+		}
 		result = append(result, t)
 	}
 	return result
 }
 
-func consume(tokens <-chan *Token) {
-	for range tokens {
+func consume(tokens Tokens) {
+	for {
+		t := tokens.Next()
+		if t == nil {
+			break
+		}
 	}
 }

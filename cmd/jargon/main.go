@@ -75,20 +75,16 @@ var lemmatizer = jargon.NewLemmatizer(stackexchange.Dictionary, 3)
 
 func lem(r io.Reader) error {
 	br := bufio.NewReader(r)
-	b, _ := br.Peek(512) // ignore the error here, it usually means we can't get 512 bytes, but returns what is gotten anyway
-	c := http.DetectContentType(b)
 
-	var tokens <-chan *jargon.Token
+	tokens := jargon.Tokenize(br)
+	lemmas := lemmatizer.Lemmatize(tokens)
 
-	if strings.HasPrefix(c, "text/html") {
-		tokens = jargon.TokenizeHTML(br)
-	} else {
-		tokens = jargon.Tokenize(br)
-	}
-
-	err := lemmatizer.LemmatizeAndWrite(tokens, w)
-	if err != nil {
-		return err
+	for {
+		t := lemmas.Next()
+		if t == nil {
+			break
+		}
+		w.WriteString(t.String())
 	}
 
 	// Flush the buffer as a last step; return error if any

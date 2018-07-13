@@ -1,5 +1,11 @@
 package jargon
 
+// Tokens represents an "iterator" interface for the results of tokenization or lemmatization
+// Callers should call Next() until it returns nil, indicating the end of data
+type Tokens interface {
+	Next() *Token
+}
+
 // Token represents a piece of text with metadata.
 type Token struct {
 	value               string

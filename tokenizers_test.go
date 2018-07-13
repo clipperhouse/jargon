@@ -2,13 +2,14 @@ package jargon
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"strings"
 	"testing"
 	"unicode/utf8"
 )
 
-func TestTechProse(t *testing.T) {
+func TestTokenize(t *testing.T) {
 	text := `Hi! This is a test of tech terms.
 It should consider F#, C++, .net, Node.JS and 3.141592 to be their own tokens. 
 Similarly, #hashtag and @handle should work, as should an first.last+@example.com.
@@ -16,13 +17,23 @@ It should—wait for it—break on things like em-dashes and "quotes" and it end
 It'd be great it it’ll handle apostrophes.
 `
 	r := strings.NewReader(text)
-	got := collect(Tokenize(r))
+	tokens := Tokenize(r)
+
+	var got []*Token
+
+	for {
+		tok := tokens.Next()
+		if tok == nil {
+			break
+		}
+		got = append(got, tok)
+	}
 
 	expected := []string{
 		"Hi", "!",
 		"F#", "C++", ".net", "Node.JS", "3.141592",
 		"#hashtag", "@handle", "first.last+@example.com",
-		"should", "—", "wait", "it", "break", "em-dashes", "quotes",
+		"should", "—", "wait", "it", "break", "em-dashes", "quotes", "ends",
 		"It'd", "it’ll", "apostrophes",
 	}
 
@@ -35,7 +46,8 @@ It'd be great it it’ll handle apostrophes.
 	// Check that last .
 	nextToLast := got[len(got)-2]
 	if nextToLast.String() != "." {
-		t.Errorf("The next-to-last token should be %q, got %q.", ".", nextToLast)
+		fmt.Println(got)
+		t.Errorf("next-to-last token should be %q, got %q.", ".", nextToLast)
 	}
 
 	// Check that last \
@@ -90,7 +102,7 @@ func TestURLs(t *testing.T) {
 
 	for input, expected := range tests {
 		r := strings.NewReader(input)
-		got := <-Tokenize(r) // just take the first token
+		got := Tokenize(r).Next() // just take the first token
 
 		if got.String() != expected {
 			t.Errorf("Expected URL %s to result in %s, but got %s", input, expected, got)
@@ -98,9 +110,8 @@ func TestURLs(t *testing.T) {
 	}
 }
 
-func TestTechHTML(t *testing.T) {
-	h := `
-<html>
+func TestTokenizeHTML(t *testing.T) {
+	h := `<html>
 <p foo="bar">
 Hi! Let's talk Ruby on Rails.
 <!-- Ignore ASPNET MVC in comments -->

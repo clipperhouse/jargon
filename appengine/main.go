@@ -40,7 +40,7 @@ func jargonHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	route := parts[1]
 
-	var tokens <-chan *jargon.Token
+	var tokens jargon.Tokens
 
 	switch route {
 	case "text":
@@ -54,7 +54,11 @@ func jargonHandler(w http.ResponseWriter, r *http.Request) {
 
 	lemmatized := lemmatizer.Lemmatize(tokens)
 
-	for t := range lemmatized {
+	for {
+		t := lemmatized.Next()
+		if t == nil {
+			break
+		}
 		if t.IsLemma() {
 			lemma.Execute(w, t)
 		} else {
