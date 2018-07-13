@@ -27,6 +27,8 @@ func Tokenize(r io.Reader) *TextTokens {
 	return newTextTokens(r)
 }
 
+// TextTokens is an "iterator" for the results of lemmatization; keep calling .Next() until it returns nil, indicating the end
+// TextTokens implements the Tokens interface
 type TextTokens struct {
 	incoming *bufio.Reader
 	buffer   bytes.Buffer
@@ -38,12 +40,13 @@ func newTextTokens(r io.Reader) *TextTokens {
 	}
 }
 
+// Next returns the next token; nil indicates end of data
 func (t *TextTokens) Next() *Token {
 	if t == nil {
 		return nil
 	}
 	if t.buffer.Len() > 0 {
-		// Punct or space accepted in previous call to readWordToken
+		// Punct or space accepted in previous call to readWord
 		return t.token()
 	}
 	for {
@@ -63,19 +66,20 @@ func (t *TextTokens) Next() *Token {
 			isLeadingPunct := mightBeLeadingPunct(r) && !t.peekTerminator()
 			if isLeadingPunct {
 				// Treat it as start of a word
-				return t.readWordToken()
+				return t.readWord()
 			}
+			// Regular punct, emit it
 			return t.token()
 		default:
 			// It's a letter
 			t.accept(r)
-			return t.readWordToken()
+			return t.readWord()
 		}
 	}
 }
 
-// Important that this function only gets entered from the readToken loop; readToken determines 'word start'
-func (t *TextTokens) readWordToken() *Token {
+// Important that this function only gets entered from the token() loop, which determines 'word start'
+func (t *TextTokens) readWord() *Token {
 	for {
 		r, _, err := t.incoming.ReadRune()
 		switch {
@@ -83,10 +87,10 @@ func (t *TextTokens) readWordToken() *Token {
 			// Current word is terminated by EOF, send it back
 			return t.token()
 		case mightBeMidPunct(r):
-			// Look ahead to see if dot or apostrophe is acting as punctuation,
-			// by being the last char, or being followed by space or more punctuation.
-			if t.peekTerminator() {
-				// It's not mid-punct, it's regular punct
+			// Look ahead to see if it's followed by space or more punctuation
+			followedByTerminator := t.peekTerminator()
+			if followedByTerminator {
+				// It's just regular punct, treat it as such
 
 				// Get the current word token without the punct
 				tok := t.token()
@@ -97,8 +101,7 @@ func (t *TextTokens) readWordToken() *Token {
 				// Emit the word token
 				return tok
 			}
-			// Otherwise it's a mid-word e.g. dot or apostrophe or hyphen,
-			// treat it like a letter
+			// Else, it's mid-word punct, treat it like a letter
 			t.accept(r)
 		case isPunct(r) || unicode.IsSpace(r):
 			// Get the current word token without the punct
