@@ -78,7 +78,7 @@ func (t *TextTokens) Next() *Token {
 	}
 }
 
-// Important that this function only gets entered from the token() loop, which determines 'word start'
+// Important that this function only gets entered from the Next() loop, which determines 'word start'
 func (t *TextTokens) readWord() *Token {
 	for {
 		r, _, err := t.incoming.ReadRune()
