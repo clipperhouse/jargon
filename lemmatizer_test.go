@@ -53,9 +53,9 @@ func BenchmarkLemmatizer(b *testing.B) {
 		b.Error(err)
 	}
 
-	r := bytes.NewReader(file)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		r := bytes.NewReader(file)
 		tokens := Tokenize(r)
 		consume(lem.Lemmatize(tokens))
 	}
