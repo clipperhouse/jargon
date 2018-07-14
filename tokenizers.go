@@ -11,10 +11,15 @@ import (
 	"golang.org/x/net/html"
 )
 
-// Tokenize returns a channel of Tokens from a io.Reader, intended to be ranged over thus:
+// Tokenize returns an 'iterator' of Tokens from a io.Reader. Call .Next() until it returns nil:
 //	tokens := Tokenize(reader)
-//	for t := range tokens {
-// 		// do stuff
+//	for {
+//		token := tokens.Next()
+//		if token == nil {
+//			break
+//		}
+//
+// 		// do stuff with token
 //	}
 //
 // The tokenizer is targeted to English text that contains tech terms, so things like C++ and .Net are handled as single units.

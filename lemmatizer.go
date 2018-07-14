@@ -21,10 +21,22 @@ func NewLemmatizer(d Dictionary, maxGramLength int) *Lemmatizer {
 	return lem
 }
 
-// Lemmatize transforms a stream of tokens to their canonicalized terms.
-// Tokens that are not canonicalized are returned as-is, e.g.
+// Lemmatize transforms a tokens to their canonicalized terms.
+// It returns an 'iterator' of Tokens, given input Tokens. Call .Next() until it returns nil:
+//	tokens := Tokenize(reader)
+//	lem := NewLemmatizer(stackexchange.Dictionary, 3)
+//	lemmas := lem.Lemmatize(tokens)
+//	for {
+//		lemma := lemmas.Next()
+//		if lemma == nil {
+//			break
+//		}
+//
+// 		// do stuff with lemma
+//	}
+// Tokens that are not canonicalized are returned as-is, e.g. for input:
 //     "I", " ", "think", " ", "Ruby", " ", "on", " ", "Rails", " ", "is", " ", "great"
-// becomes
+// lemmatized output:
 //     "I", " ", "think", " ", "ruby-on-rails", " ", "is", " ", "great"
 // Note that fewer tokens may be returned than were input, and that correct lemmatization depends on correct tokenization!
 func (lem *Lemmatizer) Lemmatize(tokens Tokens) *LemmaTokens {
