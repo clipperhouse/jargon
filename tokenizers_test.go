@@ -18,16 +18,7 @@ It'd be great it it’ll handle apostrophes.
 `
 	r := strings.NewReader(text)
 	tokens := Tokenize(r)
-
-	var got []*Token
-
-	for {
-		tok := tokens.Next()
-		if tok == nil {
-			break
-		}
-		got = append(got, tok)
-	}
+	got := collect(tokens)
 
 	expected := []string{
 		"Hi", "!", "a",
