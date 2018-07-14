@@ -30,7 +30,7 @@ It'd be great it it’ll handle apostrophes.
 	}
 
 	expected := []string{
-		"Hi", "!",
+		"Hi", "!", "a",
 		"F#", "C++", ".net", "Node.JS", "3.141592",
 		"#hashtag", "@handle", "first.last+@example.com",
 		"should", "—", "wait", "it", "break", "em-dashes", "quotes", "ends",

@@ -126,22 +126,53 @@ func (t *TextTokens) token() *Token {
 		return nil
 	}
 
-	token := &Token{
-		value: string(b),
-	}
+	// Got the bytes, can reset
+	t.buffer.Reset()
 
 	// Determine punct and/or space
 	if utf8.RuneCount(b) == 1 {
 		// Punct and space are always one rune in our usage
 		r, _ := utf8.DecodeRune(b)
 
-		// For our purposes, newlines and tabs should be considered punctuation, i.e.,
-		// they break a word run. Consumers should test for punct *before* testing for space.
-		token.punct = isPunct(r) || r == '\r' || r == '\n' || r == '\t'
-		token.space = unicode.IsSpace(r)
+		known, ok := knownTokens[r]
+
+		if ok {
+			return known
+		}
+
+		return &Token{
+			value: string(r),
+			punct: isPunct(r) || r == '\r' || r == '\n' || r == '\t',
+			space: unicode.IsSpace(r),
+		}
 	}
-	t.buffer.Reset()
-	return token
+
+	return &Token{
+		value: string(b),
+	}
+}
+
+var knownTokens = map[rune]*Token{
+	' ': &Token{
+		value: " ",
+		punct: false,
+		space: true,
+	},
+	'\r': &Token{
+		value: "\r",
+		punct: true,
+		space: true,
+	},
+	'\n': &Token{
+		value: "\n",
+		punct: true,
+		space: true,
+	},
+	'\t': &Token{
+		value: "\t",
+		punct: true,
+		space: true,
+	},
 }
 
 func (t *TextTokens) accept(r rune) {
