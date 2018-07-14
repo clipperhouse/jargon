@@ -145,11 +145,7 @@ func (t *TextTokens) token() *Token {
 			return known
 		}
 
-		return &Token{
-			value: string(r),
-			punct: isPunct(r) || r == '\r' || r == '\n' || r == '\t',
-			space: unicode.IsSpace(r),
-		}
+		return newTokenFromRune(r)
 	}
 
 	return &Token{
@@ -157,27 +153,24 @@ func (t *TextTokens) token() *Token {
 	}
 }
 
-var knownTokens = map[rune]*Token{
-	' ': &Token{
-		value: " ",
-		punct: false,
-		space: true,
-	},
-	'\r': &Token{
-		value: "\r",
-		punct: true,
-		space: true,
-	},
-	'\n': &Token{
-		value: "\n",
-		punct: true,
-		space: true,
-	},
-	'\t': &Token{
-		value: "\t",
-		punct: true,
-		space: true,
-	},
+func newTokenFromRune(r rune) *Token {
+	return &Token{
+		value: string(r),
+		punct: isPunct(r) || r == '\r' || r == '\n' || r == '\t',
+		space: unicode.IsSpace(r),
+	}
+}
+
+var knownTokens = make(map[rune]*Token)
+
+func init() {
+	runes := []rune{
+		' ', '\r', '\n', '\t', '.', ',',
+	}
+
+	for _, r := range runes {
+		knownTokens[r] = newTokenFromRune(r)
+	}
 }
 
 func (t *TextTokens) accept(r rune) {
