@@ -6,13 +6,11 @@ Jargon offers a **tokenizer** for Go, with an emphasis on handling technology te
 - #hashtags and @handles
 - Simple URLs and email address are handled _pretty well_, though can be notoriously hard to get right
 
-There is also an HTML tokenizer, which applies the above to text nodes in markup.
-
-The tokenizer preserves all tokens verbatim, so that the original text can be reconstructed with fidelity (“round tripped”).
+The tokenizer preserves all tokens verbatim, including whitespace and punctuation, so the original text can be reconstructed with fidelity (“round tripped”).
 
 In turn, Jargon offers a **lemmatizer**, for recognizing canonical and synonymous terms. For example the n-gram “Ruby on Rails” becomes ruby-on-rails. It implements “insensitivity” to spaces, dots and dashes.
 
-(It turns out™️ that the above rules apply well to structured text such as CSV and JSON.)
+(It turns out™️ that the above rules work well in structured text such as CSV and JSON.)
 
 ### Command line
 
@@ -75,16 +73,28 @@ func main() {
     r := strings.NewReader(text)
     tokens := jargon.Tokenize(r)
 
-    // iterate over the resulting tokens, or pass on to the lemmatizer...
+    // Iterate by calling Next() until nil
+    for {
+        tok := tokens.Next()
+        if tok == nil {
+            break
+        }
 
-    lemmatized := lem.Lemmatize(tokens)
-    for t := range lemmatized {
-        fmt.Print(t)
+        // Do stuff with token
+    }
+
+    // Or! Pass tokens on to the lemmatizer
+    lemmas := lem.Lemmatize(tokens)
+    for {
+        lemma := tokens.Next()
+        if lemma == nil {
+            break
+        }
+
+        fmt.Print(lemma)
     }
 }
 ```
-
-Jargon uses a streaming API – reader in, channel out. This is good for avoiding blowing out memory on large files.
 
 ## Background
 
@@ -111,6 +121,6 @@ Recognizing mutli-words-as-a-single-term (“Ruby on Rails”) is [named-entity 
 
 Dunno yet, some ideas…
 
-- Recognition of domain terms appearing in text
-- NLP on unstructured data, when we wish to ensure consistency of vocabulary, for statistical analysis.
+- Recognition of domain terms in text
+- NLP for unstructured data, when we wish to ensure consistency of vocabulary, for statistical analysis.
 - Search applications, where searches for “Ruby on Rails” are understood as an entity, instead of three unrelated words, or to ensure that “React” and “reactjs” and “react.js” and handled synonmously.
