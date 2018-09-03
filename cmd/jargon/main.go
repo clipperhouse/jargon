@@ -65,7 +65,7 @@ Alternatively, use %[1]s 'standalone' by passing flags for text sources:
 `
 		fmt.Fprintf(out, usage, cmd)
 		flag.PrintDefaults()
-		fmt.Fprintf(out, "\n  Example: jargon -f /path/to/file.txt\n\n")
+		fmt.Fprintf(out, "\n  Example: %s -f /path/to/file.txt\n\n", cmd)
 		fmt.Fprintf(out, "Results are piped to Stdout (regardless of input)\n\n")
 	}
 }
