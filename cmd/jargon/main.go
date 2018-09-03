@@ -56,7 +56,7 @@ func init() {
 		out := flag.CommandLine.Output()
 
 		usage := `
-Usage: %[1]s accepts piped text from tools such as cat, curl or echo, via Stdin
+Usage: %[1]s accepts piped UTF8 text from tools such as cat, curl or echo, via Stdin
 		
   Example: echo "I luv Rails" | %[1]s
 

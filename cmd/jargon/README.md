@@ -1,10 +1,14 @@
 This package is the command-line version of [Jargon](https://github.com/clipperhouse/jargon).
 
-### Command line
+### Installation
 
 ```bash
 go install github.com/clipperhouse/jargon/cmd/jargon
 ```
+
+(Assumes a [Go installation](https://golang.org/dl/).)
+
+### Usage
 
 To display usage, simply type:
 
@@ -12,26 +16,21 @@ To display usage, simply type:
 jargon
 ```
 
-Use `-f` to lemmatize a file and pipe to stdout:
-
-```bash
-jargon -f file.txt
 ```
+Usage: jargon accepts piped UTF8 text from tools such as cat, curl or echo, via Stdin
 
-If you’re dealing with large files, you might wish to pipe the results into another file
+  Example: echo "I luv Rails" | jargon
 
-```bash
-jargon -f file.txt > result.txt
-```
+Alternatively, use jargon 'standalone' by passing flags for text sources:
 
-Use `-s` to lemmatize a string and pipe to stdout
+  -f string
+    	A file path to lemmatize
+  -s string
+    	A (quoted) string to lemmatize
+  -u string
+    	A URL to fetch and lemmatize
 
-```bash
-jargon -s "Here is a string with Ruby and SQL"
-```
+  Example: jargon -f /path/to/file.txt
 
-Use `-u` to fetch a URL and lemmatize, and pipe to stdout
-
-```bash
-jargon -u https://en.wikipedia.org/wiki/Programming_language
+Results are piped to Stdout (regardless of input)
 ```
