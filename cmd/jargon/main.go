@@ -15,20 +15,20 @@ import (
 func main() {
 	flag.Parse()
 
-	var err error
-
 	switch {
 	case len(f) > 0:
-		err = lemFile(f)
+		check(lemFile(f))
 	case len(s) > 0:
-		err = lemString(s)
+		check(lemString(s))
 		w.WriteByte('\n')
 	case len(u) > 0:
-		err = lemURL(u)
+		check(lemURL(u))
 	default:
 		flag.PrintDefaults()
 	}
+}
 
+func check(err error) {
 	if err != nil {
 		os.Stderr.WriteString(err.Error() + "\n")
 		os.Exit(1)
@@ -53,12 +53,12 @@ func lemFile(filePath string) error {
 	}
 	defer file.Close()
 
-	return lem(file)
+	return lem(file, w)
 }
 
 func lemString(s string) error {
 	r := strings.NewReader(s)
-	return lem(r)
+	return lem(r, w)
 }
 
 func lemURL(u string) error {
@@ -68,12 +68,12 @@ func lemURL(u string) error {
 	}
 	defer resp.Body.Close()
 
-	return lem(resp.Body)
+	return lem(resp.Body, w)
 }
 
 var lemmatizer = jargon.NewLemmatizer(stackexchange.Dictionary, 3)
 
-func lem(r io.Reader) error {
+func lem(r io.Reader, w *bufio.Writer) error {
 	br := bufio.NewReader(r)
 
 	tokens := jargon.Tokenize(br)

@@ -1,6 +1,9 @@
 package main
 
 import (
+	"bufio"
+	"io/ioutil"
+	"strings"
 	"testing"
 )
 
@@ -12,7 +15,10 @@ func BenchmarkFile(b *testing.B) {
 
 func TestFlush(t *testing.T) {
 	s := "Hi objective c and pythOn"
-	err := lemString(s)
+	r := strings.NewReader(s)
+	w := bufio.NewWriter(ioutil.Discard)
+
+	err := lem(r, w)
 	if err != nil {
 		t.Error(err)
 	}
