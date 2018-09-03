@@ -12,8 +12,9 @@ type dictionary struct {
 	synonyms map[string]string
 }
 
-func (d *dictionary) Lookup(s string) (string, bool) {
-	key := normalize(s)
+func (d *dictionary) Lookup(s []string) (string, bool) {
+	gram := strings.Join(s, "")
+	key := normalize(gram)
 	canonical1, found1 := d.tags[key]
 
 	if found1 {
