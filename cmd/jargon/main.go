@@ -21,7 +21,6 @@ func main() {
 		check(lemFile(f))
 	case len(s) > 0:
 		check(lemString(s))
-		w.WriteByte('\n')
 	case len(u) > 0:
 		check(lemURL(u))
 	default:
@@ -45,33 +44,32 @@ func check(err error) {
 	}
 }
 
-var f, s, u string
+var f, s, u, o string
 
 func init() {
-	flag.StringVar(&f, "f", "", "A file path to lemmatize")
+	flag.StringVar(&f, "f", "", "Input file path")
 	flag.StringVar(&s, "s", "", "A (quoted) string to lemmatize")
 	flag.StringVar(&u, "u", "", "A URL to fetch and lemmatize")
+	flag.StringVar(&o, "o", "", "Output file path")
 	flag.Usage = func() {
 		cmd := os.Args[0]
 		out := flag.CommandLine.Output()
 
 		usage := `
-Usage: %[1]s accepts piped UTF8 text from tools such as cat, curl or echo, via Stdin
+Usage:
+
+%[1]s accepts piped UTF8 text from Stdin and pipes lemmatized text to Stdout
 		
   Example: echo "I luv Rails" | %[1]s
 
-Alternatively, use %[1]s 'standalone' by passing flags for text sources:
+Alternatively, use %[1]s 'standalone' by passing flags for inputs and outputs:
 
 `
 		fmt.Fprintf(out, usage, cmd)
 		flag.PrintDefaults()
-		fmt.Fprintf(out, "\n  Example: %s -f /path/to/file.txt\n\n", cmd)
-		fmt.Fprintf(out, "Results are piped to Stdout (regardless of input)\n\n")
+		fmt.Fprintf(out, "\n  Example: %s -f /path/to/original.txt -o /path/to/lemmatized.txt\n\n", cmd)
 	}
 }
-
-// turns out that buffering on the way out performs ~40% better, at least on my machine
-var w = bufio.NewWriter(os.Stdout)
 
 func lemFile(filePath string) error {
 	file, err := os.Open(filePath)
@@ -80,12 +78,12 @@ func lemFile(filePath string) error {
 	}
 	defer file.Close()
 
-	return lem(file, w)
+	return lem(file)
 }
 
 func lemString(s string) error {
 	r := strings.NewReader(s)
-	return lem(r, w)
+	return lem(r)
 }
 
 func lemURL(u string) error {
@@ -95,16 +93,30 @@ func lemURL(u string) error {
 	}
 	defer resp.Body.Close()
 
-	return lem(resp.Body, w)
+	return lem(resp.Body)
 }
 
 func lemStdin() error {
-	return lem(os.Stdin, w)
+	return lem(os.Stdin)
 }
 
 var lemmatizer = jargon.NewLemmatizer(stackexchange.Dictionary, 3)
 
-func lem(r io.Reader, w *bufio.Writer) error {
+func lem(r io.Reader) error {
+	var w *bufio.Writer
+
+	if len(o) > 0 { // output file flag
+		f, err := os.Create(o)
+		check(err)
+		defer f.Close()
+
+		w = bufio.NewWriter(f)
+	}
+
+	if w == nil {
+		w = bufio.NewWriter(os.Stdout)
+	}
+
 	br := bufio.NewReader(r)
 
 	tokens := jargon.Tokenize(br)
@@ -115,7 +127,8 @@ func lem(r io.Reader, w *bufio.Writer) error {
 		if t == nil {
 			break
 		}
-		w.WriteString(t.String())
+		_, err := w.WriteString(t.String())
+		check(err)
 	}
 
 	// Flush the buffer as a last step; return error if any
