@@ -1,2 +1,6 @@
 .vscode/*
 *.test
+bin/
+obj/
+packages/
+.vs/
