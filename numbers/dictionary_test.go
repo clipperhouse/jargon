@@ -18,7 +18,6 @@ func TestInts(t *testing.T) {
 		{[]string{"five"}, expected{"5", true}},
 		{[]string{"thirtyfive"}, expected{"35", true}},
 		{[]string{"thirty-five"}, expected{"35", true}},
-		{[]string{"foo"}, expected{"", false}},
 		{[]string{"three", "hundred"}, expected{"300", true}},
 		{[]string{"3", "hundred"}, expected{"300", true}},
 		{[]string{"+3", "hundred"}, expected{"300", true}},
@@ -27,6 +26,14 @@ func TestInts(t *testing.T) {
 
 		{[]string{"4.58", "hundred"}, expected{"458", true}},
 		{[]string{"4.581", "hundred"}, expected{"458.1", true}},
+
+		{[]string{"foo"}, expected{"", false}},
+		{[]string{"hundred"}, expected{"", false}},
+		{[]string{"hundred", "3"}, expected{"", false}},
+		{[]string{"million", "seven"}, expected{"", false}},
+		{[]string{"three", "foo"}, expected{"", false}},
+		{[]string{"three", "hundred", "foo"}, expected{"", false}},
+		{[]string{"a", "hundred"}, expected{"", false}},
 	}
 
 	for _, test := range tests {

@@ -7,7 +7,7 @@ import (
 
 // Given a phrase like "three hundred thousand", return "300000"
 // The form is exactly one leading number followed by zero or more magnitudes
-// In the above example, "thirty five" is the number, "hundred" and "thousand" are magnitudes
+// In the above example, "three" is the number, "hundred" and "thousand" are magnitudes
 // All passed tokens must contribute to the number for the lookup to succeed
 
 // Test cases:
