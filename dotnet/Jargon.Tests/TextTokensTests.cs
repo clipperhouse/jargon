@@ -9,11 +9,11 @@ namespace Jargon.Tests
     public class TextTokensTest
     {
         [Theory]
-        [InlineData("Hi! This is a test of tech terms.\nIt should consider F#, C++, .net, Node.JS and 3.141592 to be their own tokens. \nSimilarly, #hashtag and @handle should work, as should an first.last+@example.com.\nIt should—wait for it—break on things like em-dashes and \"quotes\" and it ends.\nIt'd be great it it’ll handle apostrophes.\n",
+        [InlineData("Hi! This is a test of tech terms.\nIt should consider F#, C++, .net, Node.JS and 3.141592 and -123 to be their own tokens. \nSimilarly, #hashtag and @handle should work, as should an first.last+@example.com.\nIt should—wait for it—break on things like em-dashes and \"quotes\" and it ends.\nIt'd be great it it’ll handle apostrophes.\n",
             new[]
             {
                 "Hi", "!", "a",
-                "F#", "C++", ".net", "Node.JS", "3.141592",
+                "F#", "C++", ".net", "Node.JS", "3.141592", "-123",
                 "#hashtag", "@handle", "first.last+@example.com",
                 "should", "—", "wait", "it", "break", "em-dashes", "quotes", "ends",
                 "It'd", "it’ll", "apostrophes"
