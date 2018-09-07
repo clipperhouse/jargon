@@ -91,8 +91,7 @@ func (t *LemmaTokens) ngrams() *Token {
 			continue // on to the next n-gram
 		}
 
-		gram := join(run)
-		canonical, found := t.lem.Lookup(gram)
+		canonical, found := t.lem.Lookup(run)
 
 		if found {
 			// Emit new token, replacing consumed tokens
@@ -108,8 +107,9 @@ func (t *LemmaTokens) ngrams() *Token {
 
 		if take == 1 {
 			// No n-grams, just emit
+			original := t.buffer[0]
 			t.drop(1)
-			return run[0]
+			return original
 		}
 	}
 	err := fmt.Errorf("did not find a token. this should never happen")
@@ -145,9 +145,11 @@ func (t *LemmaTokens) fill(count int) bool {
 }
 
 // Analogous to tokens.Take(take) in Linq
-func (t *LemmaTokens) wordrun(take int) ([]*Token, int, bool) {
-	taken := make([]*Token, 0)
-	count := 0 // tokens consumed, not necessarily equal to take
+func (t *LemmaTokens) wordrun(take int) ([]string, int, bool) {
+	var (
+		taken []string // the words
+		count int      // tokens consumed, not necessarily equal to take
+	)
 
 	for len(taken) < take {
 		ok := t.fill(count)
@@ -159,18 +161,17 @@ func (t *LemmaTokens) wordrun(take int) ([]*Token, int, bool) {
 
 		token := t.buffer[count]
 		switch {
-		// Note: test for punct before space; newlines and tabs can be
-		// considered both punct and space (depending on the tokenizer!)
-		// and we want to treat them as breaking word runs.
 		case token.IsPunct():
-			// Hard stop
+			// Note: test for punct before space; newlines and tabs can be
+			// considered both punct and space (depending on the tokenizer!)
+			// and we want to treat them as breaking word runs.
 			return nil, 0, false
 		case token.IsSpace():
 			// Ignore and continue
 			count++
 		default:
 			// Found a word
-			taken = append(taken, token)
+			taken = append(taken, token.String())
 			count++
 		}
 	}

@@ -114,8 +114,9 @@ func TestWordrun(t *testing.T) {
 		ok       bool
 	}
 
+	var none []string // DeepEqual doesn't see zero-length slices as equal; need 'nil'
 	expecteds := map[int]result{
-		4: {[]string{}, 0, false},                       // attempting to get 4 should fail
+		4: {none, 0, false},                             // attempting to get 4 should fail
 		3: {[]string{"java", "script", "and"}, 5, true}, // attempting to get 3 should work, consuming 5
 		2: {[]string{"java", "script"}, 3, true},        // attempting to get 2 should work, consuming 3 tokens (incl the space)
 		1: {[]string{"java"}, 1, true},                  // attempting to get 1 should work, and consume only that token
@@ -125,21 +126,12 @@ func TestWordrun(t *testing.T) {
 
 	for take, expected := range expecteds {
 		taken, consumed, ok := sc.wordrun(take)
-		got := result{strs(taken), consumed, ok}
+		got := result{taken, consumed, ok}
 
 		if !reflect.DeepEqual(expected, got) {
 			t.Errorf("Attempting to take %d words, expected %v but got %v", take, expected, got)
 		}
 	}
-}
-
-// a convenience method for getting a slice of the string values of tokens
-func strs(tokens []*Token) []string {
-	result := make([]string, 0)
-	for _, t := range tokens {
-		result = append(result, t.String())
-	}
-	return result
 }
 
 func collect(tokens Tokens) []*Token {
