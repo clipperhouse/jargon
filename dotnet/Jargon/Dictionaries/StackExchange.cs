@@ -15,9 +15,10 @@ namespace Jargon.Data
 
         private StackExchange() { }
 
-        public (string Canonical, bool Found) Lookup(string s)
+        public (string Canonical, bool Found) Lookup(string[] s)
         {
-            var key = Normalize(s);
+            var gram = string.Join("", s);
+            var key = Normalize(gram);
 
             if(Tags.TryGetValue(key, out var canonical1))
             {

@@ -18,7 +18,7 @@ namespace Jargon
             _MaxGramLength = maxGramLength;
         }
 
-        public (string Canonical, bool Found) Lookup(string term)
-        => Dictionary.Lookup(term);
+        public (string Canonical, bool Found) Lookup(string[] s)
+        => Dictionary.Lookup(s);
     }
 }

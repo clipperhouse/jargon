@@ -2,6 +2,6 @@
 {
     public interface Dictionary
     {
-        (string Canonical, bool Found) Lookup(string term);
+        (string Canonical, bool Found) Lookup(string[] term);
     }
 }

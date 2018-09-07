@@ -163,7 +163,7 @@ namespace Jargon.Tests
                         var takenStrs = new List<string>();
                         foreach (var t in taken)
                         {
-                            takenStrs.Add(t.String);
+                            takenStrs.Add(t);
                         }
                         takenStrsArr = takenStrs.ToArray();
                     }

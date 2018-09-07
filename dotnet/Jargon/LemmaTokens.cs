@@ -111,8 +111,7 @@ namespace Jargon
 
                 if (!ok) continue;
 
-                var gram = Join(run);
-                var (canonical, found) = t.Lem.Lookup(gram);
+                var (canonical, found) = t.Lem.Lookup(run);
 
                 if(found)
                 {
@@ -123,19 +122,20 @@ namespace Jargon
 
                 if(take == 1)
                 {
+                    var original = t.Buffer[0];
                     t.Drop(1);
-                    return run[0];
+                    return original;
                 }
             }
 
             throw new Exception("Did not find token, this should never happen.");
         }
 
-        internal (List<Token> Taken, int Count, bool Ok) WordRun(int take)
+        internal (string[] Taken, int Count, bool Ok) WordRun(int take)
         {
             var t = this;
 
-            var taken = new List<Token>();
+            var taken = new List<string>();
             var count = 0;
 
             while(taken.Count < take)
@@ -160,11 +160,11 @@ namespace Jargon
                 }
 
                 // default
-                taken.Add(token);
+                taken.Add(token.String);
                 count++;
             }
 
-            return (taken, count, true);
+            return (taken.ToArray(), count, true);
         }
 
         private string Join(List<Token> tokens)
