@@ -65,7 +65,7 @@ namespace Jargon
 
                 var tok = t.Buffer[0];
 
-                if(tok.Punct || tok.Space)
+                if(tok.IsPunct || tok.IsSpace)
                 {
                     t.Drop(1);
                     return tok;
@@ -148,12 +148,12 @@ namespace Jargon
 
                 var token = t.Buffer[count];
 
-                if(token.Punct)
+                if(token.IsPunct)
                 {
                     return (null, 0, false);
                 }
 
-                if (token.Space)
+                if (token.IsSpace)
                 {
                     count++;
                     continue;
@@ -172,7 +172,7 @@ namespace Jargon
             var ret = new StringBuilder();
             foreach(var t in tokens)
             {
-                ret.Append(t.Value);
+                ret.Append(t.String);
             }
 
             return ret.ToString();

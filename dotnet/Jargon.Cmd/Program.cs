@@ -141,7 +141,7 @@ namespace Jargon.Cmd
             {
                 while (e.MoveNext())
                 {
-                    writer.Write(e.Current.Value);
+                    writer.Write(e.Current.String);
                 }
             }
         }

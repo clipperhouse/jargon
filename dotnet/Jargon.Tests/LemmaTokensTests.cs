@@ -38,7 +38,7 @@ namespace Jargon.Tests
             Assert.Equal(expected.Count, got.Count);
             for(var i = 0; i < got.Count; i++)
             {
-                Assert.Equal(expected[i].Value, got[i].Value);
+                Assert.Equal(expected[i].String, got[i].String);
             }
 
             var lemmas = new[] { "ruby-on-rails", "node.js", "javascript", "html5", "asp.net-mvc" };
@@ -46,17 +46,17 @@ namespace Jargon.Tests
             var lookup = new Dictionary<string, Token>();
             foreach(var g in got)
             {
-                lookup[g.Value] = g;
+                lookup[g.String] = g;
             }
 
             foreach(var lemma in lemmas)
             {
-                var matching = got.Where(g => g.Value == lemma).ToList();
+                var matching = got.Where(g => g.String == lemma).ToList();
                 Assert.True(matching.Count > 0);
 
                 var ok = lookup.TryGetValue(lemma, out var l);
                 Assert.True(ok);
-                Assert.True(l.Lemma);
+                Assert.True(l.IsLemma);
             }
         }
 
@@ -92,7 +92,7 @@ namespace Jargon.Tests
             Assert.Equal(expected.Count, got.Count);
             for(var i = 0; i < got.Count; i++)
             {
-                Assert.Equal(expected[i].Value, got[i].Value);
+                Assert.Equal(expected[i].String, got[i].String);
             }
         }
 
@@ -127,7 +127,7 @@ namespace Jargon.Tests
             Assert.Equal(expected.Count, got.Count);
             for (var i = 0; i < got.Count; i++)
             {
-                Assert.Equal(expected[i].Value, got[i].Value);
+                Assert.Equal(expected[i].String, got[i].String);
             }
         }
 
@@ -163,7 +163,7 @@ namespace Jargon.Tests
                         var takenStrs = new List<string>();
                         foreach (var t in taken)
                         {
-                            takenStrs.Add(t.Value);
+                            takenStrs.Add(t.String);
                         }
                         takenStrsArr = takenStrs.ToArray();
                     }

@@ -33,19 +33,19 @@ namespace Jargon.Tests
 
             foreach(var tok in expectedTokens)
             {
-                var matching = got.Where(g => g.Value == tok).ToArray();
+                var matching = got.Where(g => g.String == tok).ToArray();
                 Assert.True(matching.Count() > 0);
             }
 
             var nextToLast = got[got.Count - 2];
-            Assert.Equal(".", nextToLast.Value);
+            Assert.Equal(".", nextToLast.String);
 
             var last = got[got.Count - 1];
-            Assert.Equal("\n", last.Value);
+            Assert.Equal("\n", last.String);
 
             foreach(var token in got)
             {
-                var ee = StringInfo.GetTextElementEnumerator(token.Value);
+                var ee = StringInfo.GetTextElementEnumerator(token.String);
                 var numRunes = 0;
                 while (ee.MoveNext())
                 {
@@ -54,7 +54,7 @@ namespace Jargon.Tests
 
                 if (numRunes == 1) continue;
 
-                Assert.False(token.Value.EndsWith(",") || token.Value.EndsWith("."));
+                Assert.False(token.String.EndsWith(",") || token.String.EndsWith("."));
             }
         }
 
@@ -85,7 +85,7 @@ namespace Jargon.Tests
                     Assert.True(e.MoveNext());
                     var first = e.Current;
 
-                    Assert.Equal(kv.Value, first.Value);
+                    Assert.Equal(kv.Value, first.String);
                 }
             }
         }

@@ -33,7 +33,7 @@ namespace Jargon.Tests
 
             foreach(var e in expectedTokens)
             {
-                var matching = got.Where(g => g.Value == e).ToList();
+                var matching = got.Where(g => g.String == e).ToList();
                 Assert.True(matching.Count > 0);
             }
         }
