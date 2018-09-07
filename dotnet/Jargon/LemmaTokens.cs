@@ -166,16 +166,5 @@ namespace Jargon
 
             return (taken.ToArray(), count, true);
         }
-
-        private string Join(List<Token> tokens)
-        {
-            var ret = new StringBuilder();
-            foreach(var t in tokens)
-            {
-                ret.Append(t.String);
-            }
-
-            return ret.ToString();
-        }
     }
 }
