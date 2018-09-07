@@ -17,7 +17,7 @@ namespace Jargon.Tests
             var original = "Here is the story of Ruby on Rails nodeJS, \"Java Script\", html5 and ASPNET mvc plus TCP/IP.";
             using (var r1 = new StringReader(original))
             using (var tokens = new TextTokens(r1))
-            using (var l = new LemmaTokens(in lem, tokens))
+            using (var l = new LemmaTokens(lem, tokens))
             {
                 while (l.MoveNext())
                 {
@@ -71,7 +71,7 @@ namespace Jargon.Tests
             var got = new List<Token>();
             using (var r1 = new StringReader(original))
             using (var tokens = new TextTokens(r1))
-            using (var l = new LemmaTokens(in lem, tokens))
+            using (var l = new LemmaTokens(lem, tokens))
             {
                 while (l.MoveNext())
                 {
@@ -106,7 +106,7 @@ namespace Jargon.Tests
             var got = new List<Token>();
             using (var r1 = new StringReader(original))
             using (var tokens = new TextTokens(r1))
-            using (var l = new LemmaTokens(in lem, tokens))
+            using (var l = new LemmaTokens(lem, tokens))
             {
                 while (l.MoveNext())
                 {
@@ -148,7 +148,7 @@ namespace Jargon.Tests
 
             using (var r = new StringReader(original))
             using (var tokens = new TextTokens(r))
-            using (var sc = new LemmaTokens(in @default, tokens))
+            using (var sc = new LemmaTokens(@default, tokens))
             {
                 foreach(var kv in expecteds)
                 {

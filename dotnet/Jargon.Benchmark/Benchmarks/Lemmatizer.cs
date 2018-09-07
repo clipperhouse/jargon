@@ -22,7 +22,7 @@ namespace Jargon.Benchmark.Benchmarks
             
             using (var r = new StringReader(Wikipedia))
             using (var tokens = new TextTokens(r))
-            using (var l = new LemmaTokens(in lem, tokens))
+            using (var l = new LemmaTokens(lem, tokens))
             {
                 while (l.MoveNext())
                 {

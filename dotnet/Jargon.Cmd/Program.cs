@@ -137,7 +137,7 @@ namespace Jargon.Cmd
         {
             var lemmatizer = new Lemmatizer(Data.StackExchange.Instance, 3);
             using(var toks = new TextTokens(reader))
-            using(var e = new LemmaTokens(in lemmatizer, toks))
+            using(var e = new LemmaTokens(lemmatizer, toks))
             {
                 while (e.MoveNext())
                 {

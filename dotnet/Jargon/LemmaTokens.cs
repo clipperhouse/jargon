@@ -5,32 +5,6 @@ using System.Text;
 
 namespace Jargon
 {
-    public interface Dictionary
-    {
-        (string Canonical, bool Found) Lookup(string term);
-    }
-
-    public readonly struct Lemmatizer: Dictionary
-    {
-        private readonly int _MaxGramLength;
-        internal int MaxGramLength => _MaxGramLength;
-
-        private readonly Dictionary _Dictionary;
-        internal Dictionary Dictionary => _Dictionary;
-
-        public Lemmatizer(Dictionary d, int maxGramLength)
-        {
-            if (d == null) throw new ArgumentNullException(nameof(d));
-            if (maxGramLength <= 0) throw new ArgumentException("Must be >= 1", nameof(maxGramLength));
-
-            _Dictionary = d;
-            _MaxGramLength = maxGramLength;
-        }
-
-        public (string Canonical, bool Found) Lookup(string term)
-        => Dictionary.Lookup(term);
-    }
-
     public sealed class LemmaTokens : Tokens
     {
         // C#-y style bits
@@ -42,7 +16,7 @@ namespace Jargon
         private List<Token> Buffer;
         private readonly Lemmatizer Lem;
 
-        public LemmaTokens(in Lemmatizer lem, Tokens tokens)
+        public LemmaTokens(Lemmatizer lem, Tokens tokens)
         {
             if (tokens == null) throw new ArgumentNullException(nameof(tokens));
 

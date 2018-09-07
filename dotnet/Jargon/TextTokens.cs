@@ -59,29 +59,20 @@ namespace Jargon
         
         // doing the Go stuff that C# doesn't have a great analog for
 
-        private struct Rune
+        private readonly struct Rune
         {
             public bool IsMultiCharacter => _HighSurrogate.HasValue && _LowSurrogate.HasValue;
 
-            private string _AsString;
             public string AsString
             {
                 get
                 {
-                    if (_AsString != null)
-                    {
-                        return _AsString;
-                    }
-
                     if (IsMultiCharacter)
                     {
-                        _AsString = char.ConvertFromUtf32(char.ConvertToUtf32(HighSurrogate, LowSurrogate));
+                        return char.ConvertFromUtf32(char.ConvertToUtf32(HighSurrogate, LowSurrogate));
                     }
-                    else
-                    {
-                        _AsString = Character.ToString();
-                    }
-                    return _AsString;
+
+                    return Character.ToString();
                 }
             }
 
@@ -122,7 +113,6 @@ namespace Jargon
 
                 _HighSurrogate = c;
                 _LowSurrogate = null;
-                _AsString = null;
             }
 
             public Rune(char high, char low)
@@ -132,7 +122,6 @@ namespace Jargon
 
                 _HighSurrogate = high;
                 _LowSurrogate = low;
-                _AsString = null;
             }
 
             public bool IsSpace()
