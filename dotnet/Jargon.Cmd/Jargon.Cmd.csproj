@@ -4,6 +4,10 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <LangVersion>7.2</LangVersion>
+    <Version>0.0.1</Version>
+    <Authors>Kevin Montrose, Matt Sherman</Authors>
+    <Company />
+    <Product>Jargon Command Line Tool</Product>
   </PropertyGroup>
 
   <ItemGroup>

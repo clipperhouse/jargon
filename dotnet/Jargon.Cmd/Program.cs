@@ -9,10 +9,10 @@ namespace Jargon.Cmd
     {
         private sealed class Options
         {
-            [Option('f', Required = false, HelpText = "A file path to lemmatize")]
-            public string File { get; set; }
+            [Option('f', Required = false, HelpText = "Input file path")]
+            public string InputFile { get; set; }
 
-            internal bool FileIsSet => !string.IsNullOrEmpty(File);
+            internal bool FileIsSet => !string.IsNullOrEmpty(InputFile);
 
             [Option('s', Required = false, HelpText = "A (quoted) string to lemmatize")]
             public string String { get; set; }
@@ -23,6 +23,11 @@ namespace Jargon.Cmd
             public string Url { get; set; }
 
             internal bool UrlIsSet => !string.IsNullOrEmpty(Url);
+
+            [Option('o', Required = false, HelpText = "Output file path")]
+            public string OutputFile { get; set; }
+
+            internal bool OutputFileIsSet => !string.IsNullOrEmpty(OutputFile);
         }
 
         public static void Main(string[] args)
@@ -33,73 +38,102 @@ namespace Jargon.Cmd
 
         private static void HandleOptions(Options opts)
         {
-            var numSet =
+            var numInputsSet =
                 (opts.FileIsSet ? 1 : 0) +
                 (opts.StringIsSet ? 1 : 0) +
                 (opts.UrlIsSet ? 1 : 0);
-            if (numSet > 1)
+            if (numInputsSet > 1)
             {
                 Console.WriteLine($"Only one of `f`, `s`, and `u` may be set");
                 Environment.Exit(-2);
             }
 
-            if (opts.FileIsSet)
+            TextWriter writer = null;
+            try
             {
-                if (!File.Exists(opts.File))
+                if (opts.OutputFileIsSet)
                 {
-                    Console.WriteLine($"Could not find file: {opts.File}");
-                    Environment.Exit(-3);
-                }
-
-                try
-                {
-                    using (var reader = new StreamReader(File.OpenRead(opts.File)))
+                    try
                     {
-                        Lemmatize(reader);
-                        return;
+                        var fs = File.Create(opts.OutputFile);
+                        writer = new StreamWriter(fs);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Could not create file ({e.Message}): {opts.OutputFile}");
+                        Environment.Exit(-5);
                     }
                 }
-                catch(Exception e)
+                else
                 {
-                    Console.WriteLine($"Could not read file ({e.Message}): {opts.File}");
-                    Environment.Exit(-4);
-                }   
-            }
-
-            if (opts.StringIsSet)
-            {
-                using (var reader = new StringReader(opts.String))
-                {
-                    Lemmatize(reader);
-                    return;
+                    writer = Console.Out;
                 }
-            }
 
-            if (opts.UrlIsSet)
-            {
-                try
+                if (opts.FileIsSet)
                 {
-                    using (var web = new CompressedWebClient())
+                    if (!File.Exists(opts.InputFile))
                     {
-                        var html = web.DownloadString(opts.Url);
-                        using (var reader = new StringReader(html))
+                        Console.WriteLine($"Could not find file: {opts.InputFile}");
+                        Environment.Exit(-3);
+                    }
+
+                    try
+                    {
+                        using (var reader = new StreamReader(File.OpenRead(opts.InputFile)))
                         {
-                            Lemmatize(reader);
+                            Lemmatize(reader, writer);
+                            return;
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Could not read file ({e.Message}): {opts.InputFile}");
+                        Environment.Exit(-4);
+                    }
+                }
+
+                if (opts.StringIsSet)
+                {
+                    using (var reader = new StringReader(opts.String))
+                    {
+                        Lemmatize(reader, writer);
                         return;
                     }
                 }
-                catch (Exception e)
+
+                if (opts.UrlIsSet)
                 {
-                    Console.WriteLine($"Could not download url ({e.Message}): {opts.Url}");
-                    Environment.Exit(-5);
+                    try
+                    {
+                        using (var web = new CompressedWebClient())
+                        {
+                            var html = web.DownloadString(opts.Url);
+                            using (var reader = new StringReader(html))
+                            {
+                                Lemmatize(reader, writer);
+                            }
+                            return;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Could not download url ({e.Message}): {opts.Url}");
+                        Environment.Exit(-5);
+                    }
+                }
+
+                Lemmatize(Console.In, writer);
+            }
+            finally
+            {
+                if (writer != null && !object.ReferenceEquals(writer, Console.Out))
+                {
+                    writer.Dispose();
                 }
             }
-
-            Lemmatize(Console.In);
         }
 
-        private static void Lemmatize(TextReader reader)
+        private static void Lemmatize(TextReader reader, TextWriter writer)
         {
             var lemmatizer = new Lemmatizer(Data.StackExchange.Instance, 3);
             using(var toks = new TextTokens(reader))
@@ -107,7 +141,7 @@ namespace Jargon.Cmd
             {
                 while (e.MoveNext())
                 {
-                    Console.Write(e.Current.Value);
+                    writer.Write(e.Current.Value);
                 }
             }
         }
@@ -126,8 +160,8 @@ namespace Jargon.Cmd
 Usage: {cmdName} accepts piped UTF8 text from tools such as cat, curl or echo, via Stdin
 		
   Example: echo ""I luv Rails"" | {cmdName}
-Alternatively, use {cmdName} 'standalone' by passing flags for text sources:
-  Example: %s -f {pathSeparator}path{pathSeparator}to{pathSeparator}file.txt
+Alternatively, use {cmdName} 'standalone' by passing flags for inputs and outputs:
+  Example: {cmdName} -f {pathSeparator}path{pathSeparator}to{pathSeparator}original.txt -o {pathSeparator}path{pathSeparator}to{pathSeparator}lemmatized.txt
 
 Results are piped to Stdout (regardless of input)");
 
