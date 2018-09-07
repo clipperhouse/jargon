@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Jargon.Cmd": {
+      "commandName": "Project",
+      "commandLineArgs": "-u \"https://stackoverflow.com/\""
+    }
+  }
+}
