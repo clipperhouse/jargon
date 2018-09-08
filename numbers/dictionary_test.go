@@ -28,10 +28,13 @@ func TestInts(t *testing.T) {
 		{[]string{"4.581", "hundred"}, expected{"458.1", true}},
 
 		{[]string{"foo"}, expected{"", false}},
+		{[]string{"foo three"}, expected{"", false}},
+		{[]string{"foo 3"}, expected{"", false}},
 		{[]string{"hundred"}, expected{"", false}},
 		{[]string{"hundred", "3"}, expected{"", false}},
 		{[]string{"million", "seven"}, expected{"", false}},
 		{[]string{"three", "foo"}, expected{"", false}},
+		{[]string{"3", "foo"}, expected{"", false}},
 		{[]string{"three", "hundred", "foo"}, expected{"", false}},
 		{[]string{"a", "hundred"}, expected{"", false}},
 	}

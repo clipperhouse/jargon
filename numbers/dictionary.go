@@ -1,3 +1,4 @@
+// Package numbers provides a jargon.Dictionary to lemmatize numbers expressed as words, such as "three hundred" => "300"
 package numbers
 
 import (
@@ -5,27 +6,32 @@ import (
 	"strings"
 )
 
-// Given a phrase like "three hundred thousand", return "300000"
 // The form is exactly one leading number followed by zero or more magnitudes
 // In the above example, "three" is the number, "hundred" and "thousand" are magnitudes
 // All passed tokens must contribute to the number for the lookup to succeed
-
-// Test cases:
-// "three" => "3"
-// "3" => "3"
-// "3 thousand" => "3000"
-// "three thousand" => "3000"
-// "three hundred thousand" => "300000"
-// "thirty-five thousand" => "35000"
-// "a hundred" => not a specific number for our purpose
-// "thousand" => not a freestanding number for our purpose
-// "foo five hundred" => not a number
-// "two hundred fifty five" => out of scope for this dictionary (for now)
 
 type dictionary struct{}
 
 var Dictionary = &dictionary{}
 
+// Lookup attempts to turn a slice of token strings into a canonical number string.
+// If successful, Lookup will return the number, and a bool indicating success or failure. Examples:
+//	["three"] => "3", true
+//	["three","thousand"] => "3000", true
+//	["thirty-five","thousand"] => "35000", true
+//	["three hundred","thousand" => "300000", true
+//	["3","thousand"] => "3000", true
+//	["-3","thousand"] => "3000", true
+//	["+3","thousand"] => "3000", true
+//	["2.54","million"] => "2540000", true
+//	["1,000,000"] => "1000000", true
+//	["hundred"] => "", false
+//	["foo","3","hundred"] => "", false
+// All tokens need to contribute to the number. Any token that is not a number results in Lookup returning false.
+// Lookup works on short 'multiplicative' number phrases, where each number is multiplied into a total value, as in the examples above.
+// Lookup does not handle 'compound' or 'additive' phrases like "one thousand five hundred twenty".
+// In the above example, 'thirty-five' only works when it is a single token, no spaces, hyphen optional.
+// Commas are ignored, so long as there are no spaces.
 func (d *dictionary) Lookup(s []string) (string, bool) {
 	if len(s) == 0 {
 		return "", false
