@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/clipperhouse/jargon/numbers"
 	"github.com/clipperhouse/jargon/stackexchange"
 )
 
@@ -98,6 +99,38 @@ bar	42	javascript`)
 
 	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
+	}
+}
+
+func TestMultiple(t *testing.T) {
+	lems := []*Lemmatizer{
+		NewLemmatizer(numbers.Dictionary, 4),
+		NewLemmatizer(stackexchange.Dictionary, 3),
+	}
+
+	s := `Here is the story of five and Rails and ASPNET and three hundred thousand.`
+	r := strings.NewReader(s)
+
+	var tokens Tokens
+	tokens = Tokenize(r)
+
+	for _, lem := range lems {
+		tokens = lem.Lemmatize(tokens)
+	}
+
+	expected := `Here is the story of 5 and ruby-on-rails and asp.net and 300000.`
+	var got string
+
+	for {
+		t := tokens.Next()
+		if t == nil {
+			break
+		}
+		got += t.String()
+	}
+
+	if got != expected {
+		t.Errorf("expected %q, got %q", expected, got)
 	}
 }
 
