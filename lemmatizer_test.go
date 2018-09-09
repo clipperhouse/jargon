@@ -134,8 +134,6 @@ func TestMultiple(t *testing.T) {
 	}
 }
 
-var noop = func(t *Token) {}
-
 func TestWordrun(t *testing.T) {
 	original := `java script and `
 	r := strings.NewReader(original)
