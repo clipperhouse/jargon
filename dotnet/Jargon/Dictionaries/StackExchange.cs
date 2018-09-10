@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Jargon.Data
 {
-    public class StackExchange : Dictionary
+    public class StackExchange : ILemmatizingDictionary
     {
         public static readonly StackExchange Instance = new StackExchange();
 

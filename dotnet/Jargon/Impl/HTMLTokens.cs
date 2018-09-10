@@ -1,21 +1,16 @@
 ﻿using HtmlAgilityPack;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Jargon
+namespace Jargon.Impl
 {
-    public sealed class HTMLTokens : Tokens
+    internal sealed class HTMLTokens : ITokens
     {
         // C#-y style bits
         
         private TextTokens Text;
         private IEnumerator<(string Text, bool IsTag)> Html;
-
-        public Token Current { get; private set; }
-
-        object IEnumerator.Current => Current;
 
         public HTMLTokens(TextReader reader)
         {
@@ -33,23 +28,6 @@ namespace Jargon
 
             Html?.Dispose();
             Html = null;
-        }
-
-        public bool MoveNext()
-        {
-            var ret = Next();
-            if (ret != null)
-            {
-                Current = ret.Value;
-                return true;
-            }
-
-            return false;
-        }
-
-        public void Reset()
-        {
-            throw new NotImplementedException(nameof(Reset));
         }
 
         // have to fake how Go's html parser behaves

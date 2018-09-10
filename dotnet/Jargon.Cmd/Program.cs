@@ -136,13 +136,9 @@ namespace Jargon.Cmd
         private static void Lemmatize(TextReader reader, TextWriter writer)
         {
             var lemmatizer = new Lemmatizer(Data.StackExchange.Instance, 3);
-            using(var toks = new TextTokens(reader))
-            using(var e = new LemmaTokens(lemmatizer, toks))
+            foreach(var tok in lemmatizer.Lemmatize(reader))
             {
-                while (e.MoveNext())
-                {
-                    writer.Write(e.Current.String);
-                }
+                writer.Write(tok.String);
             }
         }
 

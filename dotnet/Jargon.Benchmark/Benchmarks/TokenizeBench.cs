@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Jargon.Benchmark.Benchmarks
 {
-    public class Tokenize
+    public class TokenizeBench
     {
         private static string Wikipedia;
         [GlobalSetup]
@@ -17,13 +17,9 @@ namespace Jargon.Benchmark.Benchmarks
         [Benchmark]
         public void TokenizeBenchmark()
         {
-            using (var r = new StringReader(Wikipedia))
-            using (var t = new TextTokens(r))
+            foreach(var t in Jargon.Tokenize(Wikipedia))
             {
-                while (t.MoveNext())
-                {
-                    // just go, don't use the results
-                }
+                // left blank
             }
         }
     }

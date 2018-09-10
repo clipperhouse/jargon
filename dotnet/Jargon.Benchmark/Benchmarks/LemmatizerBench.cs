@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Jargon.Benchmark.Benchmarks
 {
-    public class Lemmatizer
+    public class LemmatizerBench
     {
         private static string Wikipedia;
         [GlobalSetup]
@@ -18,16 +18,11 @@ namespace Jargon.Benchmark.Benchmarks
         public void LemmatizerBenchmark()
         {
             var dict = Data.StackExchange.Instance;
-            var lem = new Jargon.Lemmatizer(dict, 3);
-            
-            using (var r = new StringReader(Wikipedia))
-            using (var tokens = new TextTokens(r))
-            using (var l = new LemmaTokens(lem, tokens))
+            var lem = new Lemmatizer(dict, 3);
+
+            foreach (var _ in lem.Lemmatize(Wikipedia))
             {
-                while (l.MoveNext())
-                {
-                    // just go, don't use the results
-                }
+                // left blank
             }
         }
     }

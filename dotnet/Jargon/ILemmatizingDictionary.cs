@@ -1,6 +1,6 @@
 ﻿namespace Jargon
 {
-    public interface Dictionary
+    public interface ILemmatizingDictionary
     {
         (string Canonical, bool Found) Lookup(string[] term);
     }

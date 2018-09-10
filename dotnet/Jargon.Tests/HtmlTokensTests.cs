@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using Xunit;
 using System.Linq;
 
@@ -22,14 +21,7 @@ namespace Jargon.Tests
         public void Tokenize(string input, string[] expectedTokens)
         {
             var got = new List<Token>();
-            using (var reader = new StringReader(input))
-            using (var e = new HTMLTokens(reader))
-            {
-                while (e.MoveNext())
-                {
-                    got.Add(e.Current);
-                }
-            }
+            got.AddRange(Jargon.TokenizeHTML(input));
 
             foreach(var e in expectedTokens)
             {

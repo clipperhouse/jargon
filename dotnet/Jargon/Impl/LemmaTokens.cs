@@ -1,51 +1,31 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 
-namespace Jargon
+namespace Jargon.Impl
 {
-    public sealed class LemmaTokens : Tokens
+    internal sealed class LemmaTokens<TTokenProvider> : ITokens
+        where TTokenProvider: ITokens
     {
         // C#-y style bits
         public Token Current { get; private set; }
 
-        object IEnumerator.Current => Current;
-
-        private Tokens Incoming;
+        private TTokenProvider Incoming;
         private List<Token> Buffer;
         private readonly Lemmatizer Lem;
 
-        public LemmaTokens(Lemmatizer lem, Tokens tokens)
+        public LemmaTokens(Lemmatizer lem, TTokenProvider tokens)
         {
-            if (tokens == null) throw new ArgumentNullException(nameof(tokens));
+            if(tokens == null) throw new ArgumentNullException(nameof(tokens));
 
-            Lem = lem;
             Incoming = tokens;
+            Lem = lem;
             Buffer = new List<Token>();
         }
 
         public void Dispose()
         {
             Incoming?.Dispose();
-            Incoming = null;
-        }
-
-        public bool MoveNext()
-        {
-            var ret = Next();
-            if(ret != null)
-            {
-                Current = ret.Value;
-                return true;
-            }
-
-            return false;
-        }
-
-        public void Reset()
-        {
-            throw new NotImplementedException(nameof(Reset));
+            Incoming = default(TTokenProvider);
         }
 
         // going closer to the Go code
@@ -131,11 +111,13 @@ namespace Jargon
             throw new Exception("Did not find token, this should never happen.");
         }
 
+        private List<string> WordRun_Taken;
         internal (string[] Taken, int Count, bool Ok) WordRun(int take)
         {
             var t = this;
 
-            var taken = new List<string>();
+            var taken = (WordRun_Taken ?? (WordRun_Taken = new List<string>()));
+            taken.Clear();
             var count = 0;
 
             while(taken.Count < take)

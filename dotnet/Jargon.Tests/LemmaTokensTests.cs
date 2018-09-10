@@ -2,6 +2,7 @@
 using System.IO;
 using Xunit;
 using System.Linq;
+using Jargon.Impl;
 
 namespace Jargon.Tests
 {
@@ -15,25 +16,11 @@ namespace Jargon.Tests
 
             var got = new List<Token>();
             var original = "Here is the story of Ruby on Rails nodeJS, \"Java Script\", html5 and ASPNET mvc plus TCP/IP.";
-            using (var r1 = new StringReader(original))
-            using (var tokens = new TextTokens(r1))
-            using (var l = new LemmaTokens(lem, tokens))
-            {
-                while (l.MoveNext())
-                {
-                    got.Add(l.Current);
-                }
-            }
+            got.AddRange(Jargon.Lemmatize(original, lem));
+            
 
             var expected = new List<Token>();
-            using (var r2 = new StringReader("Here is the story of ruby-on-rails node.js, \"javascript\", html5 and asp.net-mvc plus tcpip."))
-            using (var tokens = new TextTokens(r2))
-            {
-                while (tokens.MoveNext())
-                {
-                    expected.Add(tokens.Current);
-                }
-            }
+            expected.AddRange(Jargon.Tokenize("Here is the story of ruby-on-rails node.js, \"javascript\", html5 and asp.net-mvc plus tcpip."));
 
             Assert.Equal(expected.Count, got.Count);
             for(var i = 0; i < got.Count; i++)
@@ -69,25 +56,10 @@ namespace Jargon.Tests
             var original = "\"Ruby on Rails\", 3.4, \"foo\"\n\"bar\",42, \"java script\"";
 
             var got = new List<Token>();
-            using (var r1 = new StringReader(original))
-            using (var tokens = new TextTokens(r1))
-            using (var l = new LemmaTokens(lem, tokens))
-            {
-                while (l.MoveNext())
-                {
-                    got.Add(l.Current);
-                }
-            }
+            got.AddRange(lem.Lemmatize(original));
 
             var expected = new List<Token>();
-            using (var r2 = new StringReader("\"ruby-on-rails\", 3.4, \"foo\"\n\"bar\",42, \"javascript\""))
-            using (var tokens = new TextTokens(r2))
-            {
-                while (tokens.MoveNext())
-                {
-                    expected.Add(tokens.Current);
-                }
-            }
+            expected.AddRange(Jargon.Tokenize("\"ruby-on-rails\", 3.4, \"foo\"\n\"bar\",42, \"javascript\""));
 
             Assert.Equal(expected.Count, got.Count);
             for(var i = 0; i < got.Count; i++)
@@ -104,25 +76,10 @@ namespace Jargon.Tests
             var original = "Ruby on Rails	3.4	foo\nASPNET	MVC\nbar	42	java script";
 
             var got = new List<Token>();
-            using (var r1 = new StringReader(original))
-            using (var tokens = new TextTokens(r1))
-            using (var l = new LemmaTokens(lem, tokens))
-            {
-                while (l.MoveNext())
-                {
-                    got.Add(l.Current);
-                }
-            }
+            got.AddRange(Jargon.Lemmatize(original, lem));
 
             var expected = new List<Token>();
-            using (var r2 = new StringReader("ruby-on-rails	3.4	foo\nasp.net	model-view-controller\nbar	42	javascript"))
-            using (var tokens = new TextTokens(r2))
-            {
-                while (tokens.MoveNext())
-                {
-                    expected.Add(tokens.Current);
-                }
-            }
+            expected.AddRange(Jargon.Tokenize("ruby-on-rails	3.4	foo\nasp.net	model-view-controller\nbar	42	javascript"));
 
             Assert.Equal(expected.Count, got.Count);
             for (var i = 0; i < got.Count; i++)
@@ -148,7 +105,7 @@ namespace Jargon.Tests
 
             using (var r = new StringReader(original))
             using (var tokens = new TextTokens(r))
-            using (var sc = new LemmaTokens(@default, tokens))
+            using (var sc = new LemmaTokens<TextTokens>(@default, tokens))
             {
                 foreach(var kv in expecteds)
                 {

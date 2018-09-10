@@ -22,14 +22,7 @@ namespace Jargon.Tests
         public void Tokenize(string input, string[] expectedTokens)
         {
             var got = new List<Token>();
-            using(var reader = new StringReader(input))
-            using (var e = new TextTokens(reader))
-            {
-                while (e.MoveNext())
-                {
-                    got.Add(e.Current);
-                }
-            }
+            got.AddRange(Jargon.Tokenize(input));
 
             foreach(var tok in expectedTokens)
             {
@@ -77,16 +70,10 @@ namespace Jargon.Tests
                     [@"c:\windows\notepad.exe"] = @"c:\windows\notepad.exe",
                 };
 
-            foreach(var kv in tests)
+            foreach (var kv in tests)
             {
-                using (var r = new StringReader(kv.Key))
-                using (var e = new TextTokens(r))
-                {
-                    Assert.True(e.MoveNext());
-                    var first = e.Current;
-
-                    Assert.Equal(kv.Value, first.String);
-                }
+                var first = Jargon.Tokenize(kv.Key).First();
+                Assert.Equal(kv.Value, first.String);
             }
         }
     }
