@@ -50,3 +50,19 @@ func TestInts(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkNormalize(b *testing.B) {
+	strs := []string{
+		"-25",
+		"thirty-five",
+		"1,000,000",
+		"three",
+		"seventyseven",
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, s := range strs {
+			normalize(s)
+		}
+	}
+}

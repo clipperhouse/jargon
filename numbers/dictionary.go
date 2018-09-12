@@ -85,9 +85,10 @@ func (p *parser) Parse() (string, bool) {
 func normalize(s string) string {
 	result := s
 	result = strings.Replace(result, ",", "", -1)
-	pref := string(result[0]) // leading hyphen is ok
-	suff := string(result[1:])
-	result = pref + strings.Replace(suff, "-", "", -1)
+	result = strings.Replace(result, "-", "", -1)
+	if s[0] == '-' { // leading hyphen is ok, bring it back
+		return "-" + result
+	}
 	return result
 }
 
