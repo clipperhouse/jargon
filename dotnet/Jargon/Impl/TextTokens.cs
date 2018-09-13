@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace Jargon.Impl
 {
@@ -90,7 +88,7 @@ namespace Jargon.Impl
         {
             if (Buffer.Length > 0)
             {
-                return Token();
+                return _Token();
             }
 
             while (true)
@@ -98,13 +96,13 @@ namespace Jargon.Impl
                 if (!TryReadRune(out var r))
                 {
                     // end of the input
-                    return Token();
+                    return _Token();
                 }
 
                 if (r.IsSpace())
                 {
                     Accept(r);
-                    return Token();
+                    return _Token();
                 }
 
                 if (r.IsPunct())
@@ -116,7 +114,7 @@ namespace Jargon.Impl
                         return ReadWord();
                     }
 
-                    return Token();
+                    return _Token();
                 }
 
                 Accept(r);
@@ -130,7 +128,7 @@ namespace Jargon.Impl
             {
                 if (!TryReadRune(out var r))
                 {
-                    return Token();
+                    return _Token();
                 }
 
                 if (r.MightBeMidPunct())
@@ -138,7 +136,7 @@ namespace Jargon.Impl
                     var followedByTerminator = PeekTerminator();
                     if (followedByTerminator)
                     {
-                        var tok = Token();
+                        var tok = _Token();
                         Accept(r);
 
                         return tok;
@@ -150,7 +148,7 @@ namespace Jargon.Impl
 
                 if (r.IsPunct() || r.IsSpace())
                 {
-                    var tok = Token();
+                    var tok = _Token();
 
                     Accept(r);
 
@@ -161,7 +159,7 @@ namespace Jargon.Impl
             }
         }
 
-        private Token? Token()
+        private Token? _Token()
         {
             if (Buffer.Length == 0)
             {
@@ -181,7 +179,7 @@ namespace Jargon.Impl
             }
 
             var b = Buffer.ToStringReset();
-            return new Token(b, false, false, false);
+            return Token.NewNone(b);
         }
 
         private void Accept(Rune r)

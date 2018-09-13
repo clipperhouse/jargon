@@ -20,8 +20,8 @@ namespace Jargon
             _MaxGramLength = maxGramLength;
         }
 
-        public (string Canonical, bool Found) Lookup(string[] s)
-        => Dictionary.Lookup(s);
+        public (string Canonical, bool Found) Lookup(string[] terms, int termLen)
+        => Dictionary.Lookup(terms, termLen);
 
         public IEnumerable<Token> Lemmatize(string str) => Jargon.Lemmatize(str, this);
         public IEnumerable<Token> Lemmatize(TextReader reader) => Jargon.Lemmatize(reader, this);

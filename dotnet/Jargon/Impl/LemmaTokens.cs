@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Jargon.Impl
 {
@@ -10,8 +9,9 @@ namespace Jargon.Impl
         public Token Current { get; private set; }
 
         private TTokenProvider Incoming;
-        private List<Token> Buffer;
+        private TokenBuffer Buffer;
         private readonly Lemmatizer Lem;
+        internal WordRunBuffer WordRunBuffer;
 
         public LemmaTokens(Lemmatizer lem, TTokenProvider tokens)
         {
@@ -19,55 +19,52 @@ namespace Jargon.Impl
 
             Incoming = tokens;
             Lem = lem;
-            Buffer = new List<Token>();
+            Buffer = new TokenBuffer(4);
+            WordRunBuffer = new WordRunBuffer(lem.MaxGramLength);
         }
 
         public void Dispose()
         {
             Incoming?.Dispose();
-            Incoming = default(TTokenProvider);
+            Incoming = default;
         }
 
         // going closer to the Go code
 
         public Token? Next()
         {
-            var t = this;
-
             while (true)
             {
-                t.Fill(1);
+                Fill(1);
 
-                if(t.Buffer.Count == 0)
+                if(Buffer.Count == 0)
                 {
                     return null;
                 }
 
-                var tok = t.Buffer[0];
+                var tok = Buffer.FirstElement();
 
                 if(tok.IsPunct || tok.IsSpace)
                 {
-                    t.Drop(1);
+                    Drop(1);
                     return tok;
                 }
 
-                return t.NGrams();
+                return NGrams();
             }
         }
 
         private bool Fill(int count)
         {
-            var t = this;
-
-            while (count >= t.Buffer.Count)
+            while (count >= Buffer.Count)
             {
-                var token = t.Incoming.Next();
+                var token = Incoming.Next();
                 if(token == null)
                 {
                     return false;
                 }
 
-                t.Buffer.Add(token.Value);
+                Buffer.Add(token.Value);
             }
 
             return true;
@@ -75,35 +72,34 @@ namespace Jargon.Impl
 
         private void Drop(int n)
         {
-            var t = this;
-
-            var toDrop = Math.Min(n, t.Buffer.Count);
-            t.Buffer.RemoveRange(0, toDrop);
+            var toDrop = Math.Min(n, Buffer.Count);
+            Buffer.RemoveFromFront(toDrop);
         }
 
         private Token? NGrams()
         {
-            var t = this;
-
-            for (var take = t.Lem.MaxGramLength; take > 0; take--)
+            for (var take = Lem.MaxGramLength; take > 0; take--)
             {
-                var (run, consumed, ok) = t.WordRun(take);
+                var ok = WordRun(take, out var consumed);
+
+                var run = WordRunBuffer.AsArray;
+                var runLen = WordRunBuffer.Count;
 
                 if (!ok) continue;
 
-                var (canonical, found) = t.Lem.Lookup(run);
+                var (canonical, found) = Lem.Lookup(run, runLen);
 
                 if(found)
                 {
-                    var lemma = new Token(canonical, false, false, true);
-                    t.Drop(consumed);
+                    var lemma = Token.NewLemma(canonical);
+                    Drop(consumed);
                     return lemma;
                 }
 
                 if(take == 1)
                 {
-                    var original = t.Buffer[0];
-                    t.Drop(1);
+                    var original = Buffer.FirstElement();
+                    Drop(1);
                     return original;
                 }
             }
@@ -111,28 +107,24 @@ namespace Jargon.Impl
             throw new Exception("Did not find token, this should never happen.");
         }
 
-        private List<string> WordRun_Taken;
-        internal (string[] Taken, int Count, bool Ok) WordRun(int take)
+        internal bool WordRun(int take, out int count)
         {
-            var t = this;
+            WordRunBuffer.Clear();
+            count = 0;
 
-            var taken = (WordRun_Taken ?? (WordRun_Taken = new List<string>()));
-            taken.Clear();
-            var count = 0;
-
-            while(taken.Count < take)
+            while(WordRunBuffer.Count < take)
             {
-                var ok = t.Fill(count);
+                var ok = Fill(count);
                 if(!ok)
                 {
-                    return (null, 0, false);
+                    return false;
                 }
 
-                var token = t.Buffer[count];
+                var token = Buffer.ElementAt(count);
 
                 if(token.IsPunct)
                 {
-                    return (null, 0, false);
+                    return false;
                 }
 
                 if (token.IsSpace)
@@ -142,11 +134,11 @@ namespace Jargon.Impl
                 }
 
                 // default
-                taken.Add(token.String);
+                WordRunBuffer.Add(token.String);
                 count++;
             }
 
-            return (taken.ToArray(), count, true);
+            return true;
         }
     }
 }

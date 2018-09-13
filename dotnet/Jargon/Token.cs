@@ -5,7 +5,7 @@ namespace Jargon
     public readonly struct Token
     {
         [Flags]
-        private enum State: byte
+        internal enum State: byte
         {
             None = 0,
             Punct = 1 << 0,
@@ -22,6 +22,12 @@ namespace Jargon
         public bool IsSpace => _State.HasFlag(State.Space);
         public bool IsLemma => _State.HasFlag(State.Lemma);
 
+        internal Token(string value, State state)
+        {
+            _String = value;
+            _State = state;
+        }
+
         internal Token(string value, bool punct, bool space, bool lemma)
         {
             _String = value;
@@ -31,6 +37,19 @@ namespace Jargon
                 (space ? State.Space : State.None) |
                 (lemma ? State.Lemma : State.None);
         }
+
+        public static Token NewLemma(string value)
+        => new Token(value, State.Lemma);
+
+        public static Token NewNone(string value)
+        => new Token(value, State.None);
+
+        public static Token NewPunct(string value)
+        => new Token(value, State.Punct);
+
+        public static Token NewSpace(string value)
+        => new Token(value, State.Space);
+
 
         public override string ToString() => String;
     }

@@ -134,7 +134,7 @@ namespace Jargon.Impl
 
                 if (tok.IsTag)
                 {
-                    return new Token(tok.Text, true, false, false);
+                    return Token.NewPunct(tok.Text);
                 }
             }
         }

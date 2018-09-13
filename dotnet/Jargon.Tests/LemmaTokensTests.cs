@@ -3,6 +3,7 @@ using System.IO;
 using Xunit;
 using System.Linq;
 using Jargon.Impl;
+using System;
 
 namespace Jargon.Tests
 {
@@ -18,7 +19,6 @@ namespace Jargon.Tests
             var original = "Here is the story of Ruby on Rails nodeJS, \"Java Script\", html5 and ASPNET mvc plus TCP/IP.";
             got.AddRange(Jargon.Lemmatize(original, lem));
             
-
             var expected = new List<Token>();
             expected.AddRange(Jargon.Tokenize("Here is the story of ruby-on-rails node.js, \"javascript\", html5 and asp.net-mvc plus tcpip."));
 
@@ -88,6 +88,14 @@ namespace Jargon.Tests
             }
         }
 
+        class _WordRun : ILemmatizingDictionary
+        {
+            public (string Canonical, bool Found) Lookup(string[] term, int termLen)
+            {
+                throw new System.NotImplementedException();
+            }
+        }
+
         [Fact]
         public void WordRun()
         {
@@ -101,31 +109,35 @@ namespace Jargon.Tests
                     [1] = (new[] { "java" }, 1, true),                  // attempting to get 1 should work, and consume only that token
                 };
 
-            var @default = default(Lemmatizer);
+            var fakeLem = new Lemmatizer(new _WordRun(), 4);
 
             using (var r = new StringReader(original))
             using (var tokens = new TextTokens(r))
-            using (var sc = new LemmaTokens<TextTokens>(@default, tokens))
+            using (var sc = new LemmaTokens<TextTokens>(fakeLem, tokens))
             {
                 foreach(var kv in expecteds)
                 {
                     var take = kv.Key;
                     var expected = kv.Value;
 
-                    var (taken, consumed, ok) = sc.WordRun(take);
+                    var ok = sc.WordRun(take, out var consumed);
+                    var taken = sc.WordRunBuffer.AsArray;
+                    var takenLen = sc.WordRunBuffer.Count;
                     string[] takenStrsArr;
 
-                    if (taken != null)
+                    if (ok)
                     {
                         var takenStrs = new List<string>();
-                        foreach (var t in taken)
+                        for (var i = 0; i < takenLen; i++)
                         {
+                            var t = taken[i];
                             takenStrs.Add(t);
                         }
                         takenStrsArr = takenStrs.ToArray();
                     }
                     else
                     {
+                        consumed = 0;
                         takenStrsArr = null;
                     }
 
