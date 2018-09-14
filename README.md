@@ -49,10 +49,6 @@ Alternatively, use jargon 'standalone' by passing flags for inputs and outputs:
   Example: jargon -f /path/to/original.txt -o /path/to/lemmatized.txt
 ```
 
-### Online demo
-
-[https://clipperhouse.com/jargon](https://clipperhouse.com/jargon)
-
 ### In your code
 
 [GoDoc](https://godoc.org/github.com/clipperhouse/jargon)
