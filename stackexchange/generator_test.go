@@ -26,19 +26,3 @@ func TestTrailingVersion(t *testing.T) {
 		}
 	}
 }
-
-func TestNormalize(t *testing.T) {
-	tests := map[string]string{
-		"foo.js":      "foojs",
-		".net":        ".net",
-		"asp.net-mvc": "aspnetmvc",
-		"os/2":        "os2",
-	}
-
-	for given, expected := range tests {
-		got := normalize(given)
-		if got != expected {
-			t.Errorf("Given %q, expected %q, but got %q", given, expected, got)
-		}
-	}
-}

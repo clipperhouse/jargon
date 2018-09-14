@@ -3,6 +3,7 @@ package stackexchange
 import (
 	"bytes"
 	"strings"
+	"sync"
 )
 
 // dictionary satisfies the jargon.Dictionary interface
@@ -25,6 +26,15 @@ func (d *dictionary) Lookup(s []string) (string, bool) {
 	return canonical2, found2
 }
 
+var bufPool = sync.Pool{
+	New: func() interface{} {
+		// The Pool's New function should generally only return pointer
+		// types, since a pointer can be put into the return interface
+		// value without an allocation:
+		return new(bytes.Buffer)
+	},
+}
+
 func normalize(s string) string {
 	needsRewrite := false
 loop:
@@ -39,7 +49,8 @@ loop:
 	}
 
 	if needsRewrite {
-		buf := new(bytes.Buffer)
+		b := bufPool.Get().(*bytes.Buffer)
+		b.Reset()
 		for i, r := range s {
 			if i > 0 {
 				// Leading dots are meaningful and should not be removed, for example ".net"
@@ -48,9 +59,10 @@ loop:
 					continue
 				}
 			}
-			buf.WriteRune(r)
+			b.WriteRune(r)
 		}
-		s = buf.String()
+		s = b.String()
+		bufPool.Put(b)
 	}
 	return strings.ToLower(s)
 }
