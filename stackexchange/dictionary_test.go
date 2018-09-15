@@ -1,12 +1,16 @@
 package stackexchange
 
-import "testing"
+import (
+	"io/ioutil"
+	"strings"
+	"testing"
+)
 
 func TestNormalize(t *testing.T) {
 	tests := map[string]string{
 		"foo.js":      "foojs",
-		".net":        ".net",
-		"asp.net-mvc": "aspnetmvc",
+		".Net":        ".net",
+		"ASP.net-mvc": "aspnetmvc",
 		"os/2":        "os2",
 	}
 
@@ -19,15 +23,17 @@ func TestNormalize(t *testing.T) {
 }
 
 func BenchmarkNormalize(b *testing.B) {
-	strs := []string{
-		"foo.js",
-		".net",
-		"asp.net-mvc",
-		"os/2",
+	wikipedia, err := ioutil.ReadFile("../testdata/wikipedia.txt")
+
+	if err != nil {
+		b.Error(err)
 	}
+
+	words := strings.Fields(string(wikipedia)) // good enough for this test
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		for _, s := range strs {
+		for _, s := range words {
 			normalize(s)
 		}
 	}
