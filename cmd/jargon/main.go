@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/clipperhouse/jargon"
@@ -50,7 +50,7 @@ func init() {
 	flag.StringVar(&f, "f", "", "Input file path")
 	flag.StringVar(&s, "s", "", "A (quoted) string to lemmatize")
 	flag.StringVar(&u, "u", "", "A URL to fetch and lemmatize")
-	flag.StringVar(&o, "o", "", "Output file path")
+	flag.StringVar(&o, "o", "", "Output file path. If omitted, output goes to Stdout.")
 	flag.Usage = func() {
 		cmd := os.Args[0]
 		out := flag.CommandLine.Output()
@@ -78,12 +78,23 @@ func lemFile(filePath string) error {
 	}
 	defer file.Close()
 
-	return lem(file)
+	var tokens jargon.Tokens
+
+	ext := filepath.Ext(filePath)
+	switch ext {
+	case ".html", ".htm":
+		tokens = jargon.TokenizeHTML(file)
+	default:
+		tokens = jargon.Tokenize(file)
+	}
+
+	return lem(tokens)
 }
 
 func lemString(s string) error {
 	r := strings.NewReader(s)
-	return lem(r)
+	tokens := jargon.Tokenize(r)
+	return lem(tokens)
 }
 
 func lemURL(u string) error {
@@ -93,16 +104,37 @@ func lemURL(u string) error {
 	}
 	defer resp.Body.Close()
 
-	return lem(resp.Body)
+	var tokens jargon.Tokens
+
+	ct := resp.Header.Get("Content-Type")
+	html := strings.HasPrefix(ct, "text/html")
+	if html {
+		tokens = jargon.TokenizeHTML(resp.Body)
+	} else {
+		tokens = jargon.Tokenize(resp.Body)
+	}
+
+	return lem(tokens)
 }
 
 func lemStdin() error {
-	return lem(os.Stdin)
+	tokens := jargon.Tokenize(os.Stdin)
+	return lem(tokens)
 }
 
 var lemmatizer = jargon.NewLemmatizer(stackexchange.Dictionary, 3)
 
-func lem(r io.Reader) error {
+func lem(tokens jargon.Tokens) error {
+
+	// switch tokens.(type) {
+	// case *jargon.HTMLTokens:
+	// 	fmt.Println("tokenized html")
+	// case *jargon.TextTokens:
+	// 	fmt.Println("tokenized plain text")
+	// default:
+	// 	panic("unknown text type")
+	// }
+
 	var w *bufio.Writer
 
 	if len(o) > 0 { // output file flag
@@ -117,9 +149,6 @@ func lem(r io.Reader) error {
 		w = bufio.NewWriter(os.Stdout)
 	}
 
-	br := bufio.NewReader(r)
-
-	tokens := jargon.Tokenize(br)
 	lemmas := lemmatizer.Lemmatize(tokens)
 
 	for {
