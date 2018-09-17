@@ -6,6 +6,10 @@
     <IsPackable>false</IsPackable>
 
     <LangVersion>7.2</LangVersion>
+
+    <SignAssembly>true</SignAssembly>
+
+    <AssemblyOriginatorKeyFile>Jargon.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>

@@ -115,7 +115,7 @@ namespace Jargon.Tests
             using (var tokens = new TextTokens(r))
             using (var sc = new LemmaTokens<TextTokens>(fakeLem, tokens))
             {
-                foreach(var kv in expecteds)
+                foreach (var kv in expecteds)
                 {
                     var take = kv.Key;
                     var expected = kv.Value;
@@ -146,14 +146,14 @@ namespace Jargon.Tests
                     Assert.Equal(expected.Ok, got.Ok);
                     Assert.Equal(expected.Count, got.Count);
 
-                    if(expected.Taken == null)
+                    if (expected.Taken == null)
                     {
                         Assert.Null(got.Taken);
                     }
                     else
                     {
                         Assert.Equal(expected.Taken.Length, got.Taken.Length);
-                        for(var i = 0; i < expected.Taken.Length; i++)
+                        for (var i = 0; i < expected.Taken.Length; i++)
                         {
                             Assert.Equal(expected.Taken[i], got.Taken[i]);
                         }

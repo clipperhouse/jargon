@@ -6,6 +6,9 @@
     <Version>0.0.1</Version>
     <Authors>Matt Sherman, Kevin Montrose</Authors>
     <Company />
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>Jargon.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
     
   </PropertyGroup>
 
