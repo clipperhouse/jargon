@@ -58,9 +58,16 @@ func (p *parser) Parse() (string, bool) {
 	// Try parsing first token as int
 	i, err := strconv.ParseInt(first, 10, 64)
 	if err == nil {
-		p.ints = append(p.ints, i)
-		p.pos++
-		return p.parseMagnitudesInt()
+		switch {
+		case hasLeadingZero(first):
+			// Special case for leading zeros on an integer: assume it is intentional,
+			// such as a zip code, serial number, phone number
+			return "", false
+		default:
+			p.ints = append(p.ints, i)
+			p.pos++
+			return p.parseMagnitudesInt()
+		}
 	}
 
 	// Try parsing first token as float
@@ -90,6 +97,21 @@ func normalize(s string) string {
 		return "-" + result
 	}
 	return result
+}
+
+func hasLeadingZero(s string) bool {
+	if s[0] == '0' {
+		return true
+	}
+
+	if len(s) > 1 {
+		switch s[:2] {
+		case "+0", "-0":
+			return true
+		}
+	}
+
+	return false
 }
 
 func (p *parser) parseMagnitudesInt() (string, bool) {

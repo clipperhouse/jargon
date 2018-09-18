@@ -24,8 +24,15 @@ func TestInts(t *testing.T) {
 		{[]string{"-5", "billion"}, expected{"-5000000000", true}},
 		{[]string{"3", "hundred", "million"}, expected{"300000000", true}},
 
+		{[]string{"0.25"}, expected{"0.25", true}},
 		{[]string{"4.58", "hundred"}, expected{"458", true}},
 		{[]string{"4.581", "hundred"}, expected{"458.1", true}},
+
+		// leading zeros on integer, special case
+		{[]string{"02134"}, expected{"", false}},
+		{[]string{"2134"}, expected{"2134", true}},
+		{[]string{"+011"}, expected{"", false}},
+		{[]string{"-023"}, expected{"", false}},
 
 		{[]string{"foo"}, expected{"", false}},
 		{[]string{"foo three"}, expected{"", false}},
