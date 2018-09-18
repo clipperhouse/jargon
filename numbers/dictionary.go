@@ -12,6 +12,18 @@ import (
 
 type dictionary struct{}
 
+// Dictionary implements the jargon.Dictionary interface, for use with the jargon lemmatizer, e.g.:
+//	lem := jargon.NewLemmatizer(numbers.Dictionary)
+// This dictionary will lemmatize simple number phrases like 'three hundred' into '300'. More examples:
+//	"three" → "3"
+//	"three thousand" → "3000"
+//	"3 thousand" → "3000"
+//	"thirty-five thousand" → "35000"
+//	"three hundred thousand" → "300000"
+//	"-3 thousand" → "-3000"
+//	"+3 thousand" → "3000"
+//	"2.54 million" → "2540000"
+//	"1,000,000" → "1000000"
 var Dictionary = &dictionary{}
 
 // Lookup attempts to turn a slice of token strings into a canonical number string.
