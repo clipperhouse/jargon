@@ -1,9 +1,16 @@
-This package generates a Dictionary for use with the [jargon](https://github.com/clipperhouse/jargon) lemmatizer, using tags & synonyms from Stack Exchange sites.
+This package generates a Dictionary for use with the [jargon](https://github.com/clipperhouse/jargon) lemmatizer, using technology tags & synonyms from Stack Exchange sites.
 
-In particular, it uses the most popular tags from Stack Overflow, Server Fault, Game Dev and and Data Science. We think that provides a pretty good sample of likely term is technology text.
+Examples:
 
-It does this via code generation, pulling from the Stack Exchange API.
+- "Ruby on Rails" → "ruby-on-rails"
+- "ObjC" → "objective-c"
 
-The easiest way to generate code is to invoke the tests using `go test`.
+It includes the most popular tags from Stack Overflow, Server Fault, Game Dev and and Data Science. We think that provides a good set of likely terms in technological text.
 
-There is a list of stop words, intended to avoid lemmatizing plain-English words that also happen to be tags, such as `this`.
+### Implementation
+
+The [Lookup](https://github.com/clipperhouse/jargon/blob/master/stackexchange/dictionary.go#L16) method satisfies the [jargon.Dictionary interface](https://github.com/clipperhouse/jargon/blob/master/dictionary.go).
+
+The dictionary is code-generated, pulling from the Stack Exchange API. Have a look at the [`writeDictionary` method](https://github.com/clipperhouse/jargon/blob/master/stackexchange/generator.go#L24).
+
+There is a list of [stop words](https://github.com/clipperhouse/jargon/blob/master/stackexchange/stopwords.go), intended to avoid lemmatizing plain-English words that also happen to be tags, such as `this`.
