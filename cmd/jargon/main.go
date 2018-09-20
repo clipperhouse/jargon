@@ -10,11 +10,14 @@ import (
 	"strings"
 
 	"github.com/clipperhouse/jargon"
+	"github.com/clipperhouse/jargon/numbers"
 	"github.com/clipperhouse/jargon/stackexchange"
 )
 
 func main() {
 	flag.Parse()
+
+	lemmatizers = determineLemmatizers(tech, num)
 
 	switch {
 	case len(f) > 0:
@@ -37,6 +40,28 @@ func main() {
 	}
 }
 
+var lemmatizers []*jargon.Lemmatizer
+
+func determineLemmatizers(tech, num bool) []*jargon.Lemmatizer {
+	// splitting this out into a func to allow testing
+
+	var result []*jargon.Lemmatizer
+
+	none := !tech && !num
+
+	if tech || none {
+		lem := jargon.NewLemmatizer(stackexchange.Dictionary, 3)
+		result = append(result, lem)
+	}
+
+	if num {
+		lem := jargon.NewLemmatizer(numbers.Dictionary, 3)
+		result = append(result, lem)
+	}
+
+	return result
+}
+
 func check(err error) {
 	if err != nil {
 		os.Stderr.WriteString(err.Error() + "\n")
@@ -45,12 +70,15 @@ func check(err error) {
 }
 
 var f, s, u, o string
+var tech, num bool
 
 func init() {
 	flag.StringVar(&f, "f", "", "Input file path")
 	flag.StringVar(&s, "s", "", "A (quoted) string to lemmatize")
 	flag.StringVar(&u, "u", "", "A URL to fetch and lemmatize")
 	flag.StringVar(&o, "o", "", "Output file path. If omitted, output goes to Stdout.")
+	// flag.BoolVar(&tech, "tech", false, "Lemmatize technology terms using the StackExchange dictionary")
+	// flag.BoolVar(&num, "num", false, `Lemmatize number phrases (e.g. "three hundred → "300")`)
 	flag.Usage = func() {
 		cmd := os.Args[0]
 		out := flag.CommandLine.Output()
@@ -122,8 +150,6 @@ func lemStdin() error {
 	return lem(tokens)
 }
 
-var lemmatizer = jargon.NewLemmatizer(stackexchange.Dictionary, 3)
-
 func lem(tokens jargon.Tokens) error {
 
 	// switch tokens.(type) {
@@ -149,10 +175,10 @@ func lem(tokens jargon.Tokens) error {
 		w = bufio.NewWriter(os.Stdout)
 	}
 
-	lemmas := lemmatizer.Lemmatize(tokens)
+	tokens = lemAll(tokens, lemmatizers)
 
 	for {
-		t := lemmas.Next()
+		t := tokens.Next()
 		if t == nil {
 			break
 		}
@@ -162,4 +188,11 @@ func lem(tokens jargon.Tokens) error {
 
 	// Flush the buffer as a last step; return error if any
 	return w.Flush()
+}
+
+func lemAll(tokens jargon.Tokens, lems []*jargon.Lemmatizer) jargon.Tokens {
+	for _, lem := range lems {
+		tokens = lem.Lemmatize(tokens)
+	}
+	return tokens
 }
