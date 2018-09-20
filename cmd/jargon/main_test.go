@@ -22,7 +22,6 @@ func TestDetermineLemmatizers(t *testing.T) {
 	if len(tech) != 1 {
 		t.Errorf("expected 1 lemmatizer, got %d", len(tech))
 	}
-
 	if tech[0].Dictionary != stackexchange.Dictionary {
 		t.Errorf("expected tech lemmatizer to include stackexchange.Dictionary, got a %T", tech[0].Dictionary)
 	}
@@ -31,7 +30,6 @@ func TestDetermineLemmatizers(t *testing.T) {
 	if len(num) != 1 {
 		t.Errorf("expected 1 lemmatizer when num is specified, got %d", len(num))
 	}
-
 	if num[0].Dictionary != numbers.Dictionary {
 		t.Errorf("expected num lemmatizer to include numbers.Dictionary, got a %T", num[0].Dictionary)
 	}
