@@ -9,38 +9,54 @@ import (
 	"github.com/clipperhouse/jargon/stackexchange"
 )
 
-func TestDetermineLemmatizers(t *testing.T) {
+func TestDefaultLemmatizer(t *testing.T) {
 	defaults := determineLemmatizers(false, false)
+
 	if len(defaults) != 1 {
 		t.Errorf("expected 1 lemmatizer, got %d", len(defaults))
 	}
+
 	if defaults[0].Dictionary != stackexchange.Dictionary {
 		t.Errorf("expected default to be the stackexchange.Dictionary, got %T", defaults[0].Dictionary)
 	}
+}
 
+func TestTechLemmatizer(t *testing.T) {
 	tech := determineLemmatizers(true, false)
+
 	if len(tech) != 1 {
 		t.Errorf("expected 1 lemmatizer, got %d", len(tech))
 	}
+
 	if tech[0].Dictionary != stackexchange.Dictionary {
 		t.Errorf("expected tech lemmatizer to include stackexchange.Dictionary, got a %T", tech[0].Dictionary)
 	}
+}
+
+func TestNumbersLemmatizer(t *testing.T) {
 
 	num := determineLemmatizers(false, true)
+
 	if len(num) != 1 {
 		t.Errorf("expected 1 lemmatizer when num is specified, got %d", len(num))
 	}
+
 	if num[0].Dictionary != numbers.Dictionary {
 		t.Errorf("expected num lemmatizer to include numbers.Dictionary, got a %T", num[0].Dictionary)
 	}
+}
 
+func TestBothLemmatizers(t *testing.T) {
 	both := determineLemmatizers(true, true)
+
 	if len(both) != 2 {
 		t.Errorf("expected 2 lemmatizer when tech and num are specified, got %d", len(both))
 	}
+
 	if both[0].Dictionary != stackexchange.Dictionary {
 		t.Errorf("expected first lemmatizer to be stackexchange.Dictionary, got a %T", both[0].Dictionary)
 	}
+
 	if both[1].Dictionary != numbers.Dictionary {
 		t.Errorf("expected second lemmatizer to be numbers.Dictionary, got a %T", both[1].Dictionary)
 	}
