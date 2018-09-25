@@ -85,7 +85,7 @@ func TestLemAll(t *testing.T) {
 	lems := []*jargon.Lemmatizer{
 		jargon.NewLemmatizer(stackexchange.Dictionary, 3),
 		jargon.NewLemmatizer(numbers.Dictionary, 3),
-		jargon.NewLemmatizer(contractions.Dictionary, 3),
+		jargon.NewLemmatizer(contractions.Dictionary, 1),
 	}
 
 	lemmatized := lemAll(tokens, lems)
