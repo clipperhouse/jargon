@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/clipperhouse/jargon"
+	"github.com/clipperhouse/jargon/contractions"
 	"github.com/clipperhouse/jargon/numbers"
 	"github.com/clipperhouse/jargon/stackexchange"
 )
@@ -17,7 +18,7 @@ import (
 func main() {
 	flag.Parse()
 
-	lemmatizers = determineLemmatizers(tech, num)
+	lemmatizers = determineLemmatizers(tech, num, cont)
 
 	switch {
 	case len(f) > 0:
@@ -42,12 +43,12 @@ func main() {
 
 var lemmatizers []*jargon.Lemmatizer
 
-func determineLemmatizers(tech, num bool) []*jargon.Lemmatizer {
+func determineLemmatizers(tech, num, cont bool) []*jargon.Lemmatizer {
 	// splitting this out into a func to allow testing
 
 	var result []*jargon.Lemmatizer
 
-	none := !tech && !num
+	none := !tech && !num && !cont
 
 	if tech || none {
 		lem := jargon.NewLemmatizer(stackexchange.Dictionary, 3)
@@ -56,6 +57,11 @@ func determineLemmatizers(tech, num bool) []*jargon.Lemmatizer {
 
 	if num {
 		lem := jargon.NewLemmatizer(numbers.Dictionary, 3)
+		result = append(result, lem)
+	}
+
+	if cont {
+		lem := jargon.NewLemmatizer(contractions.Dictionary, 1)
 		result = append(result, lem)
 	}
 
@@ -70,7 +76,7 @@ func check(err error) {
 }
 
 var f, s, u, o string
-var tech, num bool
+var tech, num, cont bool
 
 func init() {
 	flag.StringVar(&f, "f", "", "Input file path")
@@ -79,6 +85,7 @@ func init() {
 	flag.StringVar(&o, "o", "", "Output file path. If omitted, output goes to Stdout.")
 	// flag.BoolVar(&tech, "tech", false, "Lemmatize technology terms using the StackExchange dictionary")
 	// flag.BoolVar(&num, "num", false, `Lemmatize number phrases (e.g. "three hundred → "300")`)
+	// flag.BoolVar(&cont, "cont", false, `Expand contractions (e.g. "didn't → "did not")`)
 	flag.Usage = func() {
 		cmd := os.Args[0]
 		out := flag.CommandLine.Output()
