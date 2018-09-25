@@ -5,9 +5,9 @@ import (
 	"testing"
 )
 
-func TestExhaustive(t *testing.T) {
-	given := "i'll she’d they'll wouldn’t should've"
-	expected := "i will she would they will would not should have"
+func TestSome(t *testing.T) {
+	given := "i'll SHE’D they're Can’t should've GOTTA Wanna"
+	expected := "i will SHE WOULD they are Can not should have GOT TO Want to"
 
 	var lookups []string
 
