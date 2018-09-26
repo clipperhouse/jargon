@@ -84,17 +84,14 @@ package contractions
 // This file is generated. Best not to modify it, as it will likely be overwritten.
 
 // Dictionary for expanding common contractions into distinct words. Examples:
-//	don't → does not
-//	we've → we have
-//	she's -> she is
-// Caveats:
-// - only lower case right now; TODO: add support for title case and all uppercase?
-// - returns expanded words as a single string with a space in it; caller might wish to re-tokenize
+// don't → does not
+// We’ve → We have
+// SHE'S -> SHE IS
 var Dictionary = &dictionary{ 
 	variations: variations, 
 }
 
-// remember maps do not guarantee order, so this will look random
+// maps do not guarantee order, so this will look random
 var variations = {{ printf "%#v" . }}
 `))
 

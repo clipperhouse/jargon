@@ -115,7 +115,7 @@ flags to choose other dictionaries.
 
   -tech
     	Lemmatize technology terms to Stack Overflow-style tags
-    	(e.g. "Ruby on Rails" → "ruby-on-rails").  If no dictionary is
+    	(e.g. "Ruby on Rails" → "ruby-on-rails"). If no dictionary is
     	specified, this is the default.
   -cont
     	Expand contractions (e.g. "didn't" → "did not")
