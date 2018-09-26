@@ -83,9 +83,9 @@ func init() {
 	flag.StringVar(&s, "s", "", "A (quoted) string to lemmatize")
 	flag.StringVar(&u, "u", "", "A URL to fetch and lemmatize")
 	flag.StringVar(&o, "o", "", "Output file path. If omitted, output goes to Stdout.")
-	// flag.BoolVar(&tech, "tech", false, "Lemmatize technology terms using the StackExchange dictionary")
-	// flag.BoolVar(&num, "num", false, `Lemmatize number phrases (e.g. "three hundred → "300")`)
-	// flag.BoolVar(&cont, "cont", false, `Expand contractions (e.g. "didn't → "did not")`)
+	flag.BoolVar(&tech, "tech", false, "Lemmatize technology terms using the StackExchange dictionary")
+	flag.BoolVar(&num, "num", false, `Lemmatize number phrases (e.g. "three hundred → "300")`)
+	flag.BoolVar(&cont, "cont", false, `Expand contractions (e.g. "didn't → "did not")`)
 	flag.Usage = func() {
 		cmd := os.Args[0]
 		out := flag.CommandLine.Output()
@@ -99,10 +99,31 @@ Usage:
 
 Alternatively, use %[1]s 'standalone' by passing flags for inputs and outputs:
 
+  -f string
+    	Input file path
+  -o string
+    	Output file path. If omitted, output goes to Stdout.
+  -s string
+    	A (quoted) string to lemmatize
+  -u string
+    	A URL to fetch and lemmatize
+
+  Example: %[1]s -f /path/to/original.txt -o /path/to/lemmatized.txt
+
+By default, %[1]s uses a dictionary of technology terms. Pass the following 
+flags to choose other dictionaries.
+
+  -tech
+    	Lemmatize technology terms to Stack Overflow-style tags
+    	(e.g. "Ruby on Rails" → "ruby-on-rails").  If no dictionary is
+    	specified, this is the default.
+  -cont
+    	Expand contractions (e.g. "didn't" → "did not")
+  -num
+    	Lemmatize number phrases (e.g. "three hundred" → "300")
+
 `
 		fmt.Fprintf(out, usage, cmd)
-		flag.PrintDefaults()
-		fmt.Fprintf(out, "\n  Example: %s -f /path/to/original.txt -o /path/to/lemmatized.txt\n\n", cmd)
 	}
 }
 
