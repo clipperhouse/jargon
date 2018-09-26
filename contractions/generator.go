@@ -115,14 +115,14 @@ var contractions = map[string]string{
 	"i've":    "i have",
 	"you've":  "you have",
 	"we've":   "we have",
-	"they've": "we have",
+	"they've": "they have",
 
 	"i'd":    "i would", // arguably "i had"
 	"you'd":  "you would",
 	"she'd":  "she would",
 	"he'd":   "he would",
 	"we'd":   "we would",
-	"they'd": "we would",
+	"they'd": "they would",
 
 	"isn't":  "is not",
 	"aren't": "are not",

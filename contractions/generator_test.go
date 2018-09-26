@@ -31,3 +31,13 @@ func TestVariations(t *testing.T) {
 		t.Errorf("generated variations should have %d items, but got %d", expected, got)
 	}
 }
+
+func TestSanity(t *testing.T) {
+	for contraction, expansion := range contractions {
+		// first letters should match, intended to catch dumb typos
+		if contraction[0] != expansion[0] {
+			t.Errorf("the first character of the mapping %q → %q should match", contraction, expansion)
+		}
+	}
+
+}
