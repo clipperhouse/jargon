@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/clipperhouse/jargon/contractions"
 	"github.com/clipperhouse/jargon/numbers"
 	"github.com/clipperhouse/jargon/stackexchange"
 )
@@ -41,6 +42,23 @@ func TestLemmatize(t *testing.T) {
 		if l, ok := lookup[lemma]; !ok || !l.IsLemma() {
 			t.Errorf("Expected %q to be identified as a lemma, but it was not", lemma)
 		}
+	}
+}
+
+func TestRetokenize(t *testing.T) {
+	dict := contractions.Dictionary
+	lem := NewLemmatizer(dict, 1)
+
+	original := `Would've but also won't`
+	r1 := strings.NewReader(original)
+	tokens := Tokenize(r1)
+
+	got := collect(lem.Lemmatize(tokens))
+	r2 := strings.NewReader(`Would have but also will not`)
+	expected := collect(Tokenize(r2))
+
+	if !equals(got, expected) {
+		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
 	}
 }
 
@@ -106,9 +124,10 @@ func TestMultiple(t *testing.T) {
 	lems := []*Lemmatizer{
 		NewLemmatizer(numbers.Dictionary, 4),
 		NewLemmatizer(stackexchange.Dictionary, 3),
+		NewLemmatizer(contractions.Dictionary, 1),
 	}
 
-	s := `Here is the story of five and Rails and ASPNET and three hundred thousand.`
+	s := `Here is the story of five and Rails and ASPNET and couldn't three hundred thousand.`
 	r := strings.NewReader(s)
 
 	var tokens Tokens
@@ -118,7 +137,7 @@ func TestMultiple(t *testing.T) {
 		tokens = lem.Lemmatize(tokens)
 	}
 
-	expected := `Here is the story of 5 and ruby-on-rails and asp.net and 300000.`
+	expected := `Here is the story of 5 and ruby-on-rails and asp.net and could not 300000.`
 	var got string
 
 	for {

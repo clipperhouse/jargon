@@ -4,6 +4,7 @@ package jargon
 import (
 	"fmt"
 	"strings"
+	"unicode"
 )
 
 // Lemmatizer is the main structure for looking up canonical tags
@@ -48,7 +49,8 @@ func (lem *Lemmatizer) Lemmatize(tokens Tokens) *LemmaTokens {
 type LemmaTokens struct {
 	lem      *Lemmatizer
 	incoming Tokens
-	buffer   []*Token
+	buffer   []*Token // for incoming tokens; no guarantee they will be emitted
+	outgoing []*Token
 }
 
 func newLemmaTokens(lem *Lemmatizer, incoming Tokens) *LemmaTokens {
@@ -64,6 +66,11 @@ func (t *LemmaTokens) Next() *Token {
 		return nil
 	}
 	for {
+
+		if len(t.outgoing) > 0 {
+			return t.emit()
+		}
+
 		t.fill(1) // ok to ignore this error
 
 		if len(t.buffer) == 0 {
@@ -72,17 +79,17 @@ func (t *LemmaTokens) Next() *Token {
 
 		switch tok := t.buffer[0]; {
 		case tok.IsPunct() || tok.IsSpace():
-			// Emit it
+			// Emit it straight from the incoming buffer
 			t.drop(1)
 			return tok
 		default:
 			// Else it's a word
-			return t.ngrams()
+			t.ngrams()
 		}
 	}
 }
 
-func (t *LemmaTokens) ngrams() *Token {
+func (t *LemmaTokens) ngrams() {
 	// Try n-grams, longest to shortest (greedy)
 	for take := t.lem.maxGramLength; take > 0; take-- {
 		run, consumed, ok := t.wordrun(take)
@@ -94,22 +101,48 @@ func (t *LemmaTokens) ngrams() *Token {
 		canonical, found := t.lem.Lookup(run)
 
 		if found {
-			// Emit new token, replacing consumed tokens
-			lemma := &Token{
-				value: canonical,
-				space: false,
-				punct: false,
-				lemma: true,
+			// the canonical can have space or punct, so we want to return separate tokens
+
+			// optimization: check if tokenization is needed, avoid expense if not
+			var tokenize bool
+			for _, r := range canonical {
+				if unicode.IsSpace(r) || isPunct(r) {
+					tokenize = true
+					break
+				}
 			}
+
+			if tokenize {
+				r := strings.NewReader(canonical)
+				tokens := Tokenize(r)
+				for {
+					tok := tokens.Next()
+					if tok == nil {
+						break
+					}
+					tok.lemma = true
+					t.stage(tok) //set it up to be emitted
+				}
+			} else {
+				tok := &Token{
+					value: canonical,
+					space: false,
+					punct: false,
+					lemma: true,
+				}
+				t.stage(tok) //set it up to be emitted
+			}
+
 			t.drop(consumed) // discard the incoming tokens that comprised the lemma
-			return lemma
+			return
 		}
 
 		if take == 1 {
 			// No n-grams, just emit
 			original := t.buffer[0]
-			t.drop(1)
-			return original
+			t.stage(original) // set it up to be emitted
+			t.drop(1)         // take it out of the buffer
+			return
 		}
 	}
 	err := fmt.Errorf("did not find a token. this should never happen")
@@ -142,6 +175,18 @@ func (t *LemmaTokens) fill(count int) bool {
 		t.buffer = append(t.buffer, token)
 	}
 	return true
+}
+
+func (t *LemmaTokens) stage(tok *Token) {
+	t.outgoing = append(t.outgoing, tok)
+}
+
+func (t *LemmaTokens) emit() *Token {
+	n := 1
+	tok := t.outgoing[0]
+	copy(t.outgoing, t.outgoing[n:])
+	t.outgoing = t.outgoing[:len(t.outgoing)-n]
+	return tok
 }
 
 // Analogous to tokens.Take(take) in Linq
