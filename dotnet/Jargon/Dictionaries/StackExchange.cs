@@ -49,7 +49,7 @@ namespace Jargon.Data
             return (null, false);
         }
 
-        private static string Normalize(string s)
+        internal static string Normalize(string s)
         {
             var needsRewrite = false;
 
