@@ -46,7 +46,7 @@ namespace Jargon.Impl
 
             var ix = r.Character + Offset;
 
-            if (ix < 0 || ix > TokenOffsetLookup.Length)
+            if (ix < 0 || ix >= TokenOffsetLookup.Length)
             {
                 tok = default;
                 return false;

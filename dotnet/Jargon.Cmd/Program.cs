@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace Jargon.Cmd
 {
@@ -24,7 +25,7 @@ namespace Jargon.Cmd
 
             internal bool UrlIsSet => !string.IsNullOrEmpty(Url);
 
-            [Option('o', Required = false, HelpText = "Output file path")]
+            [Option('o', Required = false, HelpText = "Output file path.  If omitted, output goes to Stdout.")]
             public string OutputFile { get; set; }
 
             internal bool OutputFileIsSet => !string.IsNullOrEmpty(OutputFile);
@@ -79,9 +80,11 @@ namespace Jargon.Cmd
 
                     try
                     {
+                        var isHtmlFile = new[] { ".html", ".htm" }.Contains(Path.GetExtension(opts.InputFile), StringComparer.InvariantCultureIgnoreCase);
+
                         using (var reader = new StreamReader(File.OpenRead(opts.InputFile)))
                         {
-                            Lemmatize(reader, writer);
+                            Lemmatize(isHtmlFile, reader, writer);
                             return;
                         }
                     }
@@ -96,7 +99,7 @@ namespace Jargon.Cmd
                 {
                     using (var reader = new StringReader(opts.String))
                     {
-                        Lemmatize(reader, writer);
+                        Lemmatize(false, reader, writer);
                         return;
                     }
                 }
@@ -108,9 +111,17 @@ namespace Jargon.Cmd
                         using (var web = new CompressedWebClient())
                         {
                             var html = web.DownloadString(opts.Url);
+
+                            var contentType =
+                                web.ResponseHeaders.AllKeys.Contains("Content-Type") ?
+                                    web.ResponseHeaders["Content-Type"] :
+                                    "text/plain";
+
+                            var isHtmlResponse = contentType.StartsWith("text/html", StringComparison.InvariantCultureIgnoreCase);
+
                             using (var reader = new StringReader(html))
                             {
-                                Lemmatize(reader, writer);
+                                Lemmatize(isHtmlResponse, reader, writer);
                             }
                             return;
                         }
@@ -122,7 +133,7 @@ namespace Jargon.Cmd
                     }
                 }
 
-                Lemmatize(Console.In, writer);
+                Lemmatize(false, Console.In, writer);
             }
             finally
             {
@@ -133,10 +144,12 @@ namespace Jargon.Cmd
             }
         }
 
-        private static void Lemmatize(TextReader reader, TextWriter writer)
+        private static void Lemmatize(bool isHtml, TextReader reader, TextWriter writer)
         {
             var lemmatizer = new Lemmatizer(Data.StackExchange.Instance, 3);
-            foreach(var tok in lemmatizer.Lemmatize(reader))
+            var tokens = isHtml ? Jargon.LemmatizeHTML(reader, lemmatizer) : Jargon.Lemmatize(reader, lemmatizer);
+
+            foreach(var tok in tokens)
             {
                 writer.Write(tok.String);
             }
