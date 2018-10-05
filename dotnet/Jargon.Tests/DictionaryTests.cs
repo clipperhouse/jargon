@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using System.Collections.Generic;
+using Xunit;
 
 namespace Jargon.Tests
 {
@@ -47,6 +48,24 @@ namespace Jargon.Tests
             var got = Data.Numbers.Instance.Lookup(given, given.Length);
             Assert.Equal(expectedCanonical, got.Canonical);
             Assert.Equal(expectedFound, got.Found);
+        }
+
+        [Theory]
+        [InlineData("i'll SHE’D they're Can’t should've GOTTA Wanna", "i will SHE WOULD they are Can not should have GOT TO Want to")]
+        public void TestSome_Contractions(string given, string expected)
+        {
+            var lookups = new List<string>();
+            foreach(var word in given.Split(' '))
+            {
+                var (canonical, ok) = Data.Contractions.Instance.Lookup(new[] { word }, 1);
+                if (ok)
+                {
+                    lookups.Add(canonical);
+                }
+            }
+
+            var got = string.Join(" ", lookups);
+            Assert.Equal(expected, got);
         }
     }
 }
