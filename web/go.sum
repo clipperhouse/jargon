@@ -1,0 +1,4 @@
+github.com/clipperhouse/jargon v0.0.0-20181016171321-f63d273c43c8 h1:G64zTrfFfeUpUet+rB8u/M9CYBbaoX4qkQW1QL5P8mQ=
+github.com/clipperhouse/jargon v0.0.0-20181016171321-f63d273c43c8/go.mod h1:F4HYnzhy51USiCYKlECSTvm+hYa8kmIpPX9jPJK/C8A=
+golang.org/x/net v0.0.0-20180911220305-26e67e76b6c3/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
+golang.org/x/net v0.0.0-20181011144130-49bb7cea24b1/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
