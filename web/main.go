@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/clipperhouse/jargon/stackexchange"
@@ -13,11 +14,14 @@ import (
 )
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 	http.HandleFunc("/", mainHandler)
 	http.HandleFunc("/_ah/health", healthCheckHandler)
 
-	log.Print("Listening on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
 func mainHandler(w http.ResponseWriter, r *http.Request) {
