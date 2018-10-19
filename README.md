@@ -10,7 +10,7 @@ The tokenizer preserves all tokens verbatim, including whitespace and punctuatio
 
 In turn, Jargon offers a **lemmatizer**, for recognizing canonical and synonymous terms. For example the n-gram “Ruby on Rails” becomes ruby-on-rails. It implements “insensitivity” to spaces, dots and dashes.
 
-(It turns out™️ that the above rules work well in structured text such as CSV and JSON.)
+(It turns out that the above rules work well in structured text such as CSV and JSON.)
 
 ### Online demo
 
@@ -33,8 +33,6 @@ jargon
 ```
 
 ```
-Usage:
-
 jargon accepts piped UTF8 text from Stdin and pipes lemmatized text to Stdout
 
   Example: echo "I luv Rails" | jargon
@@ -97,6 +95,18 @@ func main() {
 }
 ```
 
+## Dictionaries
+
+Canonical terms (lemmas) are looked up in dictionaries, implemented as their own packages. Three are available:
+
+- [Stack Exchange technology tags](https://github.com/clipperhouse/jargon/stackexchange)
+  - `Ruby on Rails → ruby-on-rails`
+  - `ObjC → objective-c`
+- [Contractions](https://github.com/clipperhouse/jargon/contractions)
+  - `Couldn‘t → Could not`
+- [Simple numbers](https://github.com/clipperhouse/jargon/numbers)
+  - `Thirty-five hundred → 3500`
+
 ## Background
 
 When dealing with technology terms in text – say, a job listing or a resume –
@@ -118,9 +128,7 @@ In NLP, it’s handled by [stemmers](https://en.wikipedia.org/wiki/Stemming) or 
 
 Recognizing mutli-words-as-a-single-term (“Ruby on Rails”) is [named-entity recognition](https://en.wikipedia.org/wiki/Named-entity_recognition).
 
-## Who’s it for?
-
-Dunno yet, some ideas…
+## What’s it for?
 
 - Recognition of domain terms in text
 - NLP for unstructured data, when we wish to ensure consistency of vocabulary, for statistical analysis.
