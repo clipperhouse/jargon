@@ -12,6 +12,10 @@ In turn, Jargon offers a **lemmatizer**, for recognizing canonical and synonymou
 
 (It turns out™️ that the above rules work well in structured text such as CSV and JSON.)
 
+### Online demo
+
+[Give it a try](https://clipperhouse.com/jargon/)
+
 ### Command line
 
 ```bash
