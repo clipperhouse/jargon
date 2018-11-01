@@ -2,15 +2,15 @@
 package main
 
 import (
+	"bytes"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 
-	"github.com/clipperhouse/jargon/stackexchange"
-
 	"github.com/clipperhouse/jargon"
+	"github.com/clipperhouse/jargon/stackexchange"
 )
 
 func main() {
@@ -58,16 +58,27 @@ func jargonHandler(w http.ResponseWriter, r *http.Request) {
 
 	lemmatized := lemmatizer.Lemmatize(tokens)
 
+	var b bytes.Buffer
+
 	for {
 		t := lemmatized.Next()
 		if t == nil {
 			break
 		}
+
+		// we buffer (instead of writing directly to Response) because the Body
+		// will be closed if we read and write concurrently:
+		// https://github.com/golang/go/issues/15527
 		if t.IsLemma() {
-			lemma.Execute(w, t)
+			lemma.Execute(&b, t)
 		} else {
-			plain.Execute(w, t)
+			plain.Execute(&b, t)
 		}
+	}
+
+	_, err := b.WriteTo(w)
+	if err != nil {
+		log.Print(err)
 	}
 }
 

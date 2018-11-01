@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"log"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -62,8 +63,8 @@ func (t *TextTokens) Next() *Token {
 				// No problem
 				return t.token()
 			}
-			// Problem
-			panic(err)
+			log.Print(err)
+			return nil
 		case unicode.IsSpace(r):
 			t.accept(r)
 			return t.token()
