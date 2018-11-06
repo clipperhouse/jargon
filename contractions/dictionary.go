@@ -1,3 +1,4 @@
+// Package contractions provides a jargon.Dictionary to expand English contractions, such as "don't" → "does not"
 package contractions
 
 type dictionary struct {

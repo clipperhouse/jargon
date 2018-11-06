@@ -7,6 +7,9 @@ import (
 	"strings"
 	"testing"
 	"unicode/utf8"
+
+	"github.com/clipperhouse/jargon"
+	"github.com/clipperhouse/jargon/stackexchange"
 )
 
 func TestTokenize(t *testing.T) {
@@ -125,6 +128,35 @@ Hi! Let's talk Ruby on Rails.
 		if !contains(e, got) {
 			t.Errorf("Expected to find token %q, but did not.", e)
 		}
+	}
+}
+
+func Example() {
+	lem := jargon.NewLemmatizer(stackexchange.Dictionary)
+
+	text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
+	r := strings.NewReader(text)
+	tokens := jargon.Tokenize(r)
+
+	// Iterate by calling Next() until nil
+	for {
+		tok := tokens.Next()
+		if tok == nil {
+			break
+		}
+
+		// Do stuff with token, or...
+	}
+
+	// Or! Pass tokens on to the lemmatizer
+	lemmas := lem.Lemmatize(tokens)
+	for {
+		lemma := tokens.Next()
+		if lemma == nil {
+			break
+		}
+
+		fmt.Print(lemma)
 	}
 }
 

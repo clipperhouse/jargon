@@ -24,12 +24,15 @@ import (
 //	}
 //
 // The tokenizer is targeted to English text that contains tech terms, so things like C++ and .Net are handled as single units.
-// It respects Unicode definitions of 'punctuation' and 'symbol', with a few hard-coded exceptions. Symbols are treated as word characters (like alphanumerics), allowing things like email addresses, hashtags and @-handles to be understood as a single token.
+//
+// It generally relies on Unicode definitions of 'punctuation' and 'symbol'. Symbols are treated as word characters (like alphanumerics), allowing things like email addresses, hashtags and @-handles to be understood as a single token.
+//
 // Dots are allowed to lead words, and to appear mid-word, allowing things like .Net and Node.js. Trailing dots are considered end-of-sentence.
-// [@, #, -, *, %, /, \] are hard-coded as symbols, even though Unicode specifies them as punctuation. See http://www.unicode.org/faq/punctuation_symbols.html
+//
+// [@, #, -, *, %, /, \] are hard-coded as symbols, even though Unicode specifies them as punctuation. See http://www.unicode.org/faq/punctuation_symbols.html.
 // All other punctuation terminates words, as does white space.
 //
-// It returns all tokens (including white space), so text can be reconstructed with fidelity. Ignoring (say) whitespace is a decision for the caller.
+// It returns all tokens (including white space), so text can be reconstructed with fidelity ("round tripped").
 func Tokenize(r io.Reader) *TextTokens {
 	return newTextTokens(r)
 }

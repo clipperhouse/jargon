@@ -2,7 +2,7 @@
 
 Jargon is a **lemmatizer**, useful for recognizing variations on canonical and synonymous terms.
 
-For example, jargon lemmatizes `react`, `React.js` or `React  JS` and `REACTJS` to the canonical `reactjs`.
+For example, jargon lemmatizes `react`, `React.js` or `React JS` and `REACTJS` to the canonical `reactjs`.
 
 Jargon uses Stack Overflow tags & synonyms, and implements “insensitivity” to spaces, dots and dashes.
 
@@ -47,51 +47,11 @@ Alternatively, use jargon 'standalone' by passing flags for inputs and outputs:
 
 ### In your code
 
-[GoDoc](https://godoc.org/github.com/clipperhouse/jargon)
-
-```go
-package main
-
-import (
-    "fmt"
-
-    "github.com/clipperhouse/jargon"
-    "github.com/clipperhouse/jargon/stackexchange"
-)
-
-var lem = jargon.NewLemmatizer(stackexchange.Dictionary)
-
-func main() {
-    text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
-    r := strings.NewReader(text)
-    tokens := jargon.Tokenize(r)
-
-    // Iterate by calling Next() until nil
-    for {
-        tok := tokens.Next()
-        if tok == nil {
-            break
-        }
-
-        // Do stuff with token
-    }
-
-    // Or! Pass tokens on to the lemmatizer
-    lemmas := lem.Lemmatize(tokens)
-    for {
-        lemma := tokens.Next()
-        if lemma == nil {
-            break
-        }
-
-        fmt.Print(lemma)
-    }
-}
-```
+See [GoDoc](https://godoc.org/github.com/clipperhouse/jargon).
 
 ## Dictionaries
 
-Canonical terms (lemmas) are looked up in dictionaries, implemented as their own packages. Three are available:
+Canonical terms (lemmas) are looked up in dictionaries. Three are available:
 
 - [Stack Exchange technology tags](https://github.com/clipperhouse/jargon/stackexchange)
   - `Ruby on Rails → ruby-on-rails`
@@ -100,6 +60,8 @@ Canonical terms (lemmas) are looked up in dictionaries, implemented as their own
   - `Couldn‘t → Could not`
 - [Simple numbers](https://github.com/clipperhouse/jargon/numbers)
   - `Thirty-five hundred → 3500`
+
+To implement your own, see the [jargon.Dictionary interface](https://godoc.org/github.com/clipperhouse/jargon/#Dictionary)
 
 ## Tokenizer
 
