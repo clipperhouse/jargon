@@ -2,7 +2,7 @@
 
 Jargon is a **lemmatizer**, useful for recognizing variations on canonical and synonymous terms.
 
-For example, jargon lemmatizes `react`, `React.js` or `React JS` and `REACTJS` to the canonical `reactjs`.
+For example, jargon lemmatizes `react`, `React.js`, `React JS` and `REACTJS` to a canonical `reactjs`.
 
 Jargon uses Stack Overflow tags & synonyms, and implements “insensitivity” to spaces, dots and dashes.
 
