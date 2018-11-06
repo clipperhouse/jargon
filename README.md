@@ -18,8 +18,6 @@ go install github.com/clipperhouse/jargon/cmd/jargon
 
 (Assumes a [Go installation](https://golang.org/dl/).)
 
-### Usage
-
 To display usage, simply type:
 
 ```bash
