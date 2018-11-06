@@ -1,16 +1,10 @@
 # Jargon
 
-Jargon offers a **tokenizer** for Go, with an emphasis on handling technology terms correctly:
+Jargon is a **lemmatizer**, useful for recognizing variations on canonical and synonymous terms.
 
-- C++, ASP.net, and other non-alphanumeric terms are recognized as single tokens
-- #hashtags and @handles
-- Simple URLs and email address are handled _pretty well_, though can be notoriously hard to get right
+For example, jargon lemmatizes `react`, `React.js` or `React  JS` and `REACTJS` to the canonical `reactjs`.
 
-The tokenizer preserves all tokens verbatim, including whitespace and punctuation, so the original text can be reconstructed with fidelity (“round tripped”).
-
-In turn, Jargon offers a **lemmatizer**, for recognizing canonical and synonymous terms. For example the n-gram “Ruby on Rails” becomes ruby-on-rails. It implements “insensitivity” to spaces, dots and dashes.
-
-(It turns out that the above rules work well in structured text such as CSV and JSON.)
+Jargon uses Stack Overflow tags & synonyms, and implements “insensitivity” to spaces, dots and dashes.
 
 ### Online demo
 
@@ -106,6 +100,18 @@ Canonical terms (lemmas) are looked up in dictionaries, implemented as their own
   - `Couldn‘t → Could not`
 - [Simple numbers](https://github.com/clipperhouse/jargon/numbers)
   - `Thirty-five hundred → 3500`
+
+## Tokenizer
+
+Jargon includes its own tokenizer, with an emphasis on handling technology terms correctly:
+
+- C++, ASP.net, and other non-alphanumeric terms are recognized as single tokens
+- #hashtags and @handles
+- Simple URLs and email address are handled _pretty well_, though can be notoriously hard to get right
+
+The tokenizer preserves all tokens verbatim, including whitespace and punctuation, so the original text can be reconstructed with fidelity (“round tripped”).
+
+(It turns out that the above rules work well in structured text such as CSV and JSON.)
 
 ## Background
 
