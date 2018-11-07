@@ -1,6 +1,6 @@
 package jargon
 
-// Tokens represents an "iterator" interface for the results of tokenization or lemmatization
+// Tokens represents an "iterator" interface for the results of tokenization or lemmatization.
 // Callers should call Next() until it returns nil, indicating the end of data
 type Tokens interface {
 	Next() *Token
@@ -17,20 +17,20 @@ func (t *Token) String() string {
 	return t.value
 }
 
-// IsPunct indicates that the token should be considered 'breaking' of a run of words; a delimiter. Mostly determined
-// by the `unicode` package's definition, with some exceptions for our purposes.
+// IsPunct indicates that the token should be considered 'breaking' of a run of words. Mostly uses
+// Unicode's definition of punctuation, with some exceptions for our purposes.
 func (t *Token) IsPunct() bool {
 	return t.punct
 }
 
-// IsSpace indicates that the token consists entirely of white space (as defined by the `unicode `package).
+// IsSpace indicates that the token consists entirely of white space, as defined by the unicode package.
 //
-//A token can be both IsPunct and IsSpace -- line breaks and tabs to be punctuation for our purposes.
+//A token can be both IsPunct and IsSpace -- for example, line breaks and tabs are punctuation for our purposes.
 func (t *Token) IsSpace() bool {
 	return t.space
 }
 
-// IsLemma indicates that the token is a lemma, i.e., a canonical term that that replaced the original token(s).
+// IsLemma indicates that the token is a lemma, i.e., a canonical term that replaced original token(s).
 func (t Token) IsLemma() bool {
 	return t.lemma
 }

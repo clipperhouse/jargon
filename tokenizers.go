@@ -13,7 +13,7 @@ import (
 )
 
 // Tokenize returns an 'iterator' of Tokens from a io.Reader. Call .Next() until it returns nil:
-//	tokens := Tokenize(reader)
+//	tokens := jargon.Tokenize(reader)
 //	for {
 //		token := tokens.Next()
 //		if token == nil {
@@ -23,22 +23,16 @@ import (
 // 		// do stuff with token
 //	}
 //
-// The tokenizer is targeted to English text that contains tech terms, so things like C++ and .Net are handled as single units.
+// The tokenizer is targeted to English text that contains tech terms, so things like C++ and .Net are handled as single units, as are #hashtags and @handles.
 //
-// It generally relies on Unicode definitions of 'punctuation' and 'symbol'. Symbols are treated as word characters (like alphanumerics), allowing things like email addresses, hashtags and @-handles to be understood as a single token.
+// It generally relies on Unicode definitions of 'punctuation' and 'symbol', with some exceptions.
 //
-// Dots are allowed to lead words, and to appear mid-word, allowing things like .Net and Node.js. Trailing dots are considered end-of-sentence.
-//
-// [@, #, -, *, %, /, \] are hard-coded as symbols, even though Unicode specifies them as punctuation. See http://www.unicode.org/faq/punctuation_symbols.html.
-// All other punctuation terminates words, as does white space.
-//
-// It returns all tokens (including white space), so text can be reconstructed with fidelity ("round tripped").
+// Unlike some other common tokenizers, Tokenize returns all tokens (including white space), so text can be reconstructed with fidelity ("round tripped").
 func Tokenize(r io.Reader) *TextTokens {
 	return newTextTokens(r)
 }
 
-// TextTokens is an "iterator" for the results of lemmatization; keep calling .Next() until it returns nil, indicating the end
-// TextTokens implements the Tokens interface
+// TextTokens is an "iterator" that implements the Tokens interface, and should be used by calling Next()
 type TextTokens struct {
 	incoming *bufio.Reader
 	buffer   bytes.Buffer
@@ -50,7 +44,7 @@ func newTextTokens(r io.Reader) *TextTokens {
 	}
 }
 
-// Next returns the next token; nil indicates end of data
+// Next returns the next token, and implements the Tokens interface. Call until it returns nil.
 func (t *TextTokens) Next() *Token {
 	if t == nil {
 		return nil
@@ -201,12 +195,15 @@ func (t *TextTokens) peekTerminator() bool {
 }
 
 // TokenizeHTML tokenizes HTML. Text nodes are tokenized using jargon.Tokenize; everything else (tags, comments) are left verbatim.
-// It returns a channel of Tokens, intended to be ranged over thus:
-//	tokens := TokenizeHTML(string)
-//	for t := range tokens {
-// 		// do stuff
+// It returns a Tokens, intended to be iterated over by calling Next(), until nil
+//	tokens := jargon.TokenizeHTML(reader)
+//	for {
+//		tok := tokens.Next()
+//		if tok == nil {
+//			break
+//		}
+//		// Do stuff with tok...
 //	}
-//
 // It returns all tokens (including white space), so text can be reconstructed with fidelity. Ignoring (say) whitespace is a decision for the caller.
 func TokenizeHTML(r io.Reader) *HTMLTokens {
 	h := html.NewTokenizer(r)
@@ -214,11 +211,13 @@ func TokenizeHTML(r io.Reader) *HTMLTokens {
 	return t
 }
 
+// HTMLTokens implements the Tokens interface, and should be used by calling Next()
 type HTMLTokens struct {
 	html *html.Tokenizer
 	text *TextTokens
 }
 
+// Next is the implementation of the Tokens interface. To iterate, call until it returns nil
 func (t *HTMLTokens) Next() *Token {
 	// Are we "inside" a text node after previous call?
 	text := t.text.Next()
