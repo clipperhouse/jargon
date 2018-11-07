@@ -143,7 +143,7 @@ func (t *TextTokens) token() *Token {
 		// Punct and space are always one rune in our usage
 		r, _ := utf8.DecodeRune(b)
 
-		known, ok := knownTokens[r]
+		known, ok := common[r]
 
 		if ok {
 			return known
@@ -165,7 +165,7 @@ func newTokenFromRune(r rune) *Token {
 	}
 }
 
-var knownTokens = make(map[rune]*Token)
+var common = make(map[rune]*Token)
 
 func init() {
 	runes := []rune{
@@ -173,7 +173,7 @@ func init() {
 	}
 
 	for _, r := range runes {
-		knownTokens[r] = newTokenFromRune(r)
+		common[r] = newTokenFromRune(r)
 	}
 }
 

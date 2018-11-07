@@ -8,7 +8,6 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/clipperhouse/jargon"
 	"github.com/clipperhouse/jargon/stackexchange"
 )
 
@@ -132,11 +131,11 @@ Hi! Let's talk Ruby on Rails.
 }
 
 func Example() {
-	lem := jargon.NewLemmatizer(stackexchange.Dictionary)
+	lem := NewLemmatizer(stackexchange.Dictionary, 3)
 
 	text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
 	r := strings.NewReader(text)
-	tokens := jargon.Tokenize(r)
+	tokens := Tokenize(r)
 
 	// Iterate by calling Next() until nil
 	for {
@@ -151,7 +150,7 @@ func Example() {
 	// Or! Pass tokens on to the lemmatizer
 	lemmas := lem.Lemmatize(tokens)
 	for {
-		lemma := tokens.Next()
+		lemma := lemmas.Next()
 		if lemma == nil {
 			break
 		}

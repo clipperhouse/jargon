@@ -15,9 +15,5 @@ func (d *dictionary) Lookup(s []string) (string, bool) {
 	}
 
 	canonical, ok := variations[s[0]]
-	if !ok {
-		return "", false
-	}
-
-	return canonical, true
+	return canonical, ok
 }
