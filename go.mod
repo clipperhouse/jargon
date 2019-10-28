@@ -1,5 +1,5 @@
 module github.com/clipperhouse/jargon
 
-require golang.org/x/net v0.0.0-20191007182048-72f939374954
+require golang.org/x/net v0.0.0-20191028085509-fe3aa8a45271
 
 go 1.13
