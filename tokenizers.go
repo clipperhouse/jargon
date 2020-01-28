@@ -154,7 +154,7 @@ func (t *TextTokens) token() *Token {
 func newTokenFromRune(r rune) *Token {
 	return &Token{
 		value: string(r),
-		punct: isPunct(r) || r == '\r' || r == '\n' || r == '\t',
+		punct: isPunct(r),
 		space: unicode.IsSpace(r),
 	}
 }

@@ -3,7 +3,7 @@ package jargon
 import "unicode"
 
 func isPunct(r rune) bool {
-	return unicode.IsPunct(r) && !isPunctAsSymbol(r)
+	return (unicode.IsPunct(r) || isSpaceAsPunct(r)) && !isPunctAsSymbol(r)
 }
 
 var ok = struct{}{} // like a bool for maps, but with no allocation
@@ -22,6 +22,17 @@ var punctAsSymbol = map[rune]struct{}{
 
 func isPunctAsSymbol(r rune) bool {
 	_, ok := punctAsSymbol[r]
+	return ok
+}
+
+var spaceAsPunct = map[rune]struct{}{
+	'\n': ok,
+	'\r': ok,
+	'\t': ok,
+}
+
+func isSpaceAsPunct(r rune) bool {
+	_, ok := spaceAsPunct[r]
 	return ok
 }
 
