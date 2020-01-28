@@ -3,11 +3,11 @@ package jargon
 import "unicode"
 
 func isPunct(r rune) bool {
-	return unicode.IsPunct(r) && !isPunctException(r)
+	return unicode.IsPunct(r) && !isPunctAsSymbol(r)
 }
 
 var ok = struct{}{} // like a bool for maps, but with no allocation
-var punctExceptions = map[rune]struct{}{
+var punctAsSymbol = map[rune]struct{}{
 	// In some cases, we want to consider a rune a symbol, even though Unicode defines it as punctuation
 	// See http://www.unicode.org/faq/punctuation_symbols.html
 	'-':  ok,
@@ -20,8 +20,8 @@ var punctExceptions = map[rune]struct{}{
 	'\\': ok,
 }
 
-func isPunctException(r rune) bool {
-	_, ok := punctExceptions[r]
+func isPunctAsSymbol(r rune) bool {
+	_, ok := punctAsSymbol[r]
 	return ok
 }
 

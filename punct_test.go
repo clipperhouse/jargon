@@ -7,7 +7,7 @@ import (
 
 func TestPunct(t *testing.T) {
 	// ensure that punct exceptions are actually punct
-	for r := range punctExceptions {
+	for r := range punctAsSymbol {
 		if !unicode.IsPunct(r) {
 			t.Errorf("%q is included in punctExceptions but it's not defined as unicode.IsPunct, and therefore is redundant", r)
 		}

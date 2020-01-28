@@ -35,7 +35,7 @@ func Tokenize(r io.Reader) *TextTokens {
 // TextTokens is an "iterator" that implements the Tokens interface, and should be used by calling Next()
 type TextTokens struct {
 	incoming *bufio.Reader
-	buffer   bytes.Buffer
+	outgoing bytes.Buffer
 }
 
 func newTextTokens(r io.Reader) *TextTokens {
@@ -49,7 +49,7 @@ func (t *TextTokens) Next() *Token {
 	if t == nil {
 		return nil
 	}
-	if t.buffer.Len() > 0 {
+	if t.outgoing.Len() > 0 {
 		// Punct or space accepted in previous call to readWord
 		return t.token()
 	}
@@ -124,13 +124,13 @@ func (t *TextTokens) readWord() *Token {
 }
 
 func (t *TextTokens) token() *Token {
-	b := t.buffer.Bytes()
+	b := t.outgoing.Bytes()
 	if len(b) == 0 { // eof
 		return nil
 	}
 
 	// Got the bytes, can reset
-	t.buffer.Reset()
+	t.outgoing.Reset()
 
 	// Determine punct and/or space
 	if utf8.RuneCount(b) == 1 {
@@ -172,7 +172,7 @@ func init() {
 }
 
 func (t *TextTokens) accept(r rune) {
-	t.buffer.WriteRune(r)
+	t.outgoing.WriteRune(r)
 }
 
 // PeekTerminator looks to the next rune and determines if it breaks a word
