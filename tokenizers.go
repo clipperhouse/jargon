@@ -67,7 +67,7 @@ func (t *TextTokens) Next() *Token {
 			return t.token()
 		case isPunct(r):
 			t.accept(r)
-			isLeadingPunct := mightBeLeadingPunct(r) && !t.peekTerminator()
+			isLeadingPunct := leadingPunct.includes(r) && !t.peekTerminator()
 			if isLeadingPunct {
 				// Treat it as start of a word
 				return t.readWord()
@@ -90,7 +90,7 @@ func (t *TextTokens) readWord() *Token {
 		case err == io.EOF:
 			// Current word is terminated by EOF, send it back
 			return t.token()
-		case mightBeMidPunct(r):
+		case midPunct.includes(r):
 			// Look ahead to see if it's followed by space or more punctuation
 			followedByTerminator := t.peekTerminator()
 			if followedByTerminator {

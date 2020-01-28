@@ -2,12 +2,19 @@ package jargon
 
 import "unicode"
 
+type runeMap map[rune]struct{}
+
+func (rm runeMap) includes(r rune) bool {
+	_, ok := rm[r]
+	return ok
+}
+
 func isPunct(r rune) bool {
-	return (unicode.IsPunct(r) || isSpaceAsPunct(r)) && !isPunctAsSymbol(r)
+	return (unicode.IsPunct(r) || spaceAsPunct.includes(r)) && !punctAsSymbol.includes(r)
 }
 
 var ok = struct{}{} // like a bool for maps, but with no allocation
-var punctAsSymbol = map[rune]struct{}{
+var punctAsSymbol = runeMap{
 	// In some cases, we want to consider a rune a symbol, even though Unicode defines it as punctuation
 	// See http://www.unicode.org/faq/punctuation_symbols.html
 	'-':  ok,
@@ -20,33 +27,18 @@ var punctAsSymbol = map[rune]struct{}{
 	'\\': ok,
 }
 
-func isPunctAsSymbol(r rune) bool {
-	_, ok := punctAsSymbol[r]
-	return ok
-}
-
-var spaceAsPunct = map[rune]struct{}{
+var spaceAsPunct = runeMap{
 	'\n': ok,
 	'\r': ok,
 	'\t': ok,
 }
 
-func isSpaceAsPunct(r rune) bool {
-	_, ok := spaceAsPunct[r]
-	return ok
-}
-
-var leadingPunct = map[rune]struct{}{
+var leadingPunct = runeMap{
 	// Punctuation that can lead a word, like .Net
 	'.': ok,
 }
 
-func mightBeLeadingPunct(r rune) bool {
-	_, ok := leadingPunct[r]
-	return ok
-}
-
-var midPunct = map[rune]struct{}{
+var midPunct = runeMap{
 	// Punctuation that can appear mid-word
 	'.':  ok,
 	'\'': ok,
@@ -54,9 +46,4 @@ var midPunct = map[rune]struct{}{
 	':':  ok,
 	'?':  ok,
 	'&':  ok,
-}
-
-func mightBeMidPunct(r rune) bool {
-	_, ok := midPunct[r]
-	return ok
 }
