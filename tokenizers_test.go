@@ -26,7 +26,7 @@ It'd be great it it’ll handle apostrophes.
 		"Hi", "!", "a",
 		"F#", "C++", ".net", "Node.JS", "3.141592", "-123",
 		"#hashtag", "@handle", "first.last+@example.com",
-		"should", "—", "wait", "it", "break", "em-dashes", "quotes", "ends",
+		"should", "—", "wait", "it", "break", "em-dashes", "\"", "quotes", "ends",
 		"It'd", "it’ll", "apostrophes",
 	}
 
