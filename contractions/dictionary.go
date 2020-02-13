@@ -1,9 +1,13 @@
 // Package contractions provides a jargon.Dictionary to expand English contractions, such as "don't" → "does not"
 package contractions
 
-type dictionary struct {
-	variations map[string]string
-}
+// Dictionary for expanding common contractions into distinct words. Examples:
+// don't → does not
+// We’ve → We have
+// SHE'S -> SHE IS
+var Dictionary = &dictionary{}
+
+type dictionary struct{}
 
 // Lookup attempts to convert single-token contractions to non-contracted version. Examples:
 // don't → does not

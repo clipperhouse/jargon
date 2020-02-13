@@ -33,19 +33,15 @@ func write() error {
 
 	var source bytes.Buffer
 
-	fmt.Println("about to execute")
 	tmplErr := tmpl.Execute(&source, data)
 	if tmplErr != nil {
 		return tmplErr
 	}
-	fmt.Println("executed")
 
-	fmt.Println("about to format")
 	formatted, fmtErr := format.Source(source.Bytes())
 	if fmtErr != nil {
 		return fmtErr
 	}
-	fmt.Println("formatted")
 
 	f, createErr := os.Create("generated.go")
 	if createErr != nil {
@@ -82,14 +78,6 @@ var tmpl = template.Must(template.New("").Parse(`
 package contractions
 
 // This file is generated. Best not to modify it, as it will likely be overwritten.
-
-// Dictionary for expanding common contractions into distinct words. Examples:
-// don't → does not
-// We’ve → We have
-// SHE'S -> SHE IS
-var Dictionary = &dictionary{ 
-	variations: variations, 
-}
 
 // maps do not guarantee order, so this will look random
 var variations = {{ printf "%#v" . }}
