@@ -6,24 +6,31 @@ import (
 	"sync"
 )
 
+// Dictionary is the main exported Dictionary of Stack Exchange tags and synonyms, from the following Stack Exchange sites: Stack Overflow,
+// Server Fault, Game Dev and Data Science. It's indended to identify canonical tags (technologies),
+// e.g. Ruby on Rails (3 words) will be replaced with ruby-on-rails (1 word).
+// It includes the most popular 2530 tags and 2022 synonyms
+var Dictionary = &dictionary{}
+
 // dictionary satisfies the jargon.Dictionary interface
 // Used in generated.go
-type dictionary struct {
-	tags     map[string]string
-	synonyms map[string]string
-}
+type dictionary struct{}
 
 func (d *dictionary) Lookup(s []string) (string, bool) {
 	gram := strings.Join(s, "")
 	key := normalize(gram)
-	canonical1, found1 := d.tags[key]
+	canonical1, found1 := tags[key]
 
 	if found1 {
 		return canonical1, found1
 	}
 
-	canonical2, found2 := d.synonyms[key]
+	canonical2, found2 := synonyms[key]
 	return canonical2, found2
+}
+
+func (d *dictionary) MaxGramLength() int {
+	return 3
 }
 
 var bufPool = sync.Pool{

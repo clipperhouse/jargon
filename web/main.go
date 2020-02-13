@@ -34,8 +34,6 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	jargonHandler(w, r)
 }
 
-var lemmatizer = jargon.NewLemmatizer(stackexchange.Dictionary, 3)
-
 func jargonHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) < 2 {
@@ -56,7 +54,7 @@ func jargonHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lemmatized := lemmatizer.Lemmatize(tokens)
+	lemmatized := jargon.Lemmatize(tokens, stackexchange.Dictionary)
 
 	var b bytes.Buffer
 

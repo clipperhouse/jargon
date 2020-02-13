@@ -18,15 +18,15 @@ import (
 func main() {
 	flag.Parse()
 
-	lemmatizers = determineLemmatizers(tech, num, cont)
+	dictionaries := determineDictionaries(tech, num, cont)
 
 	switch {
 	case len(f) > 0:
-		check(lemFile(f))
+		check(lemFile(f, dictionaries))
 	case len(s) > 0:
-		check(lemString(s))
+		check(lemString(s, dictionaries))
 	case len(u) > 0:
-		check(lemURL(u))
+		check(lemURL(u, dictionaries))
 	default:
 		// No flags? Check to see if piped, otherwise print help.
 		fi, err := os.Stdin.Stat()
@@ -34,35 +34,30 @@ func main() {
 
 		piped := (fi.Mode() & os.ModeCharDevice) == 0 // https://stackoverflow.com/a/43947435/70613
 		if piped {
-			check(lemStdin())
+			check(lemStdin(dictionaries))
 		} else {
 			flag.Usage()
 		}
 	}
 }
 
-var lemmatizers []*jargon.Lemmatizer
-
-func determineLemmatizers(tech, num, cont bool) []*jargon.Lemmatizer {
+func determineDictionaries(tech, num, cont bool) []jargon.Dictionary {
 	// splitting this out into a func to allow testing
 
-	var result []*jargon.Lemmatizer
+	var result []jargon.Dictionary
 
 	none := !tech && !num && !cont
 
 	if tech || none {
-		lem := jargon.NewLemmatizer(stackexchange.Dictionary, 3)
-		result = append(result, lem)
+		result = append(result, stackexchange.Dictionary)
 	}
 
 	if num {
-		lem := jargon.NewLemmatizer(numbers.Dictionary, 3)
-		result = append(result, lem)
+		result = append(result, numbers.Dictionary)
 	}
 
 	if cont {
-		lem := jargon.NewLemmatizer(contractions.Dictionary, 1)
-		result = append(result, lem)
+		result = append(result, contractions.Dictionary)
 	}
 
 	return result
@@ -127,7 +122,7 @@ flags to choose other dictionaries.
 	}
 }
 
-func lemFile(filePath string) error {
+func lemFile(filePath string, dictionaries []jargon.Dictionary) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -144,16 +139,16 @@ func lemFile(filePath string) error {
 		tokens = jargon.Tokenize(file)
 	}
 
-	return lem(tokens)
+	return lem(tokens, dictionaries)
 }
 
-func lemString(s string) error {
+func lemString(s string, dictionaries []jargon.Dictionary) error {
 	r := strings.NewReader(s)
 	tokens := jargon.Tokenize(r)
-	return lem(tokens)
+	return lem(tokens, dictionaries)
 }
 
-func lemURL(u string) error {
+func lemURL(u string, dictionaries []jargon.Dictionary) error {
 	resp, err := http.Get(u)
 	if err != nil {
 		return err
@@ -170,15 +165,15 @@ func lemURL(u string) error {
 		tokens = jargon.Tokenize(resp.Body)
 	}
 
-	return lem(tokens)
+	return lem(tokens, dictionaries)
 }
 
-func lemStdin() error {
+func lemStdin(dictionaries []jargon.Dictionary) error {
 	tokens := jargon.Tokenize(os.Stdin)
-	return lem(tokens)
+	return lem(tokens, dictionaries)
 }
 
-func lem(tokens jargon.Tokens) error {
+func lem(tokens jargon.Tokens, dictionaries []jargon.Dictionary) error {
 
 	// switch tokens.(type) {
 	// case *jargon.HTMLTokens:
@@ -203,7 +198,7 @@ func lem(tokens jargon.Tokens) error {
 		w = bufio.NewWriter(os.Stdout)
 	}
 
-	tokens = lemAll(tokens, lemmatizers)
+	tokens = lemAll(tokens, dictionaries)
 
 	for {
 		t := tokens.Next()
@@ -218,9 +213,9 @@ func lem(tokens jargon.Tokens) error {
 	return w.Flush()
 }
 
-func lemAll(tokens jargon.Tokens, lems []*jargon.Lemmatizer) jargon.Tokens {
-	for _, lem := range lems {
-		tokens = lem.Lemmatize(tokens)
+func lemAll(tokens jargon.Tokens, dictionaries []jargon.Dictionary) jargon.Tokens {
+	for _, dictionary := range dictionaries {
+		tokens = jargon.Lemmatize(tokens, dictionary)
 	}
 	return tokens
 }

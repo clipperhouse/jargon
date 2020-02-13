@@ -17,3 +17,7 @@ func (d *dictionary) Lookup(s []string) (string, bool) {
 	canonical, ok := variations[s[0]]
 	return canonical, ok
 }
+
+func (d *dictionary) MaxGramLength() int {
+	return 1
+}

@@ -14,13 +14,12 @@ import (
 
 func TestLemmatize(t *testing.T) {
 	dict := stackexchange.Dictionary
-	lem := NewLemmatizer(dict, 3)
 
 	original := `Here is the story of Ruby on Rails nodeJS, "Java Script", html5 and ASPNET mvc plus TCP/IP.`
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got := collect(lem.Lemmatize(tokens))
+	got := collect(Lemmatize(tokens, dict))
 	r2 := strings.NewReader(`Here is the story of ruby-on-rails node.js, "javascript", html5 and asp.net-mvc plus tcpip.`)
 	expected := collect(Tokenize(r2))
 
@@ -47,13 +46,12 @@ func TestLemmatize(t *testing.T) {
 
 func TestRetokenize(t *testing.T) {
 	dict := contractions.Dictionary
-	lem := NewLemmatizer(dict, 1)
 
 	original := `Would've but also won't`
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got := collect(lem.Lemmatize(tokens))
+	got := collect(Lemmatize(tokens, dict))
 	r2 := strings.NewReader(`Would have but also will not`)
 	expected := collect(Tokenize(r2))
 
@@ -64,7 +62,6 @@ func TestRetokenize(t *testing.T) {
 
 func BenchmarkLemmatizer(b *testing.B) {
 	dict := stackexchange.Dictionary
-	lem := NewLemmatizer(dict, 3)
 
 	file, err := ioutil.ReadFile("testdata/wikipedia.txt")
 
@@ -76,20 +73,19 @@ func BenchmarkLemmatizer(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		r := bytes.NewReader(file)
 		tokens := Tokenize(r)
-		consume(lem.Lemmatize(tokens))
+		consume(Lemmatize(tokens, dict))
 	}
 }
 
 func TestCSV(t *testing.T) {
 	dict := stackexchange.Dictionary
-	lem := NewLemmatizer(dict, 3)
 
 	original := `"Ruby on Rails", 3.4, "foo"
 "bar",42, "java script"`
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got := collect(lem.Lemmatize(tokens))
+	got := collect(Lemmatize(tokens, dict))
 	r2 := strings.NewReader(`"ruby-on-rails", 3.4, "foo"
 "bar",42, "javascript"`)
 	expected := collect(Tokenize(r2))
@@ -101,7 +97,6 @@ func TestCSV(t *testing.T) {
 
 func TestTSV(t *testing.T) {
 	dict := stackexchange.Dictionary
-	lem := NewLemmatizer(dict, 3)
 
 	original := `Ruby on Rails	3.4	foo
 ASPNET	MVC
@@ -109,7 +104,7 @@ bar	42	java script`
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got := collect(lem.Lemmatize(tokens))
+	got := collect(Lemmatize(tokens, dict))
 	r2 := strings.NewReader(`ruby-on-rails	3.4	foo
 asp.net	model-view-controller
 bar	42	javascript`)
@@ -121,21 +116,12 @@ bar	42	javascript`)
 }
 
 func TestMultiple(t *testing.T) {
-	lems := []*Lemmatizer{
-		NewLemmatizer(numbers.Dictionary, 4),
-		NewLemmatizer(stackexchange.Dictionary, 3),
-		NewLemmatizer(contractions.Dictionary, 1),
-	}
-
 	s := `Here is the story of five and Rails and ASPNET and couldn't three hundred thousand.`
 	r := strings.NewReader(s)
 
 	var tokens Tokens
 	tokens = Tokenize(r)
-
-	for _, lem := range lems {
-		tokens = lem.Lemmatize(tokens)
-	}
+	tokens = Lemmatize(tokens, stackexchange.Dictionary, contractions.Dictionary, numbers.Dictionary)
 
 	expected := `Here is the story of 5 and ruby-on-rails and asp.net and could not 300000.`
 	var got string
@@ -172,7 +158,9 @@ func TestWordrun(t *testing.T) {
 		1: {[]string{"java"}, 1, true},                  // attempting to get 1 should work, and consume only that token
 	}
 
-	sc := newLemmaTokens(nil, tokens)
+	sc := &LemmaTokens{
+		incoming: tokens,
+	}
 
 	for take, expected := range expecteds {
 		taken, consumed, ok := sc.wordrun(take)

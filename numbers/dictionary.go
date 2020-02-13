@@ -52,6 +52,10 @@ func (d *dictionary) Lookup(s []string) (string, bool) {
 	return p.Parse()
 }
 
+func (d *dictionary) MaxGramLength() int {
+	return 6
+}
+
 type parser struct {
 	tokens []string
 	ints   []int64

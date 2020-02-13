@@ -131,8 +131,6 @@ Hi! Let's talk Ruby on Rails.
 }
 
 func Example() {
-	lem := NewLemmatizer(stackexchange.Dictionary, 3)
-
 	text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
 	r := strings.NewReader(text)
 	tokens := Tokenize(r)
@@ -148,7 +146,7 @@ func Example() {
 	}
 
 	// Or! Pass tokens on to the lemmatizer
-	lemmas := lem.Lemmatize(tokens)
+	lemmas := Lemmatize(tokens, stackexchange.Dictionary)
 	for {
 		lemma := lemmas.Next()
 		if lemma == nil {

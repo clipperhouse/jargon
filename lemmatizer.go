@@ -5,22 +5,9 @@ import (
 	"fmt"
 	"strings"
 	"unicode"
+
+	"github.com/clipperhouse/jargon/stackexchange"
 )
-
-// Lemmatizer is the main structure for looking up canonical tags
-type Lemmatizer struct {
-	Dictionary
-	maxGramLength int
-}
-
-// NewLemmatizer creates and populates a new Lemmatizer for the purpose of looking up and replacing canonical tags.
-func NewLemmatizer(d Dictionary, maxGramLength int) *Lemmatizer {
-	lem := &Lemmatizer{
-		Dictionary:    d,
-		maxGramLength: maxGramLength,
-	}
-	return lem
-}
 
 // Lemmatize transforms a tokens to their canonicalized terms.
 // It returns an 'iterator' of Tokens, given input Tokens. Call .Next() until it returns nil:
@@ -40,24 +27,39 @@ func NewLemmatizer(d Dictionary, maxGramLength int) *Lemmatizer {
 // lemmatized output:
 //     "I", " ", "think", " ", "ruby-on-rails", " ", "is", " ", "great"
 // Note that fewer tokens may be returned than were input, and that correct lemmatization depends on correct tokenization!
-func (lem *Lemmatizer) Lemmatize(tokens Tokens) *LemmaTokens {
-	return newLemmaTokens(lem, tokens)
+func Lemmatize(incoming Tokens, dictionaries ...Dictionary) *LemmaTokens {
+	if len(dictionaries) == 0 {
+		dictionaries = append(dictionaries, stackexchange.Dictionary)
+	}
+
+	// ensure return type is LemmaTokens
+	result := &LemmaTokens{
+		incoming:   incoming,
+		dictionary: dictionaries[0],
+	}
+
+	if len(dictionaries) > 1 {
+		dictionaries = dictionaries[1:]
+	}
+
+	// remaining dictionaries
+	for _, dictionary := range dictionaries {
+		result = &LemmaTokens{
+			incoming:   result,
+			dictionary: dictionary,
+		}
+	}
+
+	return result
 }
 
 // LemmaTokens is an "iterator" for the results of lemmatization; keep calling .Next() until it returns nil, indicating the end
 // LemmaTokens implements the Tokens interface
 type LemmaTokens struct {
-	lem      *Lemmatizer
-	incoming Tokens
-	buffer   []*Token // for incoming tokens; no guarantee they will be emitted
-	outgoing []*Token
-}
-
-func newLemmaTokens(lem *Lemmatizer, incoming Tokens) *LemmaTokens {
-	return &LemmaTokens{
-		lem:      lem,
-		incoming: incoming,
-	}
+	dictionary Dictionary
+	incoming   Tokens
+	buffer     []*Token // for incoming tokens; no guarantee they will be emitted
+	outgoing   []*Token
 }
 
 // Next returns the next token; nil indicates end of data
@@ -91,14 +93,14 @@ func (t *LemmaTokens) Next() *Token {
 
 func (t *LemmaTokens) ngrams() {
 	// Try n-grams, longest to shortest (greedy)
-	for take := t.lem.maxGramLength; take > 0; take-- {
+	for take := t.dictionary.MaxGramLength(); take > 0; take-- {
 		run, consumed, ok := t.wordrun(take)
 
 		if !ok {
 			continue // on to the next n-gram
 		}
 
-		canonical, found := t.lem.Lookup(run)
+		canonical, found := t.dictionary.Lookup(run)
 
 		if found {
 			// the canonical can have space or punct, so we want to return separate tokens
