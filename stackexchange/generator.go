@@ -125,6 +125,39 @@ func writeDictionary() error {
 		return writeErr
 	}
 
+	writeErr = writeTypeScript("tags.ts", tmplTypeScript, data.Tags)
+	if writeErr != nil {
+		return writeErr
+	}
+
+	writeErr = writeTypeScript("synonyms.ts", tmplTypeScript, data.Synonyms)
+	if writeErr != nil {
+		return writeErr
+	}
+
+	return nil
+}
+
+func writeTypeScript(filename string, tmpl *template.Template, data interface{}) error {
+
+	var source bytes.Buffer
+
+	tmplErr := tmpl.Execute(&source, data)
+	if tmplErr != nil {
+		return tmplErr
+	}
+
+	f, createErr := os.Create(filename)
+	if createErr != nil {
+		return createErr
+	}
+	defer f.Close()
+
+	_, writeErr := f.Write(source.Bytes())
+	if writeErr != nil {
+		return writeErr
+	}
+
 	return nil
 }
 
@@ -136,6 +169,16 @@ package stackexchange
 var tags = {{ printf "%#v" .Tags }}
 
 var synonyms = {{ printf "%#v" .Synonyms }}
+`))
+
+var tmplTypeScript = template.Must(template.New("").Parse(`
+// This file is generated. Best not to modify it, as it will likely be overwritten.
+
+export default new Map<string, string>([
+{{- range $key, $value := . }}
+	["{{ $key }}", "{{ $value }}"],
+{{- end }}
+]);
 `))
 
 // sites to query, with the number of tags to get, based on eyeballing how many of the top x are 'interesting'
