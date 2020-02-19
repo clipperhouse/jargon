@@ -175,14 +175,8 @@ func TestWordrun(t *testing.T) {
 	r := strings.NewReader(original)
 	tokens := Tokenize(r)
 
-	type result struct {
-		expect   []string
-		consumed int
-		ok       bool
-	}
-
 	var none []string // DeepEqual doesn't see zero-length slices as equal; need 'nil'
-	expecteds := map[int]result{
+	expecteds := map[int]wordrun{
 		4: {none, 0, false},                             // attempting to get 4 should fail
 		3: {[]string{"java", "script", "and"}, 5, true}, // attempting to get 3 should work, consuming 5
 		2: {[]string{"java", "script"}, 3, true},        // attempting to get 2 should work, consuming 3 tokens (incl the space)
@@ -194,12 +188,10 @@ func TestWordrun(t *testing.T) {
 	}
 
 	for take, expected := range expecteds {
-		taken, consumed, ok, err := lem.wordrun(take)
+		got, err := lem.wordrun(take)
 		if err != nil {
 			t.Error(err)
 		}
-
-		got := result{taken, consumed, ok}
 
 		if !reflect.DeepEqual(expected, got) {
 			t.Errorf("Attempting to take %d words, expected %v but got %v", take, expected, got)

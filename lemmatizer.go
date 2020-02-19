@@ -90,15 +90,15 @@ func (t *lemmatizer) next() (*Token, error) {
 func (t *lemmatizer) ngrams() error {
 	// Try n-grams, longest to shortest (greedy)
 	for take := t.dictionary.MaxGramLength(); take > 0; take-- {
-		run, consumed, ok, err := t.wordrun(take)
+		wordrun, err := t.wordrun(take)
 		if err != nil {
 			return err
 		}
-		if !ok {
+		if !wordrun.success {
 			continue // on to the next n-gram
 		}
 
-		canonical, found := t.dictionary.Lookup(run)
+		canonical, found := t.dictionary.Lookup(wordrun.words)
 
 		if found {
 			// the canonical can have space or punct, so we want to return separate tokens
@@ -136,7 +136,7 @@ func (t *lemmatizer) ngrams() error {
 				t.stage(tok) //set it up to be emitted
 			}
 
-			t.drop(consumed) // discard the incoming tokens that comprised the lemma
+			t.drop(wordrun.consumed) // discard the incoming tokens that comprised the lemma
 			return nil
 		}
 
@@ -195,8 +195,15 @@ func (t *lemmatizer) emit() *Token {
 	return tok
 }
 
-// Analogous to tokens.Take(take) in Linq
-func (t *lemmatizer) wordrun(take int) ([]string, int, bool, error) {
+type wordrun struct {
+	words    []string
+	consumed int
+	success  bool
+}
+
+var empty = wordrun{}
+
+func (t *lemmatizer) wordrun(take int) (wordrun, error) {
 	var (
 		taken []string // the words
 		count int      // tokens consumed, not necessarily equal to take
@@ -205,12 +212,12 @@ func (t *lemmatizer) wordrun(take int) ([]string, int, bool, error) {
 	for len(taken) < take {
 		ok, err := t.fill(count)
 		if err != nil {
-			return nil, 0, false, err
+			return empty, err
 		}
 		if !ok {
 			// Not enough (buffered) tokens to continue
 			// So, a word run of length `take` is impossible
-			return nil, 0, false, nil
+			return empty, nil
 		}
 
 		token := t.buffer[count]
@@ -219,7 +226,7 @@ func (t *lemmatizer) wordrun(take int) ([]string, int, bool, error) {
 			// Note: test for punct before space; newlines and tabs can be
 			// considered both punct and space (depending on the tokenizer!)
 			// and we want to treat them as breaking word runs.
-			return nil, 0, false, nil
+			return empty, nil
 		case token.IsSpace():
 			// Ignore and continue
 			count++
@@ -230,5 +237,11 @@ func (t *lemmatizer) wordrun(take int) ([]string, int, bool, error) {
 		}
 	}
 
-	return taken, count, true, nil
+	result := wordrun{
+		words:    taken,
+		consumed: count,
+		success:  true,
+	}
+
+	return result, nil
 }
