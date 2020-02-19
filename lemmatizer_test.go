@@ -19,9 +19,9 @@ func TestLemmatize(t *testing.T) {
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got := collect(Lemmatize(tokens, dict))
+	got := Lemmatize(tokens, dict).ToSlice()
 	r2 := strings.NewReader(`Here is the story of ruby-on-rails node.js, "javascript", html5 and asp.net-mvc plus tcpip.`)
-	expected := collect(Tokenize(r2))
+	expected := Tokenize(r2).ToSlice()
 
 	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
@@ -51,9 +51,9 @@ func TestRetokenize(t *testing.T) {
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got := collect(Lemmatize(tokens, dict))
+	got := Lemmatize(tokens, dict).ToSlice()
 	r2 := strings.NewReader(`Would have but also will not`)
-	expected := collect(Tokenize(r2))
+	expected := Tokenize(r2).ToSlice()
 
 	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
@@ -85,10 +85,10 @@ func TestCSV(t *testing.T) {
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got := collect(Lemmatize(tokens, dict))
+	got := Lemmatize(tokens, dict).ToSlice()
 	r2 := strings.NewReader(`"ruby-on-rails", 3.4, "foo"
 "bar",42, "javascript"`)
-	expected := collect(Tokenize(r2))
+	expected := Tokenize(r2).ToSlice()
 
 	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
@@ -104,11 +104,11 @@ bar	42	java script`
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got := collect(Lemmatize(tokens, dict))
+	got := Lemmatize(tokens, dict).ToSlice()
 	r2 := strings.NewReader(`ruby-on-rails	3.4	foo
 asp.net	model-view-controller
 bar	42	javascript`)
-	expected := collect(Tokenize(r2))
+	expected := Tokenize(r2).ToSlice()
 
 	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
@@ -158,30 +158,18 @@ func TestWordrun(t *testing.T) {
 		1: {[]string{"java"}, 1, true},                  // attempting to get 1 should work, and consume only that token
 	}
 
-	sc := &LemmaTokens{
+	lem := &lemmatizer{
 		incoming: tokens,
 	}
 
 	for take, expected := range expecteds {
-		taken, consumed, ok := sc.wordrun(take)
+		taken, consumed, ok := lem.wordrun(take)
 		got := result{taken, consumed, ok}
 
 		if !reflect.DeepEqual(expected, got) {
 			t.Errorf("Attempting to take %d words, expected %v but got %v", take, expected, got)
 		}
 	}
-}
-
-func collect(tokens Tokens) []*Token {
-	result := make([]*Token, 0)
-	for {
-		t := tokens.Next()
-		if t == nil {
-			break
-		}
-		result = append(result, t)
-	}
-	return result
 }
 
 func consume(tokens Tokens) {

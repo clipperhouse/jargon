@@ -20,7 +20,7 @@ It'd be great it it’ll handle apostrophes.
 `
 	r := strings.NewReader(text)
 	tokens := Tokenize(r)
-	got := collect(tokens)
+	got := tokens.ToSlice()
 
 	expected := []string{
 		"Hi", "!", "a",
@@ -112,7 +112,7 @@ Hi! Let's talk Ruby on Rails.
 </html>
 `
 	r := strings.NewReader(h)
-	got := collect(TokenizeHTML(r))
+	got := TokenizeHTML(r).ToSlice()
 
 	expected := []string{
 		`<p foo="bar">`, // tags kept whole

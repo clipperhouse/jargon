@@ -27,43 +27,36 @@ import (
 // lemmatized output:
 //     "I", " ", "think", " ", "ruby-on-rails", " ", "is", " ", "great"
 // Note that fewer tokens may be returned than were input, and that correct lemmatization depends on correct tokenization!
-func Lemmatize(incoming Tokens, dictionaries ...Dictionary) *LemmaTokens {
+func Lemmatize(incoming Tokens, dictionaries ...Dictionary) Tokens {
 	if len(dictionaries) == 0 {
 		dictionaries = append(dictionaries, stackexchange.Dictionary)
 	}
 
-	// ensure return type is LemmaTokens
-	result := &LemmaTokens{
-		incoming:   incoming,
-		dictionary: dictionaries[0],
-	}
+	var result = incoming
 
-	if len(dictionaries) > 1 {
-		dictionaries = dictionaries[1:]
-	}
-
-	// remaining dictionaries
+	// new lemmatizer for each dictionary, results as input into next lemmatizer
 	for _, dictionary := range dictionaries {
-		result = &LemmaTokens{
+		lem := &lemmatizer{
 			incoming:   result,
 			dictionary: dictionary,
+		}
+		result = Tokens{
+			Next: lem.next,
 		}
 	}
 
 	return result
 }
 
-// LemmaTokens is an "iterator" for the results of lemmatization; keep calling .Next() until it returns nil, indicating the end
-// LemmaTokens implements the Tokens interface
-type LemmaTokens struct {
+type lemmatizer struct {
 	dictionary Dictionary
 	incoming   Tokens
 	buffer     []*Token // for incoming tokens; no guarantee they will be emitted
 	outgoing   []*Token
 }
 
-// Next returns the next token; nil indicates end of data
-func (t *LemmaTokens) Next() *Token {
+// next returns the next token; nil indicates end of data
+func (t *lemmatizer) next() *Token {
 	if t == nil {
 		return nil
 	}
@@ -91,7 +84,7 @@ func (t *LemmaTokens) Next() *Token {
 	}
 }
 
-func (t *LemmaTokens) ngrams() {
+func (t *lemmatizer) ngrams() {
 	// Try n-grams, longest to shortest (greedy)
 	for take := t.dictionary.MaxGramLength(); take > 0; take-- {
 		run, consumed, ok := t.wordrun(take)
@@ -161,13 +154,13 @@ func join(tokens []*Token) string {
 
 // drop (truncate) the first `n` elements of the buffer
 // remember, a token being in the buffer does not imply that we will emit it
-func (t *LemmaTokens) drop(n int) {
+func (t *lemmatizer) drop(n int) {
 	copy(t.buffer, t.buffer[n:])
 	t.buffer = t.buffer[:len(t.buffer)-n]
 }
 
 // ensure that the buffer contains at least `count` elements; returns false if channel is exhausted before achieving the count
-func (t *LemmaTokens) fill(count int) bool {
+func (t *lemmatizer) fill(count int) bool {
 	for count >= len(t.buffer) {
 		token := t.incoming.Next()
 		if token == nil {
@@ -179,11 +172,11 @@ func (t *LemmaTokens) fill(count int) bool {
 	return true
 }
 
-func (t *LemmaTokens) stage(tok *Token) {
+func (t *lemmatizer) stage(tok *Token) {
 	t.outgoing = append(t.outgoing, tok)
 }
 
-func (t *LemmaTokens) emit() *Token {
+func (t *lemmatizer) emit() *Token {
 	n := 1
 	tok := t.outgoing[0]
 	copy(t.outgoing, t.outgoing[n:])
@@ -192,7 +185,7 @@ func (t *LemmaTokens) emit() *Token {
 }
 
 // Analogous to tokens.Take(take) in Linq
-func (t *LemmaTokens) wordrun(take int) ([]string, int, bool) {
+func (t *lemmatizer) wordrun(take int) ([]string, int, bool) {
 	var (
 		taken []string // the words
 		count int      // tokens consumed, not necessarily equal to take

@@ -1,9 +1,20 @@
 package jargon
 
-// Tokens represents an "iterator" interface for the results of tokenization or lemmatization.
-// Callers should call Next() until it returns nil, indicating the end of data
-type Tokens interface {
-	Next() *Token
+// Tokens represents an 'iterator' of Token. Call .Next() until it returns nil.
+type Tokens struct {
+	Next func() *Token
+}
+
+func (tokens Tokens) ToSlice() []*Token {
+	var result []*Token
+	for {
+		t := tokens.Next()
+		if t == nil {
+			break
+		}
+		result = append(result, t)
+	}
+	return result
 }
 
 // Token represents a piece of text with metadata.

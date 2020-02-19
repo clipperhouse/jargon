@@ -28,24 +28,26 @@ import (
 // It generally relies on Unicode definitions of 'punctuation' and 'symbol', with some exceptions.
 //
 // Unlike some other common tokenizers, Tokenize returns all tokens (including white space), so text can be reconstructed with fidelity ("round tripped").
-func Tokenize(r io.Reader) *TextTokens {
-	return newTextTokens(r)
+func Tokenize(r io.Reader) Tokens {
+	t := newTokenizer(r)
+	return Tokens{
+		Next: t.next,
+	}
 }
 
-// TextTokens is an "iterator" that implements the Tokens interface, and should be used by calling Next()
-type TextTokens struct {
+type tokenizer struct {
 	incoming *bufio.Reader
 	outgoing bytes.Buffer
 }
 
-func newTextTokens(r io.Reader) *TextTokens {
-	return &TextTokens{
+func newTokenizer(r io.Reader) *tokenizer {
+	return &tokenizer{
 		incoming: bufio.NewReaderSize(r, 4*4096),
 	}
 }
 
-// Next returns the next token, and implements the Tokens interface. Call until it returns nil.
-func (t *TextTokens) Next() *Token {
+// next returns the next token. Call until it returns nil.
+func (t *tokenizer) next() *Token {
 	if t == nil {
 		return nil
 	}
@@ -83,7 +85,7 @@ func (t *TextTokens) Next() *Token {
 }
 
 // Important that this function only gets entered from the Next() loop, which determines 'word start'
-func (t *TextTokens) readWord() *Token {
+func (t *tokenizer) readWord() *Token {
 	for {
 		r, _, err := t.incoming.ReadRune()
 		switch {
@@ -123,7 +125,7 @@ func (t *TextTokens) readWord() *Token {
 	}
 }
 
-func (t *TextTokens) token() *Token {
+func (t *tokenizer) token() *Token {
 	b := t.outgoing.Bytes()
 	if len(b) == 0 { // eof
 		return nil
@@ -171,12 +173,12 @@ func init() {
 	}
 }
 
-func (t *TextTokens) accept(r rune) {
+func (t *tokenizer) accept(r rune) {
 	t.outgoing.WriteRune(r)
 }
 
 // PeekTerminator looks to the next rune and determines if it breaks a word
-func (t *TextTokens) peekTerminator() bool {
+func (t *tokenizer) peekTerminator() bool {
 	r, _, err := t.incoming.ReadRune()
 
 	if err != nil {
@@ -205,21 +207,26 @@ func (t *TextTokens) peekTerminator() bool {
 //		// Do stuff with tok...
 //	}
 // It returns all tokens (including white space), so text can be reconstructed with fidelity. Ignoring (say) whitespace is a decision for the caller.
-func TokenizeHTML(r io.Reader) *HTMLTokens {
-	h := html.NewTokenizer(r)
-	t := &HTMLTokens{h, nil}
-	return t
+func TokenizeHTML(r io.Reader) Tokens {
+	t := &htokenizer{
+		html: html.NewTokenizer(r),
+		text: dummy, // dummy to avoid nil
+	}
+	return Tokens{
+		Next: t.Next,
+	}
 }
 
-// HTMLTokens implements the Tokens interface, and should be used by calling Next()
-type HTMLTokens struct {
+var dummy = Tokenize(strings.NewReader(""))
+
+type htokenizer struct {
 	html *html.Tokenizer
-	text *TextTokens
+	text Tokens
 }
 
 // Next is the implementation of the Tokens interface. To iterate, call until it returns nil
-func (t *HTMLTokens) Next() *Token {
-	// Are we "inside" a text node after previous call?
+func (t *htokenizer) Next() *Token {
+	// Are we "inside" a text node?
 	text := t.text.Next()
 	if text != nil {
 		return text
