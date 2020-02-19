@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"io"
-	"log"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -27,7 +26,7 @@ import (
 //
 // It generally relies on Unicode definitions of 'punctuation' and 'symbol', with some exceptions.
 //
-// Unlike some other common tokenizers, Tokenize returns all tokens (including white space), so text can be reconstructed with fidelity ("round tripped").
+// Tokenize returns all tokens (including white space), so text can be reconstructed with fidelity ("round tripped").
 func Tokenize(r io.Reader) Tokens {
 	t := newTokenizer(r)
 	return Tokens{
@@ -47,26 +46,25 @@ func newTokenizer(r io.Reader) *tokenizer {
 }
 
 // next returns the next token. Call until it returns nil.
-func (t *tokenizer) next() *Token {
+func (t *tokenizer) next() (*Token, error) {
 	if t == nil {
-		return nil
+		return nil, nil
 	}
 	if t.outgoing.Len() > 0 {
 		// Punct or space accepted in previous call to readWord
-		return t.token()
+		return t.token(), nil
 	}
 	for {
 		switch r, _, err := t.incoming.ReadRune(); {
 		case err != nil:
 			if err == io.EOF {
 				// No problem
-				return t.token()
+				return t.token(), nil
 			}
-			log.Print(err)
-			return nil
+			return nil, err
 		case unicode.IsSpace(r):
 			t.accept(r)
-			return t.token()
+			return t.token(), nil
 		case isPunct(r):
 			t.accept(r)
 			isLeadingPunct := leadingPunct.includes(r) && !t.peekTerminator()
@@ -75,7 +73,7 @@ func (t *tokenizer) next() *Token {
 				return t.readWord()
 			}
 			// Regular punct, emit it
-			return t.token()
+			return t.token(), nil
 		default:
 			// It's a letter
 			t.accept(r)
@@ -85,13 +83,16 @@ func (t *tokenizer) next() *Token {
 }
 
 // Important that this function only gets entered from the Next() loop, which determines 'word start'
-func (t *tokenizer) readWord() *Token {
+func (t *tokenizer) readWord() (*Token, error) {
 	for {
 		r, _, err := t.incoming.ReadRune()
 		switch {
-		case err == io.EOF:
-			// Current word is terminated by EOF, send it back
-			return t.token()
+		case err != nil:
+			if err == io.EOF {
+				// No problem
+				return t.token(), nil
+			}
+			return nil, err
 		case midPunct.includes(r):
 			// Look ahead to see if it's followed by space or more punctuation
 			followedByTerminator := t.peekTerminator()
@@ -99,25 +100,25 @@ func (t *tokenizer) readWord() *Token {
 				// It's just regular punct, treat it as such
 
 				// Get the current word token without the punct
-				tok := t.token()
+				token := t.token()
 
 				// Accept the punct for later
 				t.accept(r)
 
 				// Emit the word token
-				return tok
+				return token, nil
 			}
 			// Else, it's mid-word punct, treat it like a letter
 			t.accept(r)
 		case isPunct(r) || unicode.IsSpace(r):
 			// Get the current word token without the punct
-			tok := t.token()
+			token := t.token()
 
 			// Accept the punct for later
 			t.accept(r)
 
 			// Emit the word token
-			return tok
+			return token, nil
 		default:
 			// Otherwise it's a letter, keep going
 			t.accept(r)
@@ -213,31 +214,38 @@ func TokenizeHTML(r io.Reader) Tokens {
 		text: dummy, // dummy to avoid nil
 	}
 	return Tokens{
-		Next: t.Next,
+		Next: t.next,
 	}
 }
 
-var dummy = Tokens{Next: func() *Token { return nil }}
+var dummy = Tokens{Next: func() (*Token, error) { return nil, nil }}
 
 type htokenizer struct {
 	html *html.Tokenizer
 	text Tokens
 }
 
-// Next is the implementation of the Tokens interface. To iterate, call until it returns nil
-func (t *htokenizer) Next() *Token {
+// next is the implementation of the Tokens interface. To iterate, call until it returns nil
+func (t *htokenizer) next() (*Token, error) {
 	// Are we "inside" a text node?
-	text := t.text.Next()
+	text, err := t.text.Next()
+	if err != nil {
+		return nil, err
+	}
 	if text != nil {
-		return text
+		return text, nil
 	}
 
 	for {
 		tt := t.html.Next()
 
 		if tt == html.ErrorToken {
-			// Presumably eof
-			return nil
+			err := t.html.Err()
+			if err == io.EOF {
+				// No problem
+				return nil, nil
+			}
+			return nil, err
 		}
 
 		switch tok := t.html.Token(); {
@@ -247,12 +255,12 @@ func (t *htokenizer) Next() *Token {
 			return t.text.Next()
 		default:
 			// Everything else is punct for our purposes
-			new := &Token{
+			token := &Token{
 				value: tok.String(),
 				punct: true,
 				space: false,
 			}
-			return new
+			return token, nil
 		}
 	}
 }

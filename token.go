@@ -5,46 +5,55 @@ import (
 	"strings"
 )
 
-// Tokens represents an 'iterator' of Token. Call .Next() until it returns nil.
+// Tokens represents an 'iterator' of Token, the result of a call to Tokenize or Lemmatize. Call Next() until it returns nil.
 type Tokens struct {
 	// Next returns the next Token. If nil, the iterator is exhausted.
-	Next func() *Token
+	Next func() (*Token, error)
 }
 
 // ToSlice converts the Tokens iterator into a slice (array). Calling ToSlice will exhaust the iterator. For big files, putting everything into an array may cause memory pressure.
-func (tokens Tokens) ToSlice() []*Token {
+func (tokens Tokens) ToSlice() ([]*Token, error) {
 	var result []*Token
 
 	for {
-		t := tokens.Next()
+		t, err := tokens.Next()
+		if err != nil {
+			return result, err
+		}
 		if t == nil {
 			break
 		}
 		result = append(result, t)
 	}
 
-	return result
+	return result, nil
 }
 
-func (tokens Tokens) String() string {
+func (tokens Tokens) String() (string, error) {
 	var b strings.Builder
 
 	for {
-		t := tokens.Next()
+		t, err := tokens.Next()
+		if err != nil {
+			return b.String(), err
+		}
 		if t == nil {
 			break
 		}
 		b.WriteString(t.String())
 	}
 
-	return b.String()
+	return b.String(), nil
 }
 
 // WriteTo writes all token string values to w
 func (tokens Tokens) WriteTo(w io.Writer) (int64, error) {
 	var written int64
 	for {
-		t := tokens.Next()
+		t, err := tokens.Next()
+		if err != nil {
+			return written, err
+		}
 		if t == nil {
 			break
 		}

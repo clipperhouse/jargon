@@ -93,11 +93,14 @@ func TestLemAll(t *testing.T) {
 	got := ""
 
 	for {
-		t := lemmatized.Next()
-		if t == nil {
+		token, err := lemmatized.Next()
+		if err != nil {
+			t.Error(err)
+		}
+		if token == nil {
 			break
 		}
-		got += t.String()
+		got += token.String()
 	}
 
 	expected := "I can not luv ruby-on-rails times 300"

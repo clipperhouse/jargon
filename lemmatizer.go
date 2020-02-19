@@ -56,27 +56,30 @@ type lemmatizer struct {
 }
 
 // next returns the next token; nil indicates end of data
-func (t *lemmatizer) next() *Token {
+func (t *lemmatizer) next() (*Token, error) {
 	if t == nil {
-		return nil
+		return nil, nil
 	}
 	for {
 
 		if len(t.outgoing) > 0 {
-			return t.emit()
+			return t.emit(), nil
 		}
 
-		t.fill(1) // ok to ignore this error
+		_, err := t.fill(1)
+		if err != nil {
+			return nil, err
+		}
 
 		if len(t.buffer) == 0 {
-			return nil
+			return nil, nil
 		}
 
-		switch tok := t.buffer[0]; {
-		case tok.IsPunct() || tok.IsSpace():
+		switch token := t.buffer[0]; {
+		case token.IsPunct() || token.IsSpace():
 			// Emit it straight from the incoming buffer
 			t.drop(1)
-			return tok
+			return token, nil
 		default:
 			// Else it's a word
 			t.ngrams()
@@ -84,11 +87,13 @@ func (t *lemmatizer) next() *Token {
 	}
 }
 
-func (t *lemmatizer) ngrams() {
+func (t *lemmatizer) ngrams() error {
 	// Try n-grams, longest to shortest (greedy)
 	for take := t.dictionary.MaxGramLength(); take > 0; take-- {
-		run, consumed, ok := t.wordrun(take)
-
+		run, consumed, ok, err := t.wordrun(take)
+		if err != nil {
+			return err
+		}
 		if !ok {
 			continue // on to the next n-gram
 		}
@@ -111,7 +116,10 @@ func (t *lemmatizer) ngrams() {
 				r := strings.NewReader(canonical)
 				tokens := Tokenize(r)
 				for {
-					tok := tokens.Next()
+					tok, err := tokens.Next()
+					if err != nil {
+						return err
+					}
 					if tok == nil {
 						break
 					}
@@ -129,7 +137,7 @@ func (t *lemmatizer) ngrams() {
 			}
 
 			t.drop(consumed) // discard the incoming tokens that comprised the lemma
-			return
+			return nil
 		}
 
 		if take == 1 {
@@ -137,7 +145,7 @@ func (t *lemmatizer) ngrams() {
 			original := t.buffer[0]
 			t.stage(original) // set it up to be emitted
 			t.drop(1)         // take it out of the buffer
-			return
+			return nil
 		}
 	}
 	err := fmt.Errorf("did not find a token. this should never happen")
@@ -160,16 +168,19 @@ func (t *lemmatizer) drop(n int) {
 }
 
 // ensure that the buffer contains at least `count` elements; returns false if channel is exhausted before achieving the count
-func (t *lemmatizer) fill(count int) bool {
+func (t *lemmatizer) fill(count int) (bool, error) {
 	for count >= len(t.buffer) {
-		token := t.incoming.Next()
+		token, err := t.incoming.Next()
+		if err != nil {
+			return false, err
+		}
 		if token == nil {
 			// EOF
-			return false
+			return false, nil
 		}
 		t.buffer = append(t.buffer, token)
 	}
-	return true
+	return true, nil
 }
 
 func (t *lemmatizer) stage(tok *Token) {
@@ -185,18 +196,21 @@ func (t *lemmatizer) emit() *Token {
 }
 
 // Analogous to tokens.Take(take) in Linq
-func (t *lemmatizer) wordrun(take int) ([]string, int, bool) {
+func (t *lemmatizer) wordrun(take int) ([]string, int, bool, error) {
 	var (
 		taken []string // the words
 		count int      // tokens consumed, not necessarily equal to take
 	)
 
 	for len(taken) < take {
-		ok := t.fill(count)
+		ok, err := t.fill(count)
+		if err != nil {
+			return nil, 0, false, err
+		}
 		if !ok {
 			// Not enough (buffered) tokens to continue
 			// So, a word run of length `take` is impossible
-			return nil, 0, false
+			return nil, 0, false, nil
 		}
 
 		token := t.buffer[count]
@@ -205,7 +219,7 @@ func (t *lemmatizer) wordrun(take int) ([]string, int, bool) {
 			// Note: test for punct before space; newlines and tabs can be
 			// considered both punct and space (depending on the tokenizer!)
 			// and we want to treat them as breaking word runs.
-			return nil, 0, false
+			return nil, 0, false, nil
 		case token.IsSpace():
 			// Ignore and continue
 			count++
@@ -216,5 +230,5 @@ func (t *lemmatizer) wordrun(take int) ([]string, int, bool) {
 		}
 	}
 
-	return taken, count, true
+	return taken, count, true, nil
 }

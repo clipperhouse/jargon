@@ -19,9 +19,16 @@ func TestLemmatize(t *testing.T) {
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got := Lemmatize(tokens, dict).ToSlice()
+	got, err := Lemmatize(tokens, dict).ToSlice()
+	if err != nil {
+		t.Error(err)
+	}
+
 	r2 := strings.NewReader(`Here is the story of ruby-on-rails node.js, "javascript", html5 and asp.net-mvc plus tcpip.`)
-	expected := Tokenize(r2).ToSlice()
+	expected, err := Tokenize(r2).ToSlice()
+	if err != nil {
+		t.Error(err)
+	}
 
 	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
@@ -51,9 +58,16 @@ func TestRetokenize(t *testing.T) {
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got := Lemmatize(tokens, dict).ToSlice()
+	got, err := Lemmatize(tokens, dict).ToSlice()
+	if err != nil {
+		t.Error(err)
+	}
+
 	r2 := strings.NewReader(`Would have but also will not`)
-	expected := Tokenize(r2).ToSlice()
+	expected, err := Tokenize(r2).ToSlice()
+	if err != nil {
+		t.Error(err)
+	}
 
 	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
@@ -85,10 +99,17 @@ func TestCSV(t *testing.T) {
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got := Lemmatize(tokens, dict).ToSlice()
+	got, err := Lemmatize(tokens, dict).ToSlice()
+	if err != nil {
+		t.Error(err)
+	}
+
 	r2 := strings.NewReader(`"ruby-on-rails", 3.4, "foo"
 "bar",42, "javascript"`)
-	expected := Tokenize(r2).ToSlice()
+	expected, err := Tokenize(r2).ToSlice()
+	if err != nil {
+		t.Error(err)
+	}
 
 	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
@@ -104,11 +125,18 @@ bar	42	java script`
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got := Lemmatize(tokens, dict).ToSlice()
+	got, err := Lemmatize(tokens, dict).ToSlice()
+	if err != nil {
+		t.Error(err)
+	}
+
 	r2 := strings.NewReader(`ruby-on-rails	3.4	foo
 asp.net	model-view-controller
 bar	42	javascript`)
-	expected := Tokenize(r2).ToSlice()
+	expected, err := Tokenize(r2).ToSlice()
+	if err != nil {
+		t.Error(err)
+	}
 
 	if !equals(got, expected) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
@@ -127,11 +155,14 @@ func TestMultiple(t *testing.T) {
 	var got string
 
 	for {
-		t := tokens.Next()
-		if t == nil {
+		token, err := tokens.Next()
+		if err != nil {
+			t.Error(err)
+		}
+		if token == nil {
 			break
 		}
-		got += t.String()
+		got += token.String()
 	}
 
 	if got != expected {
@@ -163,7 +194,11 @@ func TestWordrun(t *testing.T) {
 	}
 
 	for take, expected := range expecteds {
-		taken, consumed, ok := lem.wordrun(take)
+		taken, consumed, ok, err := lem.wordrun(take)
+		if err != nil {
+			t.Error(err)
+		}
+
 		got := result{taken, consumed, ok}
 
 		if !reflect.DeepEqual(expected, got) {
@@ -172,11 +207,15 @@ func TestWordrun(t *testing.T) {
 	}
 }
 
-func consume(tokens Tokens) {
+func consume(tokens Tokens) error {
 	for {
-		t := tokens.Next()
+		t, err := tokens.Next()
+		if err != nil {
+			return err
+		}
 		if t == nil {
 			break
 		}
 	}
+	return nil
 }

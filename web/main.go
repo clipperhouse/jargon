@@ -59,12 +59,15 @@ func jargonHandler(w http.ResponseWriter, r *http.Request) {
 	var b bytes.Buffer
 
 	for {
-		t := lemmatized.Next()
+		t, err := lemmatized.Next()
+		if err != nil {
+			log.Print(err)
+			w.WriteHeader(500)
+		}
 		if t == nil {
 			break
 		}
 
-		var err error
 		// we buffer (instead of writing directly to Response) because the Body
 		// will be closed if we read and write concurrently:
 		// https://github.com/golang/go/issues/15527

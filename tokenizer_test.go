@@ -20,7 +20,10 @@ It'd be great it it’ll handle apostrophes.
 `
 	r := strings.NewReader(text)
 	tokens := Tokenize(r)
-	got := tokens.ToSlice()
+	got, err := tokens.ToSlice()
+	if err != nil {
+		t.Error(err)
+	}
 
 	expected := []string{
 		"Hi", "!", "a",
@@ -95,7 +98,10 @@ func TestURLs(t *testing.T) {
 
 	for input, expected := range tests {
 		r := strings.NewReader(input)
-		got := Tokenize(r).Next() // just take the first token
+		got, err := Tokenize(r).Next() // just take the first token
+		if err != nil {
+			t.Error(err)
+		}
 
 		if got.String() != expected {
 			t.Errorf("Expected URL %s to result in %s, but got %s", input, expected, got)
@@ -112,7 +118,11 @@ Hi! Let's talk Ruby on Rails.
 </html>
 `
 	r := strings.NewReader(h)
-	got := TokenizeHTML(r).ToSlice()
+	got, err := TokenizeHTML(r).ToSlice()
+
+	if err != nil {
+		t.Error(err)
+	}
 
 	expected := []string{
 		`<p foo="bar">`, // tags kept whole
@@ -135,10 +145,10 @@ func Example() {
 	r := strings.NewReader(text)
 	tokens := Tokenize(r)
 
-	// Iterate by calling Next() until nil
+	// Iterate by calling Next() until nil (eliding the error for demonstration purposes)
 	for {
-		tok := tokens.Next()
-		if tok == nil {
+		token, _ := tokens.Next()
+		if token == nil {
 			break
 		}
 
@@ -146,14 +156,14 @@ func Example() {
 	}
 
 	// Or! Pass tokens on to the lemmatizer
-	lemmas := Lemmatize(tokens, stackexchange.Dictionary)
+	lemmatized := Lemmatize(tokens, stackexchange.Dictionary)
 	for {
-		lemma := lemmas.Next()
-		if lemma == nil {
+		token, _ := lemmatized.Next()
+		if token == nil {
 			break
 		}
 
-		fmt.Print(lemma)
+		fmt.Print(token)
 	}
 }
 
