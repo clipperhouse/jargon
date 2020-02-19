@@ -64,19 +64,28 @@ func jargonHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
+		var err error
 		// we buffer (instead of writing directly to Response) because the Body
 		// will be closed if we read and write concurrently:
 		// https://github.com/golang/go/issues/15527
 		if t.IsLemma() {
-			lemma.Execute(&b, t)
+			err = lemma.Execute(&b, t)
 		} else {
-			plain.Execute(&b, t)
+			err = plain.Execute(&b, t)
+		}
+
+		if err != nil {
+			log.Print(err)
+			w.WriteHeader(500)
+			return
 		}
 	}
 
 	_, err := b.WriteTo(w)
 	if err != nil {
 		log.Print(err)
+		w.WriteHeader(500)
+		return
 	}
 }
 

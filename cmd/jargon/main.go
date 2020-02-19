@@ -200,14 +200,8 @@ func lem(tokens jargon.Tokens, dictionaries []jargon.Dictionary) error {
 
 	tokens = lemAll(tokens, dictionaries)
 
-	for {
-		t := tokens.Next()
-		if t == nil {
-			break
-		}
-		_, err := w.WriteString(t.String())
-		check(err)
-	}
+	_, err := tokens.WriteTo(w)
+	check(err)
 
 	// Flush the buffer as a last step; return error if any
 	return w.Flush()

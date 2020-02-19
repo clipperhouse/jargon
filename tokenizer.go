@@ -217,7 +217,7 @@ func TokenizeHTML(r io.Reader) Tokens {
 	}
 }
 
-var dummy = Tokenize(strings.NewReader(""))
+var dummy = Tokens{Next: func() *Token { return nil }}
 
 type htokenizer struct {
 	html *html.Tokenizer

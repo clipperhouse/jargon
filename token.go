@@ -1,6 +1,9 @@
 package jargon
 
-import "strings"
+import (
+	"io"
+	"strings"
+)
 
 // Tokens represents an 'iterator' of Token. Call .Next() until it returns nil.
 type Tokens struct {
@@ -8,24 +11,17 @@ type Tokens struct {
 	Next func() *Token
 }
 
-// ForEach iterates over all tokens and executes f. A convenience function, so you don't have to call Next and check nil. Call ForEach will exhaust the iterator.
-func (tokens Tokens) ForEach(f func(t *Token)) {
+// ToSlice converts the Tokens iterator into a slice (array). Calling ToSlice will exhaust the iterator. For big files, putting everything into an array may cause memory pressure.
+func (tokens Tokens) ToSlice() []*Token {
+	var result []*Token
+
 	for {
 		t := tokens.Next()
 		if t == nil {
 			break
 		}
-		f(t)
-	}
-}
-
-// ToSlice converts the Tokens iterator into a slice (array). Calling ToSlice will exhaust the iterator. For big files, putting everything into an array may cause memory pressure.
-func (tokens Tokens) ToSlice() []*Token {
-	var result []*Token
-
-	tokens.ForEach(func(t *Token) {
 		result = append(result, t)
-	})
+	}
 
 	return result
 }
@@ -33,11 +29,35 @@ func (tokens Tokens) ToSlice() []*Token {
 func (tokens Tokens) String() string {
 	var b strings.Builder
 
-	tokens.ForEach(func(t *Token) {
-		b.WriteString(t.value)
-	})
+	for {
+		t := tokens.Next()
+		if t == nil {
+			break
+		}
+		b.WriteString(t.String())
+	}
 
 	return b.String()
+}
+
+// WriteTo writes all token string values to w
+func (tokens Tokens) WriteTo(w io.Writer) (int64, error) {
+	var written int64
+	for {
+		t := tokens.Next()
+		if t == nil {
+			break
+		}
+
+		n, err := w.Write([]byte(t.String()))
+		written += int64(n)
+
+		if err != nil {
+			return written, err
+		}
+	}
+
+	return written, nil
 }
 
 // Token represents a piece of text with metadata.
