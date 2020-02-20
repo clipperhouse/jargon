@@ -264,9 +264,6 @@ func ExampleLemmatize() {
 	// Tokens is lazily evaluated; it does the lemmatization work as you call Next.
 	// This is done to ensure predictble memory usage and performance. It is
 	// 'forward-only', which means that once you consume a token, you can't go back.
-
-	// Tokens implements Stringer, which concatenates back into a string, e.g.
-	//	fmt.Println(tokens)
 }
 
 func consume(tokens Tokens) error {

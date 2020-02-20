@@ -140,7 +140,6 @@ Hi! Let's talk Ruby on Rails.
 }
 
 func ExampleTokenize() {
-
 	// Tokenize takes an io.Reader
 	text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
 	r := strings.NewReader(text)
@@ -166,10 +165,7 @@ func ExampleTokenize() {
 	// This is done to ensure predictble memory usage and performance. It is
 	// 'forward-only', which means that once you consume a token, you can't go back.
 
-	// Tokens implements Stringer, which concatenates back into a string, e.g.
-	//	fmt.Println(tokens)
-
-	// Usually, Tokens serve as input to Lemmatize
+	// Usually, Tokenize serves as input to Lemmatize
 }
 
 func contains(value string, tokens []*Token) bool {

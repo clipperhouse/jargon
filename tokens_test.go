@@ -1,7 +1,6 @@
 package jargon
 
 import (
-	"fmt"
 	"log"
 	"strings"
 )
@@ -30,8 +29,5 @@ func ExampleTokens() {
 	// As an iterator, Tokens is 'forward-only', which means that
 	// once you consume a token, you can't go back.
 
-	// Tokens implements Stringer, which concatenates back into a string, e.g.
-	fmt.Println(tokens)
-
-	// See also the convenience methods ToSlice, WriteTo and String
+	// See also the convenience methods String, ToSlice, WriteTo
 }
