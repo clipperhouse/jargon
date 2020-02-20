@@ -153,14 +153,6 @@ func (t *lemmatizer) ngrams() error {
 	return fmt.Errorf("did not find a token in ngrams. this should never happen")
 }
 
-func join(tokens []*Token) string {
-	joined := make([]string, 0)
-	for _, t := range tokens {
-		joined = append(joined, t.String())
-	}
-	return strings.Join(joined, "")
-}
-
 // drop (truncate) the first `n` elements of the buffer
 // remember, a token being in the buffer does not imply that we will emit it
 func (t *lemmatizer) drop(n int) {
