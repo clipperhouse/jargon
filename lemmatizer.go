@@ -40,6 +40,18 @@ func Lemmatize(incoming Tokens, dictionaries ...Dictionary) Tokens {
 	return result
 }
 
+// LemmatizeString transforms words to their canonicalized ("lemmatized") terms
+func LemmatizeString(s string, dictionaries ...Dictionary) string {
+	r := strings.NewReader(s)
+	tokens := Tokenize(r)
+	lemmatized := Lemmatize(tokens, dictionaries...)
+
+	// We can elide the error because it's coming from a string, no real I/O
+	result, _ := lemmatized.String()
+
+	return result
+}
+
 func newLemmatizer(incoming Tokens, dictionary Dictionary) *lemmatizer {
 	return &lemmatizer{
 		incoming:   incoming,

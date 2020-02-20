@@ -53,6 +53,27 @@ func TestLemmatize(t *testing.T) {
 	}
 }
 
+func TestLemmatizeString(t *testing.T) {
+	dict := stackexchange.Dictionary
+
+	s := `Here is the story of Ruby on Rails.`
+
+	r := strings.NewReader(s)
+	tokens := Tokenize(r)
+	lemmatized := Lemmatize(tokens, dict)
+
+	s1, err := lemmatized.String()
+	if err != nil {
+		t.Error(err)
+	}
+
+	s2 := LemmatizeString(s)
+
+	if s1 != s2 {
+		t.Errorf("Lemmatize and LemmatizeString should give the same result")
+	}
+}
+
 func TestRetokenize(t *testing.T) {
 	dict := contractions.Dictionary
 
