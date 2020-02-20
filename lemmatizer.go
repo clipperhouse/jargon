@@ -37,10 +37,7 @@ func Lemmatize(incoming Tokens, dictionaries ...Dictionary) Tokens {
 
 	// new lemmatizer for each dictionary, results as input into next lemmatizer
 	for _, dictionary := range dictionaries {
-		lem := &lemmatizer{
-			incoming:   result,
-			dictionary: dictionary,
-		}
+		lem := newLemmatizer(result, dictionary)
 		result = Tokens{
 			Next: lem.next,
 		}
@@ -49,18 +46,27 @@ func Lemmatize(incoming Tokens, dictionaries ...Dictionary) Tokens {
 	return result
 }
 
+func newLemmatizer(incoming Tokens, dictionary Dictionary) *lemmatizer {
+	return &lemmatizer{
+		incoming:   incoming,
+		dictionary: dictionary,
+		buffer:     &queue{},
+		outgoing:   &queue{},
+	}
+}
+
 type lemmatizer struct {
-	dictionary Dictionary
 	incoming   Tokens
-	buffer     []*Token // for incoming tokens; no guarantee they will be emitted
-	outgoing   []*Token
+	dictionary Dictionary
+	buffer     *queue // for incoming tokens; no guarantee they will be emitted
+	outgoing   *queue
 }
 
 // next returns the next token; nil indicates end of data
 func (lem *lemmatizer) next() (*Token, error) {
 	for {
-		if len(lem.outgoing) > 0 {
-			return lem.emit(), nil
+		if lem.outgoing.len() > 0 {
+			return lem.outgoing.pop(), nil
 		}
 
 		err := lem.fill(1)
@@ -72,15 +78,15 @@ func (lem *lemmatizer) next() (*Token, error) {
 			return nil, err
 		}
 
-		switch token := lem.buffer[0]; {
-		case token.IsPunct() || token.IsSpace():
-			// Emit it straight from the incoming buffer
-			lem.drop(1)
-			return token, nil
-		default:
-			// Else it's a word
-			lem.ngrams()
+		peek := lem.buffer.peek()
+		if peek.IsPunct() || peek.IsSpace() {
+			token := lem.buffer.pop()
+			lem.outgoing.push(token)
+			continue
 		}
+
+		// Else it's a word
+		lem.ngrams()
 	}
 }
 
@@ -122,7 +128,8 @@ func (lem *lemmatizer) ngrams() error {
 						break
 					}
 					token.lemma = true
-					lem.stage(token) //set it up to be emitted
+					//set it up to be emitted
+					lem.outgoing.push(token)
 				}
 			} else {
 				token := &Token{
@@ -131,34 +138,28 @@ func (lem *lemmatizer) ngrams() error {
 					punct: false,
 					lemma: true,
 				}
-				lem.stage(token) //set it up to be emitted
+				//set it up to be emitted
+				lem.outgoing.push(token)
 			}
 
-			lem.drop(wordrun.consumed) // discard the incoming tokens that comprised the lemma
+			// discard the incoming tokens that comprised the lemma
+			lem.buffer.drop(wordrun.consumed)
 			return nil
 		}
 
 		if desired == 1 {
-			// No n-grams, just emit
-			original := lem.buffer[0]
-			lem.stage(original) // set it up to be emitted
-			lem.drop(1)         // take it out of the buffer
+			// No n-grams, just emit the next token
+			token := lem.buffer.pop()
+			lem.outgoing.push(token)
 			return nil
 		}
 	}
 	return fmt.Errorf("did not find a token in ngrams. this should never happen")
 }
 
-// drop (truncate) the first `n` elements of the buffer
-// remember, a token being in the buffer does not imply that we will emit it
-func (lem *lemmatizer) drop(n int) {
-	copy(lem.buffer, lem.buffer[n:])
-	lem.buffer = lem.buffer[:len(lem.buffer)-n]
-}
-
 // ensure that the buffer contains at least `desired` elements; returns false if channel is exhausted before achieving the count
 func (lem *lemmatizer) fill(desired int) error {
-	for len(lem.buffer) < desired {
+	for lem.buffer.len() < desired {
 		token, err := lem.incoming.Next()
 		if err != nil {
 			return err
@@ -167,21 +168,9 @@ func (lem *lemmatizer) fill(desired int) error {
 			// EOF
 			return errInsufficient
 		}
-		lem.buffer = append(lem.buffer, token)
+		lem.buffer.push(token)
 	}
 	return nil
-}
-
-func (lem *lemmatizer) stage(token *Token) {
-	lem.outgoing = append(lem.outgoing, token)
-}
-
-func (lem *lemmatizer) emit() *Token {
-	n := 1
-	token := lem.outgoing[0]
-	copy(lem.outgoing, lem.outgoing[n:])
-	lem.outgoing = lem.outgoing[:len(lem.outgoing)-n]
-	return token
 }
 
 type wordrun struct {
@@ -209,7 +198,7 @@ func (lem *lemmatizer) wordrun(desired int) (wordrun, error) {
 			return empty, err
 		}
 
-		token := lem.buffer[consumed]
+		token := lem.buffer.tokens[consumed]
 		switch {
 		case token.IsPunct():
 			// Note: test for punct before space; newlines and tabs can be

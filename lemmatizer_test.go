@@ -179,9 +179,7 @@ func TestFill(t *testing.T) {
 
 	tokens := Tokenize(strings.NewReader(original))
 
-	lem := &lemmatizer{
-		incoming: tokens,
-	}
+	lem := newLemmatizer(tokens, nil)
 
 	for i := 0; i < count+2; i++ {
 		err := lem.fill(i)
@@ -189,8 +187,8 @@ func TestFill(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
-			if i != len(lem.buffer) {
-				t.Errorf("i should equal len(buffer), but i == %d, len(buffer) == %d", i, len(lem.buffer))
+			if i != lem.buffer.len() {
+				t.Errorf("i should equal len(buffer), but i == %d, len(buffer) == %d", i, lem.buffer.len())
 			}
 		} else { // i > count
 			if err == nil {
@@ -219,9 +217,7 @@ func TestWordrun(t *testing.T) {
 		1: {wordrun{[]string{"java"}, 1}, nil},                  // attempting to get 1 should work, and consume only that token
 	}
 
-	lem := &lemmatizer{
-		incoming: tokens,
-	}
+	lem := newLemmatizer(tokens, nil)
 
 	for take, expected := range expecteds {
 		got, err := lem.wordrun(take)
