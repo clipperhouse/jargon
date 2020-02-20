@@ -12,15 +12,6 @@ import (
 )
 
 // Tokenize returns an 'iterator' of Tokens from a io.Reader. Call .Next() until it returns nil:
-//	tokens := jargon.Tokenize(reader)
-//	for {
-//		token := tokens.Next()
-//		if token == nil {
-//			break
-//		}
-//
-// 		// do stuff with token
-//	}
 //
 // The tokenizer is targeted to English text that contains tech terms, so things like C++ and .Net are handled as single units, as are #hashtags and @handles.
 //

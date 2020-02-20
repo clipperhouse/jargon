@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"strings"
 	"testing"
 	"unicode/utf8"
-
-	"github.com/clipperhouse/jargon/stackexchange"
 )
 
 func TestTokenize(t *testing.T) {
@@ -140,31 +139,37 @@ Hi! Let's talk Ruby on Rails.
 	}
 }
 
-func Example() {
+func ExampleTokenize() {
+
+	// Tokenize takes an io.Reader
 	text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
 	r := strings.NewReader(text)
+
 	tokens := Tokenize(r)
 
-	// Iterate by calling Next() until nil (eliding the error for demonstration purposes)
+	// Tokenize returns a Tokens iterator. Iterate by calling Next() until nil, which
+	// indicates that the iterator is exhausted.
 	for {
-		token, _ := tokens.Next()
+		token, err := tokens.Next()
+		if err != nil {
+			// Because the source is I/O, errors are possible
+			log.Fatal(err)
+		}
 		if token == nil {
 			break
 		}
 
-		// Do stuff with token, or...
+		// Do stuff with token
 	}
 
-	// Or! Pass tokens on to the lemmatizer
-	lemmatized := Lemmatize(tokens, stackexchange.Dictionary)
-	for {
-		token, _ := lemmatized.Next()
-		if token == nil {
-			break
-		}
+	// Tokens is lazily evaluated; it does the tokenization work as you call Next.
+	// This is done to ensure predictble memory usage and performance. It is
+	// 'forward-only', which means that once you consume a token, you can't go back.
 
-		fmt.Print(token)
-	}
+	// Tokens implements Stringer, which concatenates back into a string, e.g.
+	//	fmt.Println(tokens)
+
+	// Usually, Tokens serve as input to Lemmatize
 }
 
 func contains(value string, tokens []*Token) bool {

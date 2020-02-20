@@ -2,7 +2,9 @@ package jargon
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
+	"log"
 	"reflect"
 	"strings"
 	"testing"
@@ -229,6 +231,42 @@ func TestWordrun(t *testing.T) {
 			t.Errorf("Attempting to take %d words, expected %v but got %v", take, expected, got)
 		}
 	}
+}
+
+func ExampleLemmatize() {
+	// Lemmatize take tokens and attempts to find their canonical version
+
+	// Lemmatize takes a Tokens iterator, and one or more dictionaries
+	text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
+	r := strings.NewReader(text)
+
+	tokens := Tokenize(r)
+	lemmatized := Lemmatize(tokens, stackexchange.Dictionary)
+
+	// Lemmatize returns a Tokens iterator. Iterate by calling Next() until nil, which
+	// indicates that the iterator is exhausted.
+	for {
+		token, err := lemmatized.Next()
+		if err != nil {
+			// Because the source is I/O, errors are possible
+			log.Fatal(err)
+		}
+		if token == nil {
+			break
+		}
+
+		// Do stuff with token
+		if token.IsLemma() {
+			fmt.Printf("found lemma: %s", token)
+		}
+	}
+
+	// Tokens is lazily evaluated; it does the lemmatization work as you call Next.
+	// This is done to ensure predictble memory usage and performance. It is
+	// 'forward-only', which means that once you consume a token, you can't go back.
+
+	// Tokens implements Stringer, which concatenates back into a string, e.g.
+	//	fmt.Println(tokens)
 }
 
 func consume(tokens Tokens) error {

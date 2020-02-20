@@ -1,0 +1,37 @@
+package jargon
+
+import (
+	"fmt"
+	"log"
+	"strings"
+)
+
+func ExampleTokens() {
+	// Tokens is an iterator resulting from a call to Lemmatize or Tokenize
+
+	text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
+	r := strings.NewReader(text)
+	tokens := Tokenize(r)
+
+	// Iterate by calling Next() until nil, which indicates that the iterator is exhausted.
+	for {
+		token, err := tokens.Next()
+		if err != nil {
+			// Because the source is I/O, errors are possible
+			log.Fatal(err)
+		}
+		if token == nil {
+			break
+		}
+
+		// Do stuff with token
+	}
+
+	// As an iterator, Tokens is 'forward-only', which means that
+	// once you consume a token, you can't go back.
+
+	// Tokens implements Stringer, which concatenates back into a string, e.g.
+	fmt.Println(tokens)
+
+	// See also the convenience methods ToSlice, WriteTo and String
+}
