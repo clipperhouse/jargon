@@ -57,16 +57,16 @@ type lemmatizer struct {
 }
 
 // next returns the next token; nil indicates end of data
-func (t *lemmatizer) next() (*Token, error) {
-	if t == nil {
+func (lem *lemmatizer) next() (*Token, error) {
+	if lem == nil {
 		return nil, nil
 	}
 	for {
-		if len(t.outgoing) > 0 {
-			return t.emit(), nil
+		if len(lem.outgoing) > 0 {
+			return lem.emit(), nil
 		}
 
-		err := t.fill(1)
+		err := lem.fill(1)
 		if err != nil {
 			if err == errInsufficient {
 				// EOF, no problem
@@ -75,22 +75,22 @@ func (t *lemmatizer) next() (*Token, error) {
 			return nil, err
 		}
 
-		switch token := t.buffer[0]; {
+		switch token := lem.buffer[0]; {
 		case token.IsPunct() || token.IsSpace():
 			// Emit it straight from the incoming buffer
-			t.drop(1)
+			lem.drop(1)
 			return token, nil
 		default:
 			// Else it's a word
-			t.ngrams()
+			lem.ngrams()
 		}
 	}
 }
 
-func (t *lemmatizer) ngrams() error {
+func (lem *lemmatizer) ngrams() error {
 	// Try n-grams, longest to shortest (greedy)
-	for desired := t.dictionary.MaxGramLength(); desired > 0; desired-- {
-		wordrun, err := t.wordrun(desired)
+	for desired := lem.dictionary.MaxGramLength(); desired > 0; desired-- {
+		wordrun, err := lem.wordrun(desired)
 		if err != nil {
 			if err == errInsufficient {
 				// No problem, try the next (smaller) n-gram
@@ -99,7 +99,7 @@ func (t *lemmatizer) ngrams() error {
 			return err
 		}
 
-		canonical, found := t.dictionary.Lookup(wordrun.words)
+		canonical, found := lem.dictionary.Lookup(wordrun.words)
 
 		if found {
 			// the canonical can have space or punct, so we want to return separate tokens
@@ -117,15 +117,15 @@ func (t *lemmatizer) ngrams() error {
 				r := strings.NewReader(canonical)
 				tokens := Tokenize(r)
 				for {
-					tok, err := tokens.Next()
+					token, err := tokens.Next()
 					if err != nil {
 						return err
 					}
-					if tok == nil {
+					if token == nil {
 						break
 					}
-					tok.lemma = true
-					t.stage(tok) //set it up to be emitted
+					token.lemma = true
+					lem.stage(token) //set it up to be emitted
 				}
 			} else {
 				token := &Token{
@@ -134,18 +134,18 @@ func (t *lemmatizer) ngrams() error {
 					punct: false,
 					lemma: true,
 				}
-				t.stage(token) //set it up to be emitted
+				lem.stage(token) //set it up to be emitted
 			}
 
-			t.drop(wordrun.consumed) // discard the incoming tokens that comprised the lemma
+			lem.drop(wordrun.consumed) // discard the incoming tokens that comprised the lemma
 			return nil
 		}
 
 		if desired == 1 {
 			// No n-grams, just emit
-			original := t.buffer[0]
-			t.stage(original) // set it up to be emitted
-			t.drop(1)         // take it out of the buffer
+			original := lem.buffer[0]
+			lem.stage(original) // set it up to be emitted
+			lem.drop(1)         // take it out of the buffer
 			return nil
 		}
 	}
@@ -154,15 +154,15 @@ func (t *lemmatizer) ngrams() error {
 
 // drop (truncate) the first `n` elements of the buffer
 // remember, a token being in the buffer does not imply that we will emit it
-func (t *lemmatizer) drop(n int) {
-	copy(t.buffer, t.buffer[n:])
-	t.buffer = t.buffer[:len(t.buffer)-n]
+func (lem *lemmatizer) drop(n int) {
+	copy(lem.buffer, lem.buffer[n:])
+	lem.buffer = lem.buffer[:len(lem.buffer)-n]
 }
 
 // ensure that the buffer contains at least `desired` elements; returns false if channel is exhausted before achieving the count
-func (t *lemmatizer) fill(desired int) error {
-	for len(t.buffer) < desired {
-		token, err := t.incoming.Next()
+func (lem *lemmatizer) fill(desired int) error {
+	for len(lem.buffer) < desired {
+		token, err := lem.incoming.Next()
 		if err != nil {
 			return err
 		}
@@ -170,21 +170,21 @@ func (t *lemmatizer) fill(desired int) error {
 			// EOF
 			return errInsufficient
 		}
-		t.buffer = append(t.buffer, token)
+		lem.buffer = append(lem.buffer, token)
 	}
 	return nil
 }
 
-func (t *lemmatizer) stage(tok *Token) {
-	t.outgoing = append(t.outgoing, tok)
+func (lem *lemmatizer) stage(token *Token) {
+	lem.outgoing = append(lem.outgoing, token)
 }
 
-func (t *lemmatizer) emit() *Token {
+func (lem *lemmatizer) emit() *Token {
 	n := 1
-	tok := t.outgoing[0]
-	copy(t.outgoing, t.outgoing[n:])
-	t.outgoing = t.outgoing[:len(t.outgoing)-n]
-	return tok
+	token := lem.outgoing[0]
+	copy(lem.outgoing, lem.outgoing[n:])
+	lem.outgoing = lem.outgoing[:len(lem.outgoing)-n]
+	return token
 }
 
 type wordrun struct {
@@ -197,14 +197,14 @@ var (
 	errInsufficient = errors.New("could not find word run of desired length")
 )
 
-func (t *lemmatizer) wordrun(desired int) (wordrun, error) {
+func (lem *lemmatizer) wordrun(desired int) (wordrun, error) {
 	var (
 		words []string // the words
 		count int      // tokens consumed, not necessarily equal to desired
 	)
 
 	for len(words) < desired {
-		err := t.fill(count + 1)
+		err := lem.fill(count + 1)
 		if err != nil {
 			// If errInsufficient, not enough (buffered) tokens to continue,
 			// so a word run of desired length is impossible; be handled by ngrams().
@@ -212,7 +212,7 @@ func (t *lemmatizer) wordrun(desired int) (wordrun, error) {
 			return empty, err
 		}
 
-		token := t.buffer[count] // last element
+		token := lem.buffer[count] // last element
 		switch {
 		case token.IsPunct():
 			// Note: test for punct before space; newlines and tabs can be
