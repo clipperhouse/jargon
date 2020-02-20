@@ -62,18 +62,17 @@ func (t *lemmatizer) next() (*Token, error) {
 		return nil, nil
 	}
 	for {
-
 		if len(t.outgoing) > 0 {
 			return t.emit(), nil
 		}
 
-		_, err := t.fill(1)
+		err := t.fill(1)
 		if err != nil {
+			if err == errInsufficient {
+				// EOF, no problem
+				return nil, nil
+			}
 			return nil, err
-		}
-
-		if len(t.buffer) == 0 {
-			return nil, nil
 		}
 
 		switch token := t.buffer[0]; {
@@ -90,11 +89,11 @@ func (t *lemmatizer) next() (*Token, error) {
 
 func (t *lemmatizer) ngrams() error {
 	// Try n-grams, longest to shortest (greedy)
-	for take := t.dictionary.MaxGramLength(); take > 0; take-- {
-		wordrun, err := t.wordrun(take)
+	for desired := t.dictionary.MaxGramLength(); desired > 0; desired-- {
+		wordrun, err := t.wordrun(desired)
 		if err != nil {
 			if err == errInsufficient {
-				// No problem, try the next n-gram
+				// No problem, try the next (smaller) n-gram
 				continue
 			}
 			return err
@@ -142,7 +141,7 @@ func (t *lemmatizer) ngrams() error {
 			return nil
 		}
 
-		if take == 1 {
+		if desired == 1 {
 			// No n-grams, just emit
 			original := t.buffer[0]
 			t.stage(original) // set it up to be emitted
@@ -160,20 +159,20 @@ func (t *lemmatizer) drop(n int) {
 	t.buffer = t.buffer[:len(t.buffer)-n]
 }
 
-// ensure that the buffer contains at least `count` elements; returns false if channel is exhausted before achieving the count
-func (t *lemmatizer) fill(count int) (bool, error) {
-	for count >= len(t.buffer) {
+// ensure that the buffer contains at least `desired` elements; returns false if channel is exhausted before achieving the count
+func (t *lemmatizer) fill(desired int) error {
+	for len(t.buffer) < desired {
 		token, err := t.incoming.Next()
 		if err != nil {
-			return false, err
+			return err
 		}
 		if token == nil {
 			// EOF
-			return false, nil
+			return errInsufficient
 		}
 		t.buffer = append(t.buffer, token)
 	}
-	return true, nil
+	return nil
 }
 
 func (t *lemmatizer) stage(tok *Token) {
@@ -193,27 +192,27 @@ type wordrun struct {
 	consumed int
 }
 
-var empty = wordrun{}
-var errInsufficient = errors.New("could not find word run of desired length")
+var (
+	empty           = wordrun{}
+	errInsufficient = errors.New("could not find word run of desired length")
+)
 
-func (t *lemmatizer) wordrun(take int) (wordrun, error) {
+func (t *lemmatizer) wordrun(desired int) (wordrun, error) {
 	var (
-		taken []string // the words
-		count int      // tokens consumed, not necessarily equal to take
+		words []string // the words
+		count int      // tokens consumed, not necessarily equal to desired
 	)
 
-	for len(taken) < take {
-		ok, err := t.fill(count)
+	for len(words) < desired {
+		err := t.fill(count + 1)
 		if err != nil {
+			// If errInsufficient, not enough (buffered) tokens to continue,
+			// so a word run of desired length is impossible; be handled by ngrams().
+			// Other errors are just errors; pass 'em back.
 			return empty, err
 		}
-		if !ok {
-			// Not enough (buffered) tokens to continue
-			// So, a word run of length `take` is impossible
-			return empty, errInsufficient
-		}
 
-		token := t.buffer[count]
+		token := t.buffer[count] // last element
 		switch {
 		case token.IsPunct():
 			// Note: test for punct before space; newlines and tabs can be
@@ -225,13 +224,13 @@ func (t *lemmatizer) wordrun(take int) (wordrun, error) {
 			count++
 		default:
 			// Found a word
-			taken = append(taken, token.String())
+			words = append(words, token.String())
 			count++
 		}
 	}
 
 	result := wordrun{
-		words:    taken,
+		words:    words,
 		consumed: count,
 	}
 

@@ -169,6 +169,36 @@ func TestMultiple(t *testing.T) {
 		t.Errorf("expected %q, got %q", expected, got)
 	}
 }
+func TestFill(t *testing.T) {
+	original := `one two three four five `
+
+	count, err := Tokenize(strings.NewReader(original)).count()
+	if err != nil {
+		t.Error(err)
+	}
+
+	tokens := Tokenize(strings.NewReader(original))
+
+	lem := &lemmatizer{
+		incoming: tokens,
+	}
+
+	for i := 0; i < count+2; i++ {
+		err := lem.fill(i)
+		if i <= count {
+			if err != nil {
+				t.Error(err)
+			}
+			if i != len(lem.buffer) {
+				t.Errorf("i should equal len(buffer), but i == %d, len(buffer) == %d", i, len(lem.buffer))
+			}
+		} else { // i > count
+			if err == nil {
+				t.Errorf("for tokens of count %d, at i == %d, there should be an error on fill", i, count)
+			}
+		}
+	}
+}
 
 func TestWordrun(t *testing.T) {
 	original := `java script and: foo `
