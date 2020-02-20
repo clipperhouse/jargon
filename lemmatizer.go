@@ -196,12 +196,12 @@ var (
 
 func (lem *lemmatizer) wordrun(desired int) (wordrun, error) {
 	var (
-		words []string // the words
-		count int      // tokens consumed, not necessarily equal to desired
+		words    []string
+		consumed int // tokens consumed or 'seen', not necessarily equal to desired
 	)
 
 	for len(words) < desired {
-		err := lem.fill(count + 1)
+		err := lem.fill(consumed + 1)
 		if err != nil {
 			// If errInsufficient, not enough (buffered) tokens to continue,
 			// so a word run of desired length is impossible; be handled by ngrams().
@@ -209,7 +209,7 @@ func (lem *lemmatizer) wordrun(desired int) (wordrun, error) {
 			return empty, err
 		}
 
-		token := lem.buffer[count] // last element
+		token := lem.buffer[consumed]
 		switch {
 		case token.IsPunct():
 			// Note: test for punct before space; newlines and tabs can be
@@ -218,17 +218,17 @@ func (lem *lemmatizer) wordrun(desired int) (wordrun, error) {
 			return empty, errInsufficient
 		case token.IsSpace():
 			// Ignore and continue
-			count++
+			consumed++
 		default:
 			// Found a word
 			words = append(words, token.String())
-			count++
+			consumed++
 		}
 	}
 
 	result := wordrun{
 		words:    words,
-		consumed: count,
+		consumed: consumed,
 	}
 
 	return result, nil
