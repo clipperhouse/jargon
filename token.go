@@ -7,7 +7,7 @@ import (
 
 // Tokens represents an 'iterator' of Token, the result of a call to Tokenize or Lemmatize. Call Next() until it returns nil.
 type Tokens struct {
-	// Next returns the next Token. If nil, the iterator is exhausted.
+	// Next returns the next Token. If nil, the iterator is exhausted. Because it depends on I/O, callers should check errors.
 	Next func() (*Token, error)
 }
 

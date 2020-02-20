@@ -171,16 +171,22 @@ func TestMultiple(t *testing.T) {
 }
 
 func TestWordrun(t *testing.T) {
-	original := `java script and `
+	original := `java script and: foo `
 	r := strings.NewReader(original)
 	tokens := Tokenize(r)
 
 	var none []string // DeepEqual doesn't see zero-length slices as equal; need 'nil'
-	expecteds := map[int]wordrun{
-		4: {none, 0, false},                             // attempting to get 4 should fail
-		3: {[]string{"java", "script", "and"}, 5, true}, // attempting to get 3 should work, consuming 5
-		2: {[]string{"java", "script"}, 3, true},        // attempting to get 2 should work, consuming 3 tokens (incl the space)
-		1: {[]string{"java"}, 1, true},                  // attempting to get 1 should work, and consume only that token
+
+	type expected struct {
+		wordrun wordrun
+		err     error
+	}
+
+	expecteds := map[int]expected{
+		4: {wordrun{none, 0}, errInsufficient},                  // attempting to get 4 should fail
+		3: {wordrun{[]string{"java", "script", "and"}, 5}, nil}, // attempting to get 3 should work, consuming 5
+		2: {wordrun{[]string{"java", "script"}, 3}, nil},        // attempting to get 2 should work, consuming 3 tokens (incl the space)
+		1: {wordrun{[]string{"java"}, 1}, nil},                  // attempting to get 1 should work, and consume only that token
 	}
 
 	lem := &lemmatizer{
@@ -189,11 +195,11 @@ func TestWordrun(t *testing.T) {
 
 	for take, expected := range expecteds {
 		got, err := lem.wordrun(take)
-		if err != nil {
+		if err != expected.err {
 			t.Error(err)
 		}
 
-		if !reflect.DeepEqual(expected, got) {
+		if !reflect.DeepEqual(expected.wordrun, got) {
 			t.Errorf("Attempting to take %d words, expected %v but got %v", take, expected, got)
 		}
 	}

@@ -2,6 +2,7 @@
 package jargon
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"unicode"
@@ -92,10 +93,11 @@ func (t *lemmatizer) ngrams() error {
 	for take := t.dictionary.MaxGramLength(); take > 0; take-- {
 		wordrun, err := t.wordrun(take)
 		if err != nil {
+			if err == errInsufficient {
+				// No problem, try the next n-gram
+				continue
+			}
 			return err
-		}
-		if !wordrun.success {
-			continue // on to the next n-gram
 		}
 
 		canonical, found := t.dictionary.Lookup(wordrun.words)
@@ -127,13 +129,13 @@ func (t *lemmatizer) ngrams() error {
 					t.stage(tok) //set it up to be emitted
 				}
 			} else {
-				tok := &Token{
+				token := &Token{
 					value: canonical,
 					space: false,
 					punct: false,
 					lemma: true,
 				}
-				t.stage(tok) //set it up to be emitted
+				t.stage(token) //set it up to be emitted
 			}
 
 			t.drop(wordrun.consumed) // discard the incoming tokens that comprised the lemma
@@ -148,8 +150,7 @@ func (t *lemmatizer) ngrams() error {
 			return nil
 		}
 	}
-	err := fmt.Errorf("did not find a token. this should never happen")
-	panic(err)
+	return fmt.Errorf("did not find a token in ngrams. this should never happen")
 }
 
 func join(tokens []*Token) string {
@@ -198,10 +199,10 @@ func (t *lemmatizer) emit() *Token {
 type wordrun struct {
 	words    []string
 	consumed int
-	success  bool
 }
 
 var empty = wordrun{}
+var errInsufficient = errors.New("could not find word run of desired length")
 
 func (t *lemmatizer) wordrun(take int) (wordrun, error) {
 	var (
@@ -217,7 +218,7 @@ func (t *lemmatizer) wordrun(take int) (wordrun, error) {
 		if !ok {
 			// Not enough (buffered) tokens to continue
 			// So, a word run of length `take` is impossible
-			return empty, nil
+			return empty, errInsufficient
 		}
 
 		token := t.buffer[count]
@@ -226,7 +227,7 @@ func (t *lemmatizer) wordrun(take int) (wordrun, error) {
 			// Note: test for punct before space; newlines and tabs can be
 			// considered both punct and space (depending on the tokenizer!)
 			// and we want to treat them as breaking word runs.
-			return empty, nil
+			return empty, errInsufficient
 		case token.IsSpace():
 			// Ignore and continue
 			count++
@@ -240,7 +241,6 @@ func (t *lemmatizer) wordrun(take int) (wordrun, error) {
 	result := wordrun{
 		words:    taken,
 		consumed: count,
-		success:  true,
 	}
 
 	return result, nil
