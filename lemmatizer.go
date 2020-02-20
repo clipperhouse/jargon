@@ -58,9 +58,6 @@ type lemmatizer struct {
 
 // next returns the next token; nil indicates end of data
 func (lem *lemmatizer) next() (*Token, error) {
-	if lem == nil {
-		return nil, nil
-	}
 	for {
 		if len(lem.outgoing) > 0 {
 			return lem.emit(), nil
