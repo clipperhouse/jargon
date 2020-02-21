@@ -36,6 +36,11 @@ func newTokenizer(r io.Reader) *tokenizer {
 	}
 }
 
+// TODO: the parsing below is practical but should probably implement unicode text sgementation:
+//	https://unicode.org/reports/tr29/
+// is there a library detecting Unicode 'word break'?
+// unicode.Pattern_White_Space is one place to look
+
 // next returns the next token. Call until it returns nil.
 func (t *tokenizer) next() (*Token, error) {
 	if t == nil {
