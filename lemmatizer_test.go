@@ -12,6 +12,7 @@ import (
 	"github.com/clipperhouse/jargon/contractions"
 	"github.com/clipperhouse/jargon/numbers"
 	"github.com/clipperhouse/jargon/stackexchange"
+	"github.com/clipperhouse/jargon/stemmer"
 )
 
 func TestLemmatize(t *testing.T) {
@@ -168,25 +169,15 @@ bar	42	javascript`)
 
 func TestMultiple(t *testing.T) {
 	s := `Here is the story of five and Rails and ASPNET and couldn't three hundred thousand.`
-	r := strings.NewReader(s)
 
-	var tokens Tokens
-	tokens = Tokenize(r)
-	tokens = Lemmatize(tokens, stackexchange.Dictionary, contractions.Dictionary, numbers.Dictionary)
+	got := LemmatizeString(s,
+		stackexchange.Dictionary,
+		contractions.Dictionary,
+		numbers.Dictionary,
+		stemmer.English,
+	)
 
-	expected := `Here is the story of 5 and ruby-on-rails and asp.net and could not 300000.`
-	var got string
-
-	for {
-		token, err := tokens.Next()
-		if err != nil {
-			t.Error(err)
-		}
-		if token == nil {
-			break
-		}
-		got += token.String()
-	}
+	expected := `here is the stori of 5 and ruby-on-rail and asp.net and could not 300000.`
 
 	if got != expected {
 		t.Errorf("expected %q, got %q", expected, got)
