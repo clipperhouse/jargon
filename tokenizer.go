@@ -18,9 +18,9 @@ import (
 // It generally relies on Unicode definitions of 'punctuation' and 'symbol', with some exceptions.
 //
 // Tokenize returns all tokens (including white space), so text can be reconstructed with fidelity ("round tripped").
-func Tokenize(r io.Reader) Tokens {
+func Tokenize(r io.Reader) *Tokens {
 	t := newTokenizer(r)
-	return Tokens{
+	return &Tokens{
 		Next: t.next,
 	}
 }
@@ -199,21 +199,21 @@ func (t *tokenizer) peekTerminator() bool {
 //		// Do stuff with tok...
 //	}
 // It returns all tokens (including white space), so text can be reconstructed with fidelity. Ignoring (say) whitespace is a decision for the caller.
-func TokenizeHTML(r io.Reader) Tokens {
+func TokenizeHTML(r io.Reader) *Tokens {
 	t := &htokenizer{
 		html: html.NewTokenizer(r),
 		text: dummy, // dummy to avoid nil
 	}
-	return Tokens{
+	return &Tokens{
 		Next: t.next,
 	}
 }
 
-var dummy = Tokens{Next: func() (*Token, error) { return nil, nil }}
+var dummy = &Tokens{Next: func() (*Token, error) { return nil, nil }}
 
 type htokenizer struct {
 	html *html.Tokenizer
-	text Tokens
+	text *Tokens
 }
 
 // next is the implementation of the Tokens interface. To iterate, call until it returns nil

@@ -1,6 +1,6 @@
-## Numbers dictionary for Jargon
+## Numbers filter for Jargon
 
-This package implements a Dictionary for use with the [jargon](https://github.com/clipperhouse/jargon) lemmatizer, intending to canonicalize simple number phrases appearing in text.
+This package implements a TokenFilter for use with the [jargon](https://github.com/clipperhouse/jargon) lemmatizer, intending to canonicalize simple number phrases appearing in text.
 
 Examples:
 
@@ -16,7 +16,7 @@ Examples:
 
 ### Command line
 
-Assuming you have installed the [Jargon CLI](https://github.com/clipperhouse/jargon#command-line), use the `-num` flag to specify this numbers dictionary.
+Assuming you have installed the [Jargon CLI](https://github.com/clipperhouse/jargon#command-line), use the `-num` flag to specify this numbers filter.
 
 ```bash
 echo "The U.S. population is around 3 hundred million people" | jargon -num
@@ -34,7 +34,7 @@ import (
     "github.com/clipperhouse/jargon/numbers"
 )
 
-var lem = jargon.NewLemmatizer(numbers.Dictionary)
+var lem = jargon.NewLemmatizer(numbers.Filter)
 
 func main() {
     text := `The U.S. population is around 3 hundred million people`
@@ -56,4 +56,4 @@ func main() {
 
 ### Implementation
 
-The [Lookup](https://github.com/clipperhouse/jargon/blob/master/numbers/dictionary.go#L35) method satisfies the [jargon.Dictionary interface](https://github.com/clipperhouse/jargon/blob/master/dictionary.go).
+The [Lookup](https://github.com/clipperhouse/jargon/blob/master/numbers/filter.go#L35) method satisfies the [jargon.TokenFilter interface](https://github.com/clipperhouse/jargon/blob/master/filter.go).

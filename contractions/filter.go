@@ -1,19 +1,19 @@
-// Package contractions provides a jargon.Dictionary to expand English contractions, such as "don't" → "does not"
+// Package contractions provides a jargon.TokenFilter to expand English contractions, such as "don't" → "does not"
 package contractions
 
-// Dictionary for expanding common contractions into distinct words. Examples:
+// Expander expands common contractions into distinct words. Examples:
 // don't → does not
 // We’ve → We have
 // SHE'S -> SHE IS
-var Dictionary = &dictionary{}
+var Expander = &filter{}
 
-type dictionary struct{}
+type filter struct{}
 
 // Lookup attempts to convert single-token contractions to non-contracted version. Examples:
 // don't → does not
 // We’ve → We have
 // SHE'S -> SHE IS
-func (d *dictionary) Lookup(s []string) (string, bool) {
+func (f *filter) Lookup(s []string) (string, bool) {
 	if len(s) != 1 {
 		return "", false
 	}
@@ -22,6 +22,6 @@ func (d *dictionary) Lookup(s []string) (string, bool) {
 	return canonical, ok
 }
 
-func (d *dictionary) MaxGramLength() int {
+func (f *filter) MaxGramLength() int {
 	return 1
 }

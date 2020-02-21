@@ -47,9 +47,9 @@ Alternatively, use jargon 'standalone' by passing flags for inputs and outputs:
 
 See [GoDoc](https://godoc.org/github.com/clipperhouse/jargon).
 
-## Dictionaries
+## Token filters
 
-Canonical terms (lemmas) are looked up in dictionaries. Three are available:
+Canonical terms (lemmas) are looked up in token filters. Three are available:
 
 - [Stack Exchange technology tags](https://github.com/clipperhouse/jargon/stackexchange)
   - `Ruby on Rails → ruby-on-rails`
@@ -59,7 +59,7 @@ Canonical terms (lemmas) are looked up in dictionaries. Three are available:
 - [Simple numbers](https://github.com/clipperhouse/jargon/numbers)
   - `Thirty-five hundred → 3500`
 
-To implement your own, see the [jargon.Dictionary interface](https://godoc.org/github.com/clipperhouse/jargon/#Dictionary)
+To implement your own, see the [jargon.TokenFilter interface](https://godoc.org/github.com/clipperhouse/jargon/#TokenFilter)
 
 ## Tokenizer
 

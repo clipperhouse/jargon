@@ -19,19 +19,19 @@ package ascii
  * limitations under the License.
  */
 
-// Fold is a jargon.Dictionary, which converts alphabetic, numeric, and symbolic Unicode characters
+// Fold is a jargon.TokenFilter, which converts alphabetic, numeric, and symbolic Unicode characters
 // which are not in the first 127 ASCII characters (the "Basic Latin" Unicode
 // block) into their ASCII equivalents, if one exists.
 // Ported from Lucene org.apache.lucene.analysis.miscellaneous
-var Fold = &dictionary{}
+var Fold = &filter{}
 
-type dictionary struct{}
+type filter struct{}
 
-func (d *dictionary) Lookup(s []string) (string, bool) {
+func (f *filter) Lookup(s []string) (string, bool) {
 	word := s[0]
 	return fold(word)
 }
 
-func (d *dictionary) MaxGramLength() int {
+func (f *filter) MaxGramLength() int {
 	return 1
 }

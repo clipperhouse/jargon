@@ -47,7 +47,7 @@ func TestInts(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result, ok := Dictionary.Lookup(test.input)
+		result, ok := Filter.Lookup(test.input)
 
 		if ok != test.expected.ok {
 			t.Errorf("got ok %v, expected %v, for input %q", ok, test.expected.ok, test.input)

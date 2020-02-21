@@ -6,17 +6,16 @@ import (
 	"sync"
 )
 
-// Dictionary is the main exported Dictionary of Stack Exchange tags and synonyms, from the following Stack Exchange sites: Stack Overflow,
+// Tags is the main exported Tags of Stack Exchange tags and synonyms, from the following Stack Exchange sites: Stack Overflow,
 // Server Fault, Game Dev and Data Science. It's indended to identify canonical tags (technologies),
 // e.g. Ruby on Rails (3 words) will be replaced with ruby-on-rails (1 word).
 // It includes the most popular 2530 tags and 2022 synonyms
-var Dictionary = &dictionary{}
+var Tags = &filter{}
 
-// dictionary satisfies the jargon.Dictionary interface
-// Used in generated.go
-type dictionary struct{}
+// filter satisfies the jargon.TokenFilter interface
+type filter struct{}
 
-func (d *dictionary) Lookup(s []string) (string, bool) {
+func (f *filter) Lookup(s []string) (string, bool) {
 	gram := strings.Join(s, "")
 	key := normalize(gram)
 	canonical1, found1 := tags[key]
@@ -29,7 +28,12 @@ func (d *dictionary) Lookup(s []string) (string, bool) {
 	return canonical2, found2
 }
 
-func (d *dictionary) MaxGramLength() int {
+func (f *filter) MaxGramLength() int {
+	// There *are* tags longer than 3 words, but they're rare
+	// and it's usually a long version like sql-server-2008-r2,
+	// which is probably not more interesting than sql-server-2008,
+	// (which is probably not more interesting than sql-server).
+	// So limit it to 3 to preserve decent performance.
 	return 3
 }
 

@@ -42,7 +42,7 @@ func jargonHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	route := parts[1]
 
-	var tokens jargon.Tokens
+	var tokens *jargon.Tokens
 
 	switch route {
 	case "text":
@@ -54,7 +54,7 @@ func jargonHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lemmatized := jargon.Lemmatize(tokens, stackexchange.Dictionary)
+	lemmatized := tokens.Lemmatize(stackexchange.Tags)
 
 	var b bytes.Buffer
 

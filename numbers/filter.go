@@ -1,4 +1,4 @@
-// Package numbers provides a jargon.Dictionary to lemmatize numbers expressed as words, such as "three hundred" => "300"
+// Package numbers provides a jargon.TokenFilter to lemmatize numbers expressed as words, such as "three hundred" => "300"
 package numbers
 
 import (
@@ -10,11 +10,11 @@ import (
 // In the above example, "three" is the number, "hundred" and "thousand" are magnitudes
 // All passed tokens must contribute to the number for the lookup to succeed
 
-type dictionary struct{}
+type filter struct{}
 
-// Dictionary implements the jargon.Dictionary interface, for use with the jargon lemmatizer, e.g.:
-//	lem := jargon.NewLemmatizer(numbers.Dictionary)
-// This dictionary will lemmatize simple number phrases like 'three hundred' into '300'. More examples:
+// Filter implements the jargon.TokenFilter interface, for use with the jargon lemmatizer, e.g.:
+//	lem := jargon.NewLemmatizer(numbers.Filter)
+// This token filter will lemmatize simple number phrases like 'three hundred' into '300'. More examples:
 //	"three" → "3"
 //	"three thousand" → "3000"
 //	"3 thousand" → "3000"
@@ -24,7 +24,7 @@ type dictionary struct{}
 //	"+3 thousand" → "3000"
 //	"2.54 million" → "2540000"
 //	"1,000,000" → "1000000"
-var Dictionary = &dictionary{}
+var Filter = &filter{}
 
 // Lookup attempts to turn a slice of token strings into a canonical number string.
 // If successful, Lookup will return the number, and a bool indicating success or failure. Examples:
@@ -44,7 +44,7 @@ var Dictionary = &dictionary{}
 // Lookup does not handle 'compound' or 'additive' phrases like "one thousand five hundred twenty".
 // In the above example, 'thirty-five' only works when it is a single token, no spaces, hyphen optional.
 // Commas are ignored, so long as there are no spaces.
-func (d *dictionary) Lookup(s []string) (string, bool) {
+func (f *filter) Lookup(s []string) (string, bool) {
 	if len(s) == 0 {
 		return "", false
 	}
@@ -52,7 +52,7 @@ func (d *dictionary) Lookup(s []string) (string, bool) {
 	return p.Parse()
 }
 
-func (d *dictionary) MaxGramLength() int {
+func (f *filter) MaxGramLength() int {
 	return 6
 }
 

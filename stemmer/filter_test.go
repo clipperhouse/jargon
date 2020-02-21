@@ -3,7 +3,7 @@ package stemmer
 import "testing"
 
 func TestEnglish(t *testing.T) {
-	// Just testing one of the dictionaries to test the lookup logic; have to defer
+	// Just testing one of the filters to test the lookup logic; have to defer
 	// to kljensen/snowball on correctness of other language stemmers
 
 	type test struct {

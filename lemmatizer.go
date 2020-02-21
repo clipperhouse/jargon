@@ -22,17 +22,17 @@ import (
 //
 // Note that fewer tokens may be returned than were input. In this case, the five tokens
 // representing Ruby<space>on<space>Rails are combined into a single token.
-func Lemmatize(incoming Tokens, dictionaries ...Dictionary) Tokens {
-	if len(dictionaries) == 0 {
-		dictionaries = append(dictionaries, stackexchange.Dictionary)
+func (incoming *Tokens) Lemmatize(filters ...TokenFilter) *Tokens {
+	if len(filters) == 0 {
+		filters = append(filters, stackexchange.Tags)
 	}
 
 	var result = incoming
 
-	// new lemmatizer for each dictionary, results as input into next lemmatizer
-	for _, dictionary := range dictionaries {
-		lem := newLemmatizer(result, dictionary)
-		result = Tokens{
+	// new lemmatizer for each filter, results as input into next lemmatizer
+	for _, filter := range filters {
+		lem := newLemmatizer(result, filter)
+		result = &Tokens{
 			Next: lem.next,
 		}
 	}
@@ -41,10 +41,10 @@ func Lemmatize(incoming Tokens, dictionaries ...Dictionary) Tokens {
 }
 
 // LemmatizeString transforms words to their canonicalized ("lemmatized") terms
-func LemmatizeString(s string, dictionaries ...Dictionary) string {
+func LemmatizeString(s string, filters ...TokenFilter) string {
 	r := strings.NewReader(s)
 	tokens := Tokenize(r)
-	lemmatized := Lemmatize(tokens, dictionaries...)
+	lemmatized := tokens.Lemmatize(filters...)
 
 	// We can elide the error because it's coming from a string, no real I/O
 	result, _ := lemmatized.String()
@@ -52,20 +52,20 @@ func LemmatizeString(s string, dictionaries ...Dictionary) string {
 	return result
 }
 
-func newLemmatizer(incoming Tokens, dictionary Dictionary) *lemmatizer {
+func newLemmatizer(incoming *Tokens, filter TokenFilter) *lemmatizer {
 	return &lemmatizer{
-		incoming:   incoming,
-		dictionary: dictionary,
-		buffer:     &queue{},
-		outgoing:   &queue{},
+		incoming: incoming,
+		filter:   filter,
+		buffer:   &queue{},
+		outgoing: &queue{},
 	}
 }
 
 type lemmatizer struct {
-	incoming   Tokens
-	dictionary Dictionary
-	buffer     *queue // for incoming tokens; no guarantee they will be emitted
-	outgoing   *queue
+	incoming *Tokens
+	filter   TokenFilter
+	buffer   *queue // for incoming tokens; no guarantee they will be emitted
+	outgoing *queue
 }
 
 // next returns the next token; nil indicates end of data
@@ -98,7 +98,7 @@ func (lem *lemmatizer) next() (*Token, error) {
 
 func (lem *lemmatizer) ngrams() error {
 	// Try n-grams, longest to shortest (greedy)
-	for desired := lem.dictionary.MaxGramLength(); desired > 0; desired-- {
+	for desired := lem.filter.MaxGramLength(); desired > 0; desired-- {
 		wordrun, err := lem.wordrun(desired)
 		if err != nil {
 			if err == errInsufficient {
@@ -108,7 +108,7 @@ func (lem *lemmatizer) ngrams() error {
 			return err
 		}
 
-		canonical, found := lem.dictionary.Lookup(wordrun.words)
+		canonical, found := lem.filter.Lookup(wordrun.words)
 
 		if found {
 			// the canonical can have space or punct, so we want to return separate tokens

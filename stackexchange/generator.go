@@ -1,4 +1,4 @@
-// Package stackexchange implements a jargon.Dictionary of tags and synonyms for use with jargon lemmatizers
+// Package stackexchange implements a jargon.TokenFilter of tags and synonyms for use with jargon lemmatizers
 package stackexchange
 
 import (
@@ -51,10 +51,6 @@ func writeDictionary() error {
 				// Trailing versions (like ruby-on-rails-4) are not interesting for our purposes
 				canonical := trailingVersion.ReplaceAllString(item.Name, "")
 
-				if isStopWord(canonical) {
-					continue // skip it
-				}
-
 				key := normalize(canonical)
 				// Only append tags if they haven't been added already
 				if _, found := data.Tags[key]; !found {
@@ -66,10 +62,6 @@ func writeDictionary() error {
 					synonym := trailingVersion.ReplaceAllString(s, "")
 
 					if synonym == canonical {
-						continue // skip it
-					}
-
-					if isStopWord(synonym) {
 						continue // skip it
 					}
 

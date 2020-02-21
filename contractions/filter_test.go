@@ -12,7 +12,7 @@ func TestSome(t *testing.T) {
 	var lookups []string
 
 	for _, word := range strings.Split(given, " ") {
-		canonical, ok := Dictionary.Lookup([]string{word})
+		canonical, ok := Expander.Lookup([]string{word})
 		if ok {
 			lookups = append(lookups, canonical)
 		}

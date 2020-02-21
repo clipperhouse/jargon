@@ -2,9 +2,7 @@ package jargon
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
-	"log"
 	"reflect"
 	"strings"
 	"testing"
@@ -17,13 +15,13 @@ import (
 )
 
 func TestLemmatize(t *testing.T) {
-	dict := stackexchange.Dictionary
+	dict := stackexchange.Tags
 
 	original := `Here is the story of Ruby on Rails nodeJS, "Java Script", html5 and ASPNET mvc plus TCP/IP.`
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got, err := Lemmatize(tokens, dict).ToSlice()
+	got, err := tokens.Lemmatize(dict).ToSlice()
 	if err != nil {
 		t.Error(err)
 	}
@@ -56,13 +54,13 @@ func TestLemmatize(t *testing.T) {
 }
 
 func TestLemmatizeString(t *testing.T) {
-	dict := stackexchange.Dictionary
+	dict := stackexchange.Tags
 
 	s := `Here is the story of Ruby on Rails.`
 
 	r := strings.NewReader(s)
 	tokens := Tokenize(r)
-	lemmatized := Lemmatize(tokens, dict)
+	lemmatized := tokens.Lemmatize(dict)
 
 	s1, err := lemmatized.String()
 	if err != nil {
@@ -77,13 +75,13 @@ func TestLemmatizeString(t *testing.T) {
 }
 
 func TestRetokenize(t *testing.T) {
-	dict := contractions.Dictionary
+	dict := contractions.Expander
 
 	original := `Would've but also won't`
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got, err := Lemmatize(tokens, dict).ToSlice()
+	got, err := tokens.Lemmatize(dict).ToSlice()
 	if err != nil {
 		t.Error(err)
 	}
@@ -100,7 +98,7 @@ func TestRetokenize(t *testing.T) {
 }
 
 func BenchmarkLemmatizer(b *testing.B) {
-	dict := stackexchange.Dictionary
+	dict := stackexchange.Tags
 
 	file, err := ioutil.ReadFile("testdata/wikipedia.txt")
 
@@ -112,19 +110,19 @@ func BenchmarkLemmatizer(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		r := bytes.NewReader(file)
 		tokens := Tokenize(r)
-		consume(Lemmatize(tokens, dict))
+		consume(tokens.Lemmatize(dict))
 	}
 }
 
 func TestCSV(t *testing.T) {
-	dict := stackexchange.Dictionary
+	dict := stackexchange.Tags
 
 	original := `"Ruby on Rails", 3.4, "foo"
 "bar",42, "java script"`
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got, err := Lemmatize(tokens, dict).ToSlice()
+	got, err := tokens.Lemmatize(dict).ToSlice()
 	if err != nil {
 		t.Error(err)
 	}
@@ -142,7 +140,7 @@ func TestCSV(t *testing.T) {
 }
 
 func TestTSV(t *testing.T) {
-	dict := stackexchange.Dictionary
+	dict := stackexchange.Tags
 
 	original := `Ruby on Rails	3.4	foo
 ASPNET	MVC
@@ -150,7 +148,7 @@ bar	42	java script`
 	r1 := strings.NewReader(original)
 	tokens := Tokenize(r1)
 
-	got, err := Lemmatize(tokens, dict).ToSlice()
+	got, err := tokens.Lemmatize(dict).ToSlice()
 	if err != nil {
 		t.Error(err)
 	}
@@ -172,9 +170,9 @@ func TestMultiple(t *testing.T) {
 	s := `Here is the story of five and Rails and ASPNET in the CAFÉS and couldn't three hundred thousand.`
 
 	got := LemmatizeString(s,
-		stackexchange.Dictionary,
-		contractions.Dictionary,
-		numbers.Dictionary,
+		stackexchange.Tags,
+		contractions.Expander,
+		numbers.Filter,
 		stemmer.English,
 		ascii.Fold,
 	)
@@ -247,40 +245,40 @@ func TestWordrun(t *testing.T) {
 	}
 }
 
-func ExampleLemmatize() {
-	// Lemmatize take tokens and attempts to find their canonical version
+// func ExampleLemmatize() {
+// 	// Lemmatize take tokens and attempts to find their canonical version
 
-	// Lemmatize takes a Tokens iterator, and one or more dictionaries
-	text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
-	r := strings.NewReader(text)
+// 	// Lemmatize takes a Tokens iterator, and one or more token filters
+// 	text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
+// 	r := strings.NewReader(text)
 
-	tokens := Tokenize(r)
-	lemmatized := Lemmatize(tokens, stackexchange.Dictionary)
+// 	tokens := Tokenize(r)
+// 	lemmatized := tokens.Lemmatize(stackexchange.Tags)
 
-	// Lemmatize returns a Tokens iterator. Iterate by calling Next() until nil, which
-	// indicates that the iterator is exhausted.
-	for {
-		token, err := lemmatized.Next()
-		if err != nil {
-			// Because the source is I/O, errors are possible
-			log.Fatal(err)
-		}
-		if token == nil {
-			break
-		}
+// 	// Lemmatize returns a Tokens iterator. Iterate by calling Next() until nil, which
+// 	// indicates that the iterator is exhausted.
+// 	for {
+// 		token, err := lemmatized.Next()
+// 		if err != nil {
+// 			// Because the source is I/O, errors are possible
+// 			log.Fatal(err)
+// 		}
+// 		if token == nil {
+// 			break
+// 		}
 
-		// Do stuff with token
-		if token.IsLemma() {
-			fmt.Printf("found lemma: %s", token)
-		}
-	}
+// 		// Do stuff with token
+// 		if token.IsLemma() {
+// 			fmt.Printf("found lemma: %s", token)
+// 		}
+// 	}
 
-	// Tokens is lazily evaluated; it does the lemmatization work as you call Next.
-	// This is done to ensure predictble memory usage and performance. It is
-	// 'forward-only', which means that once you consume a token, you can't go back.
-}
+// 	// Tokens is lazily evaluated; it does the lemmatization work as you call Next.
+// 	// This is done to ensure predictble memory usage and performance. It is
+// 	// 'forward-only', which means that once you consume a token, you can't go back.
+// }
 
-func consume(tokens Tokens) error {
+func consume(tokens *Tokens) error {
 	for {
 		t, err := tokens.Next()
 		if err != nil {

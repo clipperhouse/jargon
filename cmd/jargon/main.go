@@ -18,15 +18,15 @@ import (
 func main() {
 	flag.Parse()
 
-	dictionaries := determineDictionaries(tech, num, cont)
+	filters := determineFilters(tech, num, cont)
 
 	switch {
 	case len(f) > 0:
-		check(lemFile(f, dictionaries))
+		check(lemFile(f, filters))
 	case len(s) > 0:
-		check(lemString(s, dictionaries))
+		check(lemString(s, filters))
 	case len(u) > 0:
-		check(lemURL(u, dictionaries))
+		check(lemURL(u, filters))
 	default:
 		// No flags? Check to see if piped, otherwise print help.
 		fi, err := os.Stdin.Stat()
@@ -34,30 +34,30 @@ func main() {
 
 		piped := (fi.Mode() & os.ModeCharDevice) == 0 // https://stackoverflow.com/a/43947435/70613
 		if piped {
-			check(lemStdin(dictionaries))
+			check(lemStdin(filters))
 		} else {
 			flag.Usage()
 		}
 	}
 }
 
-func determineDictionaries(tech, num, cont bool) []jargon.Dictionary {
+func determineFilters(tech, num, cont bool) []jargon.TokenFilter {
 	// splitting this out into a func to allow testing
 
-	var result []jargon.Dictionary
+	var result []jargon.TokenFilter
 
 	none := !tech && !num && !cont
 
 	if tech || none {
-		result = append(result, stackexchange.Dictionary)
+		result = append(result, stackexchange.Tags)
 	}
 
 	if num {
-		result = append(result, numbers.Dictionary)
+		result = append(result, numbers.Filter)
 	}
 
 	if cont {
-		result = append(result, contractions.Dictionary)
+		result = append(result, contractions.Expander)
 	}
 
 	return result
@@ -78,7 +78,7 @@ func init() {
 	flag.StringVar(&s, "s", "", "A (quoted) string to lemmatize")
 	flag.StringVar(&u, "u", "", "A URL to fetch and lemmatize")
 	flag.StringVar(&o, "o", "", "Output file path. If omitted, output goes to Stdout.")
-	flag.BoolVar(&tech, "tech", false, "Lemmatize technology terms using the StackExchange dictionary")
+	flag.BoolVar(&tech, "tech", false, "Lemmatize technology terms using the StackExchange token filter")
 	flag.BoolVar(&num, "num", false, `Lemmatize number phrases (e.g. "three hundred → "300")`)
 	flag.BoolVar(&cont, "cont", false, `Expand contractions (e.g. "didn't → "did not")`)
 	flag.Usage = func() {
@@ -106,11 +106,11 @@ Alternatively, use %[1]s 'standalone' by passing flags for inputs and outputs:
   Example: %[1]s -f /path/to/original.txt -o /path/to/lemmatized.txt
 
 By default, %[1]s uses a dictionary of technology terms. Pass the following 
-flags to choose other dictionaries.
+flags to choose other filters.
 
   -tech
     	Lemmatize technology terms to Stack Overflow-style tags
-    	(e.g. "Ruby on Rails" → "ruby-on-rails"). If no dictionary is
+    	(e.g. "Ruby on Rails" → "ruby-on-rails"). If no filter is
     	specified, this is the default.
   -cont
     	Expand contractions (e.g. "didn't" → "did not")
@@ -122,14 +122,14 @@ flags to choose other dictionaries.
 	}
 }
 
-func lemFile(filePath string, dictionaries []jargon.Dictionary) error {
+func lemFile(filePath string, filters []jargon.TokenFilter) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	var tokens jargon.Tokens
+	var tokens *jargon.Tokens
 
 	ext := filepath.Ext(filePath)
 	switch ext {
@@ -139,23 +139,23 @@ func lemFile(filePath string, dictionaries []jargon.Dictionary) error {
 		tokens = jargon.Tokenize(file)
 	}
 
-	return lem(tokens, dictionaries)
+	return lem(tokens, filters)
 }
 
-func lemString(s string, dictionaries []jargon.Dictionary) error {
+func lemString(s string, filters []jargon.TokenFilter) error {
 	r := strings.NewReader(s)
 	tokens := jargon.Tokenize(r)
-	return lem(tokens, dictionaries)
+	return lem(tokens, filters)
 }
 
-func lemURL(u string, dictionaries []jargon.Dictionary) error {
+func lemURL(u string, filters []jargon.TokenFilter) error {
 	resp, err := http.Get(u)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	var tokens jargon.Tokens
+	var tokens *jargon.Tokens
 
 	ct := resp.Header.Get("Content-Type")
 	html := strings.HasPrefix(ct, "text/html")
@@ -165,25 +165,15 @@ func lemURL(u string, dictionaries []jargon.Dictionary) error {
 		tokens = jargon.Tokenize(resp.Body)
 	}
 
-	return lem(tokens, dictionaries)
+	return lem(tokens, filters)
 }
 
-func lemStdin(dictionaries []jargon.Dictionary) error {
+func lemStdin(filters []jargon.TokenFilter) error {
 	tokens := jargon.Tokenize(os.Stdin)
-	return lem(tokens, dictionaries)
+	return lem(tokens, filters)
 }
 
-func lem(tokens jargon.Tokens, dictionaries []jargon.Dictionary) error {
-
-	// switch tokens.(type) {
-	// case *jargon.HTMLTokens:
-	// 	fmt.Println("tokenized html")
-	// case *jargon.TextTokens:
-	// 	fmt.Println("tokenized plain text")
-	// default:
-	// 	panic("unknown text type")
-	// }
-
+func lem(tokens *jargon.Tokens, filters []jargon.TokenFilter) error {
 	var w *bufio.Writer
 
 	if len(o) > 0 { // output file flag
@@ -198,7 +188,7 @@ func lem(tokens jargon.Tokens, dictionaries []jargon.Dictionary) error {
 		w = bufio.NewWriter(os.Stdout)
 	}
 
-	tokens = lemAll(tokens, dictionaries)
+	tokens = lemAll(tokens, filters)
 
 	_, err := tokens.WriteTo(w)
 	check(err)
@@ -207,9 +197,9 @@ func lem(tokens jargon.Tokens, dictionaries []jargon.Dictionary) error {
 	return w.Flush()
 }
 
-func lemAll(tokens jargon.Tokens, dictionaries []jargon.Dictionary) jargon.Tokens {
-	for _, dictionary := range dictionaries {
-		tokens = jargon.Lemmatize(tokens, dictionary)
+func lemAll(tokens *jargon.Tokens, filters []jargon.TokenFilter) *jargon.Tokens {
+	for _, filter := range filters {
+		tokens = tokens.Lemmatize(filter)
 	}
 	return tokens
 }
