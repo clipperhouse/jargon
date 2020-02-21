@@ -1,0 +1,2157 @@
+package ascii
+
+import "bytes"
+
+func fold(s string) (string, bool) {
+	var b bytes.Buffer
+	folded := false
+
+	for _, r := range s {
+		// Quick test: if it's not in range then just keep current character
+		if r < '\u0080' {
+			b.WriteRune(r)
+		} else {
+			switch r {
+			case
+				'\u00C0', // À  [LATIN CAPITAL LETTER A WITH GRAVE]
+				'\u00C1', // Á  [LATIN CAPITAL LETTER A WITH ACUTE]
+				'\u00C2', // Â  [LATIN CAPITAL LETTER A WITH CIRCUMFLEX]
+				'\u00C3', // Ã  [LATIN CAPITAL LETTER A WITH TILDE]
+				'\u00C4', // Ä  [LATIN CAPITAL LETTER A WITH DIAERESIS]
+				'\u00C5', // Å  [LATIN CAPITAL LETTER A WITH RING ABOVE]
+				'\u0100', // Ā  [LATIN CAPITAL LETTER A WITH MACRON]
+				'\u0102', // Ă  [LATIN CAPITAL LETTER A WITH BREVE]
+				'\u0104', // Ą  [LATIN CAPITAL LETTER A WITH OGONEK]
+				'\u018F', // Ə  http://en.wikipedia.org/wiki/Schwa  [LATIN CAPITAL LETTER SCHWA]
+				'\u01CD', // Ǎ  [LATIN CAPITAL LETTER A WITH CARON]
+				'\u01DE', // Ǟ  [LATIN CAPITAL LETTER A WITH DIAERESIS AND MACRON]
+				'\u01E0', // Ǡ  [LATIN CAPITAL LETTER A WITH DOT ABOVE AND MACRON]
+				'\u01FA', // Ǻ  [LATIN CAPITAL LETTER A WITH RING ABOVE AND ACUTE]
+				'\u0200', // Ȁ  [LATIN CAPITAL LETTER A WITH DOUBLE GRAVE]
+				'\u0202', // Ȃ  [LATIN CAPITAL LETTER A WITH INVERTED BREVE]
+				'\u0226', // Ȧ  [LATIN CAPITAL LETTER A WITH DOT ABOVE]
+				'\u023A', // Ⱥ  [LATIN CAPITAL LETTER A WITH STROKE]
+				'\u1D00', // ᴀ  [LATIN LETTER SMALL CAPITAL A]
+				'\u1E00', // Ḁ  [LATIN CAPITAL LETTER A WITH RING BELOW]
+				'\u1EA0', // Ạ  [LATIN CAPITAL LETTER A WITH DOT BELOW]
+				'\u1EA2', // Ả  [LATIN CAPITAL LETTER A WITH HOOK ABOVE]
+				'\u1EA4', // Ấ  [LATIN CAPITAL LETTER A WITH CIRCUMFLEX AND ACUTE]
+				'\u1EA6', // Ầ  [LATIN CAPITAL LETTER A WITH CIRCUMFLEX AND GRAVE]
+				'\u1EA8', // Ẩ  [LATIN CAPITAL LETTER A WITH CIRCUMFLEX AND HOOK ABOVE]
+				'\u1EAA', // Ẫ  [LATIN CAPITAL LETTER A WITH CIRCUMFLEX AND TILDE]
+				'\u1EAC', // Ậ  [LATIN CAPITAL LETTER A WITH CIRCUMFLEX AND DOT BELOW]
+				'\u1EAE', // Ắ  [LATIN CAPITAL LETTER A WITH BREVE AND ACUTE]
+				'\u1EB0', // Ằ  [LATIN CAPITAL LETTER A WITH BREVE AND GRAVE]
+				'\u1EB2', // Ẳ  [LATIN CAPITAL LETTER A WITH BREVE AND HOOK ABOVE]
+				'\u1EB4', // Ẵ  [LATIN CAPITAL LETTER A WITH BREVE AND TILDE]
+				'\u1EB6', // Ặ  [LATIN CAPITAL LETTER A WITH BREVE AND DOT BELOW]
+				'\u24B6', // Ⓐ  [CIRCLED LATIN CAPITAL LETTER A]
+				'\uFF21': // Ａ  [FULLWIDTH LATIN CAPITAL LETTER A]
+				b.WriteRune('A')
+				b.WriteRune('A')
+				folded = true
+			case
+				'\u00E0', // à  [LATIN SMALL LETTER A WITH GRAVE]
+				'\u00E1', // á  [LATIN SMALL LETTER A WITH ACUTE]
+				'\u00E2', // â  [LATIN SMALL LETTER A WITH CIRCUMFLEX]
+				'\u00E3', // ã  [LATIN SMALL LETTER A WITH TILDE]
+				'\u00E4', // ä  [LATIN SMALL LETTER A WITH DIAERESIS]
+				'\u00E5', // å  [LATIN SMALL LETTER A WITH RING ABOVE]
+				'\u0101', // ā  [LATIN SMALL LETTER A WITH MACRON]
+				'\u0103', // ă  [LATIN SMALL LETTER A WITH BREVE]
+				'\u0105', // ą  [LATIN SMALL LETTER A WITH OGONEK]
+				'\u01CE', // ǎ  [LATIN SMALL LETTER A WITH CARON]
+				'\u01DF', // ǟ  [LATIN SMALL LETTER A WITH DIAERESIS AND MACRON]
+				'\u01E1', // ǡ  [LATIN SMALL LETTER A WITH DOT ABOVE AND MACRON]
+				'\u01FB', // ǻ  [LATIN SMALL LETTER A WITH RING ABOVE AND ACUTE]
+				'\u0201', // ȁ  [LATIN SMALL LETTER A WITH DOUBLE GRAVE]
+				'\u0203', // ȃ  [LATIN SMALL LETTER A WITH INVERTED BREVE]
+				'\u0227', // ȧ  [LATIN SMALL LETTER A WITH DOT ABOVE]
+				'\u0250', // ɐ  [LATIN SMALL LETTER TURNED A]
+				'\u0259', // ə  [LATIN SMALL LETTER SCHWA]
+				'\u025A', // ɚ  [LATIN SMALL LETTER SCHWA WITH HOOK]
+				'\u1D8F', // ᶏ  [LATIN SMALL LETTER A WITH RETROFLEX HOOK]
+				'\u1D95', // ᶕ  [LATIN SMALL LETTER SCHWA WITH RETROFLEX HOOK]
+				'\u1E01', // ạ  [LATIN SMALL LETTER A WITH RING BELOW]
+				'\u1E9A', // ả  [LATIN SMALL LETTER A WITH RIGHT HALF RING]
+				'\u1EA1', // ạ  [LATIN SMALL LETTER A WITH DOT BELOW]
+				'\u1EA3', // ả  [LATIN SMALL LETTER A WITH HOOK ABOVE]
+				'\u1EA5', // ấ  [LATIN SMALL LETTER A WITH CIRCUMFLEX AND ACUTE]
+				'\u1EA7', // ầ  [LATIN SMALL LETTER A WITH CIRCUMFLEX AND GRAVE]
+				'\u1EA9', // ẩ  [LATIN SMALL LETTER A WITH CIRCUMFLEX AND HOOK ABOVE]
+				'\u1EAB', // ẫ  [LATIN SMALL LETTER A WITH CIRCUMFLEX AND TILDE]
+				'\u1EAD', // ậ  [LATIN SMALL LETTER A WITH CIRCUMFLEX AND DOT BELOW]
+				'\u1EAF', // ắ  [LATIN SMALL LETTER A WITH BREVE AND ACUTE]
+				'\u1EB1', // ằ  [LATIN SMALL LETTER A WITH BREVE AND GRAVE]
+				'\u1EB3', // ẳ  [LATIN SMALL LETTER A WITH BREVE AND HOOK ABOVE]
+				'\u1EB5', // ẵ  [LATIN SMALL LETTER A WITH BREVE AND TILDE]
+				'\u1EB7', // ặ  [LATIN SMALL LETTER A WITH BREVE AND DOT BELOW]
+				'\u2090', // ₐ  [LATIN SUBSCRIPT SMALL LETTER A]
+				'\u2094', // ₔ  [LATIN SUBSCRIPT SMALL LETTER SCHWA]
+				'\u24D0', // ⓐ  [CIRCLED LATIN SMALL LETTER A]
+				'\u2C65', // ⱥ  [LATIN SMALL LETTER A WITH STROKE]
+				'\u2C6F', // Ɐ  [LATIN CAPITAL LETTER TURNED A]
+				'\uFF41': // ａ  [FULLWIDTH LATIN SMALL LETTER A]
+				b.WriteRune('a')
+				folded = true
+			case
+				'\uA732': // Ꜳ  [LATIN CAPITAL LETTER AA]
+				b.WriteRune('A')
+				b.WriteRune('A')
+				folded = true
+			case
+				'\u00C6', // Æ  [LATIN CAPITAL LETTER AE]
+				'\u01E2', // Ǣ  [LATIN CAPITAL LETTER AE WITH MACRON]
+				'\u01FC', // Ǽ  [LATIN CAPITAL LETTER AE WITH ACUTE]
+				'\u1D01': // ᴁ  [LATIN LETTER SMALL CAPITAL AE]
+				b.WriteRune('A')
+				b.WriteRune('E')
+				folded = true
+			case
+				'\uA734': // Ꜵ  [LATIN CAPITAL LETTER AO]
+				b.WriteRune('A')
+				b.WriteRune('O')
+				folded = true
+			case
+				'\uA736': // Ꜷ  [LATIN CAPITAL LETTER AU]
+				b.WriteRune('A')
+				b.WriteRune('U')
+				folded = true
+			case
+				'\uA738', // Ꜹ  [LATIN CAPITAL LETTER AV]
+				'\uA73A': // Ꜻ  [LATIN CAPITAL LETTER AV WITH HORIZONTAL BAR]
+				b.WriteRune('A')
+				b.WriteRune('V')
+				folded = true
+			case
+				'\uA73C': // Ꜽ  [LATIN CAPITAL LETTER AY]
+				b.WriteRune('A')
+				b.WriteRune('Y')
+				folded = true
+			case
+				'\u249C': // ⒜  [PARENTHESIZED LATIN SMALL LETTER A]
+				b.WriteRune('(')
+				b.WriteRune('a')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\uA733': // ꜳ  [LATIN SMALL LETTER AA]
+				b.WriteRune('a')
+				b.WriteRune('a')
+				folded = true
+			case
+				'\u00E6', // æ  [LATIN SMALL LETTER AE]
+				'\u01E3', // ǣ  [LATIN SMALL LETTER AE WITH MACRON]
+				'\u01FD', // ǽ  [LATIN SMALL LETTER AE WITH ACUTE]
+				'\u1D02': // ᴂ  [LATIN SMALL LETTER TURNED AE]
+				b.WriteRune('a')
+				b.WriteRune('e')
+				folded = true
+			case
+				'\uA735': // ꜵ  [LATIN SMALL LETTER AO]
+				b.WriteRune('a')
+				b.WriteRune('o')
+				folded = true
+			case
+				'\uA737': // ꜷ  [LATIN SMALL LETTER AU]
+				b.WriteRune('a')
+				b.WriteRune('u')
+				folded = true
+			case
+				'\uA739', // ꜹ  [LATIN SMALL LETTER AV]
+				'\uA73B': // ꜻ  [LATIN SMALL LETTER AV WITH HORIZONTAL BAR]
+				b.WriteRune('a')
+				b.WriteRune('v')
+				folded = true
+			case
+				'\uA73D': // ꜽ  [LATIN SMALL LETTER AY]
+				b.WriteRune('a')
+				b.WriteRune('y')
+				folded = true
+			case
+				'\u0181', // Ɓ  [LATIN CAPITAL LETTER B WITH HOOK]
+				'\u0182', // Ƃ  [LATIN CAPITAL LETTER B WITH TOPBAR]
+				'\u0243', // Ƀ  [LATIN CAPITAL LETTER B WITH STROKE]
+				'\u0299', // ʙ  [LATIN LETTER SMALL CAPITAL B]
+				'\u1D03', // ᴃ  [LATIN LETTER SMALL CAPITAL BARRED B]
+				'\u1E02', // Ḃ  [LATIN CAPITAL LETTER B WITH DOT ABOVE]
+				'\u1E04', // Ḅ  [LATIN CAPITAL LETTER B WITH DOT BELOW]
+				'\u1E06', // Ḇ  [LATIN CAPITAL LETTER B WITH LINE BELOW]
+				'\u24B7', // Ⓑ  [CIRCLED LATIN CAPITAL LETTER B]
+				'\uFF22': // Ｂ  [FULLWIDTH LATIN CAPITAL LETTER B]
+				b.WriteRune('B')
+				folded = true
+			case
+				'\u0180', // ƀ  [LATIN SMALL LETTER B WITH STROKE]
+				'\u0183', // ƃ  [LATIN SMALL LETTER B WITH TOPBAR]
+				'\u0253', // ɓ  [LATIN SMALL LETTER B WITH HOOK]
+				'\u1D6C', // ᵬ  [LATIN SMALL LETTER B WITH MIDDLE TILDE]
+				'\u1D80', // ᶀ  [LATIN SMALL LETTER B WITH PALATAL HOOK]
+				'\u1E03', // ḃ  [LATIN SMALL LETTER B WITH DOT ABOVE]
+				'\u1E05', // ḅ  [LATIN SMALL LETTER B WITH DOT BELOW]
+				'\u1E07', // ḇ  [LATIN SMALL LETTER B WITH LINE BELOW]
+				'\u24D1', // ⓑ  [CIRCLED LATIN SMALL LETTER B]
+				'\uFF42': // ｂ  [FULLWIDTH LATIN SMALL LETTER B]
+				b.WriteRune('b')
+				folded = true
+			case
+				'\u249D': // ⒝  [PARENTHESIZED LATIN SMALL LETTER B]
+				b.WriteRune('(')
+				b.WriteRune('b')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u00C7', // Ç  [LATIN CAPITAL LETTER C WITH CEDILLA]
+				'\u0106', // Ć  [LATIN CAPITAL LETTER C WITH ACUTE]
+				'\u0108', // Ĉ  [LATIN CAPITAL LETTER C WITH CIRCUMFLEX]
+				'\u010A', // Ċ  [LATIN CAPITAL LETTER C WITH DOT ABOVE]
+				'\u010C', // Č  [LATIN CAPITAL LETTER C WITH CARON]
+				'\u0187', // Ƈ  [LATIN CAPITAL LETTER C WITH HOOK]
+				'\u023B', // Ȼ  [LATIN CAPITAL LETTER C WITH STROKE]
+				'\u0297', // ʗ  [LATIN LETTER STRETCHED C]
+				'\u1D04', // ᴄ  [LATIN LETTER SMALL CAPITAL C]
+				'\u1E08', // Ḉ  [LATIN CAPITAL LETTER C WITH CEDILLA AND ACUTE]
+				'\u24B8', // Ⓒ  [CIRCLED LATIN CAPITAL LETTER C]
+				'\uFF23': // Ｃ  [FULLWIDTH LATIN CAPITAL LETTER C]
+				b.WriteRune('C')
+				folded = true
+			case
+				'\u00E7', // ç  [LATIN SMALL LETTER C WITH CEDILLA]
+				'\u0107', // ć  [LATIN SMALL LETTER C WITH ACUTE]
+				'\u0109', // ĉ  [LATIN SMALL LETTER C WITH CIRCUMFLEX]
+				'\u010B', // ċ  [LATIN SMALL LETTER C WITH DOT ABOVE]
+				'\u010D', // č  [LATIN SMALL LETTER C WITH CARON]
+				'\u0188', // ƈ  [LATIN SMALL LETTER C WITH HOOK]
+				'\u023C', // ȼ  [LATIN SMALL LETTER C WITH STROKE]
+				'\u0255', // ɕ  [LATIN SMALL LETTER C WITH CURL]
+				'\u1E09', // ḉ  [LATIN SMALL LETTER C WITH CEDILLA AND ACUTE]
+				'\u2184', // ↄ  [LATIN SMALL LETTER REVERSED C]
+				'\u24D2', // ⓒ  [CIRCLED LATIN SMALL LETTER C]
+				'\uA73E', // Ꜿ  [LATIN CAPITAL LETTER REVERSED C WITH DOT]
+				'\uA73F', // ꜿ  [LATIN SMALL LETTER REVERSED C WITH DOT]
+				'\uFF43': // ｃ  [FULLWIDTH LATIN SMALL LETTER C]
+				b.WriteRune('c')
+				folded = true
+			case
+				'\u249E': // ⒞  [PARENTHESIZED LATIN SMALL LETTER C]
+				b.WriteRune('(')
+				b.WriteRune('c')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u00D0', // Ð  [LATIN CAPITAL LETTER ETH]
+				'\u010E', // Ď  [LATIN CAPITAL LETTER D WITH CARON]
+				'\u0110', // Đ  [LATIN CAPITAL LETTER D WITH STROKE]
+				'\u0189', // Ɖ  [LATIN CAPITAL LETTER AFRICAN D]
+				'\u018A', // Ɗ  [LATIN CAPITAL LETTER D WITH HOOK]
+				'\u018B', // Ƌ  [LATIN CAPITAL LETTER D WITH TOPBAR]
+				'\u1D05', // ᴅ  [LATIN LETTER SMALL CAPITAL D]
+				'\u1D06', // ᴆ  [LATIN LETTER SMALL CAPITAL ETH]
+				'\u1E0A', // Ḋ  [LATIN CAPITAL LETTER D WITH DOT ABOVE]
+				'\u1E0C', // Ḍ  [LATIN CAPITAL LETTER D WITH DOT BELOW]
+				'\u1E0E', // Ḏ  [LATIN CAPITAL LETTER D WITH LINE BELOW]
+				'\u1E10', // Ḑ  [LATIN CAPITAL LETTER D WITH CEDILLA]
+				'\u1E12', // Ḓ  [LATIN CAPITAL LETTER D WITH CIRCUMFLEX BELOW]
+				'\u24B9', // Ⓓ  [CIRCLED LATIN CAPITAL LETTER D]
+				'\uA779', // Ꝺ  [LATIN CAPITAL LETTER INSULAR D]
+				'\uFF24': // Ｄ  [FULLWIDTH LATIN CAPITAL LETTER D]
+				b.WriteRune('D')
+				folded = true
+			case
+				'\u00F0', // ð  [LATIN SMALL LETTER ETH]
+				'\u010F', // ď  [LATIN SMALL LETTER D WITH CARON]
+				'\u0111', // đ  [LATIN SMALL LETTER D WITH STROKE]
+				'\u018C', // ƌ  [LATIN SMALL LETTER D WITH TOPBAR]
+				'\u0221', // ȡ  [LATIN SMALL LETTER D WITH CURL]
+				'\u0256', // ɖ  [LATIN SMALL LETTER D WITH TAIL]
+				'\u0257', // ɗ  [LATIN SMALL LETTER D WITH HOOK]
+				'\u1D6D', // ᵭ  [LATIN SMALL LETTER D WITH MIDDLE TILDE]
+				'\u1D81', // ᶁ  [LATIN SMALL LETTER D WITH PALATAL HOOK]
+				'\u1D91', // ᶑ  [LATIN SMALL LETTER D WITH HOOK AND TAIL]
+				'\u1E0B', // ḋ  [LATIN SMALL LETTER D WITH DOT ABOVE]
+				'\u1E0D', // ḍ  [LATIN SMALL LETTER D WITH DOT BELOW]
+				'\u1E0F', // ḏ  [LATIN SMALL LETTER D WITH LINE BELOW]
+				'\u1E11', // ḑ  [LATIN SMALL LETTER D WITH CEDILLA]
+				'\u1E13', // ḓ  [LATIN SMALL LETTER D WITH CIRCUMFLEX BELOW]
+				'\u24D3', // ⓓ  [CIRCLED LATIN SMALL LETTER D]
+				'\uA77A', // ꝺ  [LATIN SMALL LETTER INSULAR D]
+				'\uFF44': // ｄ  [FULLWIDTH LATIN SMALL LETTER D]
+				b.WriteRune('d')
+				folded = true
+			case
+				'\u01C4', // Ǆ  [LATIN CAPITAL LETTER DZ WITH CARON]
+				'\u01F1': // Ǳ  [LATIN CAPITAL LETTER DZ]
+				b.WriteRune('D')
+				b.WriteRune('Z')
+				folded = true
+			case
+				'\u01C5', // ǅ  [LATIN CAPITAL LETTER D WITH SMALL LETTER Z WITH CARON]
+				'\u01F2': // ǲ  [LATIN CAPITAL LETTER D WITH SMALL LETTER Z]
+				b.WriteRune('D')
+				b.WriteRune('z')
+				folded = true
+			case
+				'\u249F': // ⒟  [PARENTHESIZED LATIN SMALL LETTER D]
+				b.WriteRune('(')
+				b.WriteRune('d')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u0238': // ȸ  [LATIN SMALL LETTER DB DIGRAPH]
+				b.WriteRune('d')
+				b.WriteRune('b')
+				folded = true
+			case
+				'\u01C6', // ǆ  [LATIN SMALL LETTER DZ WITH CARON]
+				'\u01F3', // ǳ  [LATIN SMALL LETTER DZ]
+				'\u02A3', // ʣ  [LATIN SMALL LETTER DZ DIGRAPH]
+				'\u02A5': // ʥ  [LATIN SMALL LETTER DZ DIGRAPH WITH CURL]
+				b.WriteRune('d')
+				b.WriteRune('z')
+				folded = true
+			case
+				'\u00C8', // È  [LATIN CAPITAL LETTER E WITH GRAVE]
+				'\u00C9', // É  [LATIN CAPITAL LETTER E WITH ACUTE]
+				'\u00CA', // Ê  [LATIN CAPITAL LETTER E WITH CIRCUMFLEX]
+				'\u00CB', // Ë  [LATIN CAPITAL LETTER E WITH DIAERESIS]
+				'\u0112', // Ē  [LATIN CAPITAL LETTER E WITH MACRON]
+				'\u0114', // Ĕ  [LATIN CAPITAL LETTER E WITH BREVE]
+				'\u0116', // Ė  [LATIN CAPITAL LETTER E WITH DOT ABOVE]
+				'\u0118', // Ę  [LATIN CAPITAL LETTER E WITH OGONEK]
+				'\u011A', // Ě  [LATIN CAPITAL LETTER E WITH CARON]
+				'\u018E', // Ǝ  [LATIN CAPITAL LETTER REVERSED E]
+				'\u0190', // Ɛ  [LATIN CAPITAL LETTER OPEN E]
+				'\u0204', // Ȅ  [LATIN CAPITAL LETTER E WITH DOUBLE GRAVE]
+				'\u0206', // Ȇ  [LATIN CAPITAL LETTER E WITH INVERTED BREVE]
+				'\u0228', // Ȩ  [LATIN CAPITAL LETTER E WITH CEDILLA]
+				'\u0246', // Ɇ  [LATIN CAPITAL LETTER E WITH STROKE]
+				'\u1D07', // ᴇ  [LATIN LETTER SMALL CAPITAL E]
+				'\u1E14', // Ḕ  [LATIN CAPITAL LETTER E WITH MACRON AND GRAVE]
+				'\u1E16', // Ḗ  [LATIN CAPITAL LETTER E WITH MACRON AND ACUTE]
+				'\u1E18', // Ḙ  [LATIN CAPITAL LETTER E WITH CIRCUMFLEX BELOW]
+				'\u1E1A', // Ḛ  [LATIN CAPITAL LETTER E WITH TILDE BELOW]
+				'\u1E1C', // Ḝ  [LATIN CAPITAL LETTER E WITH CEDILLA AND BREVE]
+				'\u1EB8', // Ẹ  [LATIN CAPITAL LETTER E WITH DOT BELOW]
+				'\u1EBA', // Ẻ  [LATIN CAPITAL LETTER E WITH HOOK ABOVE]
+				'\u1EBC', // Ẽ  [LATIN CAPITAL LETTER E WITH TILDE]
+				'\u1EBE', // Ế  [LATIN CAPITAL LETTER E WITH CIRCUMFLEX AND ACUTE]
+				'\u1EC0', // Ề  [LATIN CAPITAL LETTER E WITH CIRCUMFLEX AND GRAVE]
+				'\u1EC2', // Ể  [LATIN CAPITAL LETTER E WITH CIRCUMFLEX AND HOOK ABOVE]
+				'\u1EC4', // Ễ  [LATIN CAPITAL LETTER E WITH CIRCUMFLEX AND TILDE]
+				'\u1EC6', // Ệ  [LATIN CAPITAL LETTER E WITH CIRCUMFLEX AND DOT BELOW]
+				'\u24BA', // Ⓔ  [CIRCLED LATIN CAPITAL LETTER E]
+				'\u2C7B', // ⱻ  [LATIN LETTER SMALL CAPITAL TURNED E]
+				'\uFF25': // Ｅ  [FULLWIDTH LATIN CAPITAL LETTER E]
+				b.WriteRune('E')
+				folded = true
+			case
+				'\u00E8', // è  [LATIN SMALL LETTER E WITH GRAVE]
+				'\u00E9', // é  [LATIN SMALL LETTER E WITH ACUTE]
+				'\u00EA', // ê  [LATIN SMALL LETTER E WITH CIRCUMFLEX]
+				'\u00EB', // ë  [LATIN SMALL LETTER E WITH DIAERESIS]
+				'\u0113', // ē  [LATIN SMALL LETTER E WITH MACRON]
+				'\u0115', // ĕ  [LATIN SMALL LETTER E WITH BREVE]
+				'\u0117', // ė  [LATIN SMALL LETTER E WITH DOT ABOVE]
+				'\u0119', // ę  [LATIN SMALL LETTER E WITH OGONEK]
+				'\u011B', // ě  [LATIN SMALL LETTER E WITH CARON]
+				'\u01DD', // ǝ  [LATIN SMALL LETTER TURNED E]
+				'\u0205', // ȅ  [LATIN SMALL LETTER E WITH DOUBLE GRAVE]
+				'\u0207', // ȇ  [LATIN SMALL LETTER E WITH INVERTED BREVE]
+				'\u0229', // ȩ  [LATIN SMALL LETTER E WITH CEDILLA]
+				'\u0247', // ɇ  [LATIN SMALL LETTER E WITH STROKE]
+				'\u0258', // ɘ  [LATIN SMALL LETTER REVERSED E]
+				'\u025B', // ɛ  [LATIN SMALL LETTER OPEN E]
+				'\u025C', // ɜ  [LATIN SMALL LETTER REVERSED OPEN E]
+				'\u025D', // ɝ  [LATIN SMALL LETTER REVERSED OPEN E WITH HOOK]
+				'\u025E', // ɞ  [LATIN SMALL LETTER CLOSED REVERSED OPEN E]
+				'\u029A', // ʚ  [LATIN SMALL LETTER CLOSED OPEN E]
+				'\u1D08', // ᴈ  [LATIN SMALL LETTER TURNED OPEN E]
+				'\u1D92', // ᶒ  [LATIN SMALL LETTER E WITH RETROFLEX HOOK]
+				'\u1D93', // ᶓ  [LATIN SMALL LETTER OPEN E WITH RETROFLEX HOOK]
+				'\u1D94', // ᶔ  [LATIN SMALL LETTER REVERSED OPEN E WITH RETROFLEX HOOK]
+				'\u1E15', // ḕ  [LATIN SMALL LETTER E WITH MACRON AND GRAVE]
+				'\u1E17', // ḗ  [LATIN SMALL LETTER E WITH MACRON AND ACUTE]
+				'\u1E19', // ḙ  [LATIN SMALL LETTER E WITH CIRCUMFLEX BELOW]
+				'\u1E1B', // ḛ  [LATIN SMALL LETTER E WITH TILDE BELOW]
+				'\u1E1D', // ḝ  [LATIN SMALL LETTER E WITH CEDILLA AND BREVE]
+				'\u1EB9', // ẹ  [LATIN SMALL LETTER E WITH DOT BELOW]
+				'\u1EBB', // ẻ  [LATIN SMALL LETTER E WITH HOOK ABOVE]
+				'\u1EBD', // ẽ  [LATIN SMALL LETTER E WITH TILDE]
+				'\u1EBF', // ế  [LATIN SMALL LETTER E WITH CIRCUMFLEX AND ACUTE]
+				'\u1EC1', // ề  [LATIN SMALL LETTER E WITH CIRCUMFLEX AND GRAVE]
+				'\u1EC3', // ể  [LATIN SMALL LETTER E WITH CIRCUMFLEX AND HOOK ABOVE]
+				'\u1EC5', // ễ  [LATIN SMALL LETTER E WITH CIRCUMFLEX AND TILDE]
+				'\u1EC7', // ệ  [LATIN SMALL LETTER E WITH CIRCUMFLEX AND DOT BELOW]
+				'\u2091', // ₑ  [LATIN SUBSCRIPT SMALL LETTER E]
+				'\u24D4', // ⓔ  [CIRCLED LATIN SMALL LETTER E]
+				'\u2C78', // ⱸ  [LATIN SMALL LETTER E WITH NOTCH]
+				'\uFF45': // ｅ  [FULLWIDTH LATIN SMALL LETTER E]
+				b.WriteRune('e')
+				folded = true
+			case
+				'\u24A0': // ⒠  [PARENTHESIZED LATIN SMALL LETTER E]
+				b.WriteRune('(')
+				b.WriteRune('e')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u0191', // Ƒ  [LATIN CAPITAL LETTER F WITH HOOK]
+				'\u1E1E', // Ḟ  [LATIN CAPITAL LETTER F WITH DOT ABOVE]
+				'\u24BB', // Ⓕ  [CIRCLED LATIN CAPITAL LETTER F]
+				'\uA730', // ꜰ  [LATIN LETTER SMALL CAPITAL F]
+				'\uA77B', // Ꝼ  [LATIN CAPITAL LETTER INSULAR F]
+				'\uA7FB', // ꟻ  [LATIN EPIGRAPHIC LETTER REVERSED F]
+				'\uFF26': // Ｆ  [FULLWIDTH LATIN CAPITAL LETTER F]
+				b.WriteRune('F')
+				folded = true
+			case
+				'\u0192', // ƒ  [LATIN SMALL LETTER F WITH HOOK]
+				'\u1D6E', // ᵮ  [LATIN SMALL LETTER F WITH MIDDLE TILDE]
+				'\u1D82', // ᶂ  [LATIN SMALL LETTER F WITH PALATAL HOOK]
+				'\u1E1F', // ḟ  [LATIN SMALL LETTER F WITH DOT ABOVE]
+				'\u1E9B', // ẛ  [LATIN SMALL LETTER LONG S WITH DOT ABOVE]
+				'\u24D5', // ⓕ  [CIRCLED LATIN SMALL LETTER F]
+				'\uA77C', // ꝼ  [LATIN SMALL LETTER INSULAR F]
+				'\uFF46': // ｆ  [FULLWIDTH LATIN SMALL LETTER F]
+				b.WriteRune('f')
+				folded = true
+			case
+				'\u24A1': // ⒡  [PARENTHESIZED LATIN SMALL LETTER F]
+				b.WriteRune('(')
+				b.WriteRune('f')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\uFB00': // ﬀ  [LATIN SMALL LIGATURE FF]
+				b.WriteRune('f')
+				b.WriteRune('f')
+				folded = true
+			case
+				'\uFB03': // ﬃ  [LATIN SMALL LIGATURE FFI]
+				b.WriteRune('f')
+				b.WriteRune('f')
+				b.WriteRune('i')
+				folded = true
+			case
+				'\uFB04': // ﬄ  [LATIN SMALL LIGATURE FFL]
+				b.WriteRune('f')
+				b.WriteRune('f')
+				b.WriteRune('l')
+				folded = true
+			case
+				'\uFB01': // ﬁ  [LATIN SMALL LIGATURE FI]
+				b.WriteRune('f')
+				b.WriteRune('i')
+				folded = true
+			case
+				'\uFB02': // ﬂ  [LATIN SMALL LIGATURE FL]
+				b.WriteRune('f')
+				b.WriteRune('l')
+				folded = true
+			case
+				'\u011C', // Ĝ  [LATIN CAPITAL LETTER G WITH CIRCUMFLEX]
+				'\u011E', // Ğ  [LATIN CAPITAL LETTER G WITH BREVE]
+				'\u0120', // Ġ  [LATIN CAPITAL LETTER G WITH DOT ABOVE]
+				'\u0122', // Ģ  [LATIN CAPITAL LETTER G WITH CEDILLA]
+				'\u0193', // Ɠ  [LATIN CAPITAL LETTER G WITH HOOK]
+				'\u01E4', // Ǥ  [LATIN CAPITAL LETTER G WITH STROKE]
+				'\u01E5', // ǥ  [LATIN SMALL LETTER G WITH STROKE]
+				'\u01E6', // Ǧ  [LATIN CAPITAL LETTER G WITH CARON]
+				'\u01E7', // ǧ  [LATIN SMALL LETTER G WITH CARON]
+				'\u01F4', // Ǵ  [LATIN CAPITAL LETTER G WITH ACUTE]
+				'\u0262', // ɢ  [LATIN LETTER SMALL CAPITAL G]
+				'\u029B', // ʛ  [LATIN LETTER SMALL CAPITAL G WITH HOOK]
+				'\u1E20', // Ḡ  [LATIN CAPITAL LETTER G WITH MACRON]
+				'\u24BC', // Ⓖ  [CIRCLED LATIN CAPITAL LETTER G]
+				'\uA77D', // Ᵹ  [LATIN CAPITAL LETTER INSULAR G]
+				'\uA77E', // Ꝿ  [LATIN CAPITAL LETTER TURNED INSULAR G]
+				'\uFF27': // Ｇ  [FULLWIDTH LATIN CAPITAL LETTER G]
+				b.WriteRune('G')
+				folded = true
+			case
+				'\u011D', // ĝ  [LATIN SMALL LETTER G WITH CIRCUMFLEX]
+				'\u011F', // ğ  [LATIN SMALL LETTER G WITH BREVE]
+				'\u0121', // ġ  [LATIN SMALL LETTER G WITH DOT ABOVE]
+				'\u0123', // ģ  [LATIN SMALL LETTER G WITH CEDILLA]
+				'\u01F5', // ǵ  [LATIN SMALL LETTER G WITH ACUTE]
+				'\u0260', // ɠ  [LATIN SMALL LETTER G WITH HOOK]
+				'\u0261', // ɡ  [LATIN SMALL LETTER SCRIPT G]
+				'\u1D77', // ᵷ  [LATIN SMALL LETTER TURNED G]
+				'\u1D79', // ᵹ  [LATIN SMALL LETTER INSULAR G]
+				'\u1D83', // ᶃ  [LATIN SMALL LETTER G WITH PALATAL HOOK]
+				'\u1E21', // ḡ  [LATIN SMALL LETTER G WITH MACRON]
+				'\u24D6', // ⓖ  [CIRCLED LATIN SMALL LETTER G]
+				'\uA77F', // ꝿ  [LATIN SMALL LETTER TURNED INSULAR G]
+				'\uFF47': // ｇ  [FULLWIDTH LATIN SMALL LETTER G]
+				b.WriteRune('g')
+				folded = true
+			case
+				'\u24A2': // ⒢  [PARENTHESIZED LATIN SMALL LETTER G]
+				b.WriteRune('(')
+				b.WriteRune('g')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u0124', // Ĥ  [LATIN CAPITAL LETTER H WITH CIRCUMFLEX]
+				'\u0126', // Ħ  [LATIN CAPITAL LETTER H WITH STROKE]
+				'\u021E', // Ȟ  [LATIN CAPITAL LETTER H WITH CARON]
+				'\u029C', // ʜ  [LATIN LETTER SMALL CAPITAL H]
+				'\u1E22', // Ḣ  [LATIN CAPITAL LETTER H WITH DOT ABOVE]
+				'\u1E24', // Ḥ  [LATIN CAPITAL LETTER H WITH DOT BELOW]
+				'\u1E26', // Ḧ  [LATIN CAPITAL LETTER H WITH DIAERESIS]
+				'\u1E28', // Ḩ  [LATIN CAPITAL LETTER H WITH CEDILLA]
+				'\u1E2A', // Ḫ  [LATIN CAPITAL LETTER H WITH BREVE BELOW]
+				'\u24BD', // Ⓗ  [CIRCLED LATIN CAPITAL LETTER H]
+				'\u2C67', // Ⱨ  [LATIN CAPITAL LETTER H WITH DESCENDER]
+				'\u2C75', // Ⱶ  [LATIN CAPITAL LETTER HALF H]
+				'\uFF28': // Ｈ  [FULLWIDTH LATIN CAPITAL LETTER H]
+				b.WriteRune('H')
+				folded = true
+			case
+				'\u0125', // ĥ  [LATIN SMALL LETTER H WITH CIRCUMFLEX]
+				'\u0127', // ħ  [LATIN SMALL LETTER H WITH STROKE]
+				'\u021F', // ȟ  [LATIN SMALL LETTER H WITH CARON]
+				'\u0265', // ɥ  [LATIN SMALL LETTER TURNED H]
+				'\u0266', // ɦ  [LATIN SMALL LETTER H WITH HOOK]
+				'\u02AE', // ʮ  [LATIN SMALL LETTER TURNED H WITH FISHHOOK]
+				'\u02AF', // ʯ  [LATIN SMALL LETTER TURNED H WITH FISHHOOK AND TAIL]
+				'\u1E23', // ḣ  [LATIN SMALL LETTER H WITH DOT ABOVE]
+				'\u1E25', // ḥ  [LATIN SMALL LETTER H WITH DOT BELOW]
+				'\u1E27', // ḧ  [LATIN SMALL LETTER H WITH DIAERESIS]
+				'\u1E29', // ḩ  [LATIN SMALL LETTER H WITH CEDILLA]
+				'\u1E2B', // ḫ  [LATIN SMALL LETTER H WITH BREVE BELOW]
+				'\u1E96', // ẖ  [LATIN SMALL LETTER H WITH LINE BELOW]
+				'\u24D7', // ⓗ  [CIRCLED LATIN SMALL LETTER H]
+				'\u2C68', // ⱨ  [LATIN SMALL LETTER H WITH DESCENDER]
+				'\u2C76', // ⱶ  [LATIN SMALL LETTER HALF H]
+				'\uFF48': // ｈ  [FULLWIDTH LATIN SMALL LETTER H]
+				b.WriteRune('h')
+				folded = true
+			case
+				'\u01F6': // Ƕ  http://en.wikipedia.org/wiki/Hwair  [LATIN CAPITAL LETTER HWAIR]
+				b.WriteRune('H')
+				b.WriteRune('V')
+				folded = true
+			case
+				'\u24A3': // ⒣  [PARENTHESIZED LATIN SMALL LETTER H]
+				b.WriteRune('(')
+				b.WriteRune('h')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u0195': // ƕ  [LATIN SMALL LETTER HV]
+				b.WriteRune('h')
+				b.WriteRune('v')
+				folded = true
+			case
+				'\u00CC', // Ì  [LATIN CAPITAL LETTER I WITH GRAVE]
+				'\u00CD', // Í  [LATIN CAPITAL LETTER I WITH ACUTE]
+				'\u00CE', // Î  [LATIN CAPITAL LETTER I WITH CIRCUMFLEX]
+				'\u00CF', // Ï  [LATIN CAPITAL LETTER I WITH DIAERESIS]
+				'\u0128', // Ĩ  [LATIN CAPITAL LETTER I WITH TILDE]
+				'\u012A', // Ī  [LATIN CAPITAL LETTER I WITH MACRON]
+				'\u012C', // Ĭ  [LATIN CAPITAL LETTER I WITH BREVE]
+				'\u012E', // Į  [LATIN CAPITAL LETTER I WITH OGONEK]
+				'\u0130', // İ  [LATIN CAPITAL LETTER I WITH DOT ABOVE]
+				'\u0196', // Ɩ  [LATIN CAPITAL LETTER IOTA]
+				'\u0197', // Ɨ  [LATIN CAPITAL LETTER I WITH STROKE]
+				'\u01CF', // Ǐ  [LATIN CAPITAL LETTER I WITH CARON]
+				'\u0208', // Ȉ  [LATIN CAPITAL LETTER I WITH DOUBLE GRAVE]
+				'\u020A', // Ȋ  [LATIN CAPITAL LETTER I WITH INVERTED BREVE]
+				'\u026A', // ɪ  [LATIN LETTER SMALL CAPITAL I]
+				'\u1D7B', // ᵻ  [LATIN SMALL CAPITAL LETTER I WITH STROKE]
+				'\u1E2C', // Ḭ  [LATIN CAPITAL LETTER I WITH TILDE BELOW]
+				'\u1E2E', // Ḯ  [LATIN CAPITAL LETTER I WITH DIAERESIS AND ACUTE]
+				'\u1EC8', // Ỉ  [LATIN CAPITAL LETTER I WITH HOOK ABOVE]
+				'\u1ECA', // Ị  [LATIN CAPITAL LETTER I WITH DOT BELOW]
+				'\u24BE', // Ⓘ  [CIRCLED LATIN CAPITAL LETTER I]
+				'\uA7FE', // ꟾ  [LATIN EPIGRAPHIC LETTER I LONGA]
+				'\uFF29': // Ｉ  [FULLWIDTH LATIN CAPITAL LETTER I]
+				b.WriteRune('I')
+				folded = true
+			case
+				'\u00EC', // ì  [LATIN SMALL LETTER I WITH GRAVE]
+				'\u00ED', // í  [LATIN SMALL LETTER I WITH ACUTE]
+				'\u00EE', // î  [LATIN SMALL LETTER I WITH CIRCUMFLEX]
+				'\u00EF', // ï  [LATIN SMALL LETTER I WITH DIAERESIS]
+				'\u0129', // ĩ  [LATIN SMALL LETTER I WITH TILDE]
+				'\u012B', // ī  [LATIN SMALL LETTER I WITH MACRON]
+				'\u012D', // ĭ  [LATIN SMALL LETTER I WITH BREVE]
+				'\u012F', // į  [LATIN SMALL LETTER I WITH OGONEK]
+				'\u0131', // ı  [LATIN SMALL LETTER DOTLESS I]
+				'\u01D0', // ǐ  [LATIN SMALL LETTER I WITH CARON]
+				'\u0209', // ȉ  [LATIN SMALL LETTER I WITH DOUBLE GRAVE]
+				'\u020B', // ȋ  [LATIN SMALL LETTER I WITH INVERTED BREVE]
+				'\u0268', // ɨ  [LATIN SMALL LETTER I WITH STROKE]
+				'\u1D09', // ᴉ  [LATIN SMALL LETTER TURNED I]
+				'\u1D62', // ᵢ  [LATIN SUBSCRIPT SMALL LETTER I]
+				'\u1D7C', // ᵼ  [LATIN SMALL LETTER IOTA WITH STROKE]
+				'\u1D96', // ᶖ  [LATIN SMALL LETTER I WITH RETROFLEX HOOK]
+				'\u1E2D', // ḭ  [LATIN SMALL LETTER I WITH TILDE BELOW]
+				'\u1E2F', // ḯ  [LATIN SMALL LETTER I WITH DIAERESIS AND ACUTE]
+				'\u1EC9', // ỉ  [LATIN SMALL LETTER I WITH HOOK ABOVE]
+				'\u1ECB', // ị  [LATIN SMALL LETTER I WITH DOT BELOW]
+				'\u2071', // ⁱ  [SUPERSCRIPT LATIN SMALL LETTER I]
+				'\u24D8', // ⓘ  [CIRCLED LATIN SMALL LETTER I]
+				'\uFF49': // ｉ  [FULLWIDTH LATIN SMALL LETTER I]
+				b.WriteRune('i')
+				folded = true
+			case
+				'\u0132': // Ĳ  [LATIN CAPITAL LIGATURE IJ]
+				b.WriteRune('I')
+				b.WriteRune('J')
+				folded = true
+			case
+				'\u24A4': // ⒤  [PARENTHESIZED LATIN SMALL LETTER I]
+				b.WriteRune('(')
+				b.WriteRune('i')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u0133': // ĳ  [LATIN SMALL LIGATURE IJ]
+				b.WriteRune('i')
+				b.WriteRune('j')
+				folded = true
+			case
+				'\u0134', // Ĵ  [LATIN CAPITAL LETTER J WITH CIRCUMFLEX]
+				'\u0248', // Ɉ  [LATIN CAPITAL LETTER J WITH STROKE]
+				'\u1D0A', // ᴊ  [LATIN LETTER SMALL CAPITAL J]
+				'\u24BF', // Ⓙ  [CIRCLED LATIN CAPITAL LETTER J]
+				'\uFF2A': // Ｊ  [FULLWIDTH LATIN CAPITAL LETTER J]
+				b.WriteRune('J')
+				folded = true
+			case
+				'\u0135', // ĵ  [LATIN SMALL LETTER J WITH CIRCUMFLEX]
+				'\u01F0', // ǰ  [LATIN SMALL LETTER J WITH CARON]
+				'\u0237', // ȷ  [LATIN SMALL LETTER DOTLESS J]
+				'\u0249', // ɉ  [LATIN SMALL LETTER J WITH STROKE]
+				'\u025F', // ɟ  [LATIN SMALL LETTER DOTLESS J WITH STROKE]
+				'\u0284', // ʄ  [LATIN SMALL LETTER DOTLESS J WITH STROKE AND HOOK]
+				'\u029D', // ʝ  [LATIN SMALL LETTER J WITH CROSSED-TAIL]
+				'\u24D9', // ⓙ  [CIRCLED LATIN SMALL LETTER J]
+				'\u2C7C', // ⱼ  [LATIN SUBSCRIPT SMALL LETTER J]
+				'\uFF4A': // ｊ  [FULLWIDTH LATIN SMALL LETTER J]
+				b.WriteRune('j')
+				folded = true
+			case
+				'\u24A5': // ⒥  [PARENTHESIZED LATIN SMALL LETTER J]
+				b.WriteRune('(')
+				b.WriteRune('j')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u0136', // Ķ  [LATIN CAPITAL LETTER K WITH CEDILLA]
+				'\u0198', // Ƙ  [LATIN CAPITAL LETTER K WITH HOOK]
+				'\u01E8', // Ǩ  [LATIN CAPITAL LETTER K WITH CARON]
+				'\u1D0B', // ᴋ  [LATIN LETTER SMALL CAPITAL K]
+				'\u1E30', // Ḱ  [LATIN CAPITAL LETTER K WITH ACUTE]
+				'\u1E32', // Ḳ  [LATIN CAPITAL LETTER K WITH DOT BELOW]
+				'\u1E34', // Ḵ  [LATIN CAPITAL LETTER K WITH LINE BELOW]
+				'\u24C0', // Ⓚ  [CIRCLED LATIN CAPITAL LETTER K]
+				'\u2C69', // Ⱪ  [LATIN CAPITAL LETTER K WITH DESCENDER]
+				'\uA740', // Ꝁ  [LATIN CAPITAL LETTER K WITH STROKE]
+				'\uA742', // Ꝃ  [LATIN CAPITAL LETTER K WITH DIAGONAL STROKE]
+				'\uA744', // Ꝅ  [LATIN CAPITAL LETTER K WITH STROKE AND DIAGONAL STROKE]
+				'\uFF2B': // Ｋ  [FULLWIDTH LATIN CAPITAL LETTER K]
+				b.WriteRune('K')
+				folded = true
+			case
+				'\u0137', // ķ  [LATIN SMALL LETTER K WITH CEDILLA]
+				'\u0199', // ƙ  [LATIN SMALL LETTER K WITH HOOK]
+				'\u01E9', // ǩ  [LATIN SMALL LETTER K WITH CARON]
+				'\u029E', // ʞ  [LATIN SMALL LETTER TURNED K]
+				'\u1D84', // ᶄ  [LATIN SMALL LETTER K WITH PALATAL HOOK]
+				'\u1E31', // ḱ  [LATIN SMALL LETTER K WITH ACUTE]
+				'\u1E33', // ḳ  [LATIN SMALL LETTER K WITH DOT BELOW]
+				'\u1E35', // ḵ  [LATIN SMALL LETTER K WITH LINE BELOW]
+				'\u24DA', // ⓚ  [CIRCLED LATIN SMALL LETTER K]
+				'\u2C6A', // ⱪ  [LATIN SMALL LETTER K WITH DESCENDER]
+				'\uA741', // ꝁ  [LATIN SMALL LETTER K WITH STROKE]
+				'\uA743', // ꝃ  [LATIN SMALL LETTER K WITH DIAGONAL STROKE]
+				'\uA745', // ꝅ  [LATIN SMALL LETTER K WITH STROKE AND DIAGONAL STROKE]
+				'\uFF4B': // ｋ  [FULLWIDTH LATIN SMALL LETTER K]
+				b.WriteRune('k')
+				folded = true
+			case
+				'\u24A6': // ⒦  [PARENTHESIZED LATIN SMALL LETTER K]
+				b.WriteRune('(')
+				b.WriteRune('k')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u0139', // Ĺ  [LATIN CAPITAL LETTER L WITH ACUTE]
+				'\u013B', // Ļ  [LATIN CAPITAL LETTER L WITH CEDILLA]
+				'\u013D', // Ľ  [LATIN CAPITAL LETTER L WITH CARON]
+				'\u013F', // Ŀ  [LATIN CAPITAL LETTER L WITH MIDDLE DOT]
+				'\u0141', // Ł  [LATIN CAPITAL LETTER L WITH STROKE]
+				'\u023D', // Ƚ  [LATIN CAPITAL LETTER L WITH BAR]
+				'\u029F', // ʟ  [LATIN LETTER SMALL CAPITAL L]
+				'\u1D0C', // ᴌ  [LATIN LETTER SMALL CAPITAL L WITH STROKE]
+				'\u1E36', // Ḷ  [LATIN CAPITAL LETTER L WITH DOT BELOW]
+				'\u1E38', // Ḹ  [LATIN CAPITAL LETTER L WITH DOT BELOW AND MACRON]
+				'\u1E3A', // Ḻ  [LATIN CAPITAL LETTER L WITH LINE BELOW]
+				'\u1E3C', // Ḽ  [LATIN CAPITAL LETTER L WITH CIRCUMFLEX BELOW]
+				'\u24C1', // Ⓛ  [CIRCLED LATIN CAPITAL LETTER L]
+				'\u2C60', // Ⱡ  [LATIN CAPITAL LETTER L WITH DOUBLE BAR]
+				'\u2C62', // Ɫ  [LATIN CAPITAL LETTER L WITH MIDDLE TILDE]
+				'\uA746', // Ꝇ  [LATIN CAPITAL LETTER BROKEN L]
+				'\uA748', // Ꝉ  [LATIN CAPITAL LETTER L WITH HIGH STROKE]
+				'\uA780', // Ꞁ  [LATIN CAPITAL LETTER TURNED L]
+				'\uFF2C': // Ｌ  [FULLWIDTH LATIN CAPITAL LETTER L]
+				b.WriteRune('L')
+				folded = true
+			case
+				'\u013A', // ĺ  [LATIN SMALL LETTER L WITH ACUTE]
+				'\u013C', // ļ  [LATIN SMALL LETTER L WITH CEDILLA]
+				'\u013E', // ľ  [LATIN SMALL LETTER L WITH CARON]
+				'\u0140', // ŀ  [LATIN SMALL LETTER L WITH MIDDLE DOT]
+				'\u0142', // ł  [LATIN SMALL LETTER L WITH STROKE]
+				'\u019A', // ƚ  [LATIN SMALL LETTER L WITH BAR]
+				'\u0234', // ȴ  [LATIN SMALL LETTER L WITH CURL]
+				'\u026B', // ɫ  [LATIN SMALL LETTER L WITH MIDDLE TILDE]
+				'\u026C', // ɬ  [LATIN SMALL LETTER L WITH BELT]
+				'\u026D', // ɭ  [LATIN SMALL LETTER L WITH RETROFLEX HOOK]
+				'\u1D85', // ᶅ  [LATIN SMALL LETTER L WITH PALATAL HOOK]
+				'\u1E37', // ḷ  [LATIN SMALL LETTER L WITH DOT BELOW]
+				'\u1E39', // ḹ  [LATIN SMALL LETTER L WITH DOT BELOW AND MACRON]
+				'\u1E3B', // ḻ  [LATIN SMALL LETTER L WITH LINE BELOW]
+				'\u1E3D', // ḽ  [LATIN SMALL LETTER L WITH CIRCUMFLEX BELOW]
+				'\u24DB', // ⓛ  [CIRCLED LATIN SMALL LETTER L]
+				'\u2C61', // ⱡ  [LATIN SMALL LETTER L WITH DOUBLE BAR]
+				'\uA747', // ꝇ  [LATIN SMALL LETTER BROKEN L]
+				'\uA749', // ꝉ  [LATIN SMALL LETTER L WITH HIGH STROKE]
+				'\uA781', // ꞁ  [LATIN SMALL LETTER TURNED L]
+				'\uFF4C': // ｌ  [FULLWIDTH LATIN SMALL LETTER L]
+				b.WriteRune('l')
+				folded = true
+			case
+				'\u01C7': // Ǉ  [LATIN CAPITAL LETTER LJ]
+				b.WriteRune('L')
+				b.WriteRune('J')
+				folded = true
+			case
+				'\u1EFA': // Ỻ  [LATIN CAPITAL LETTER MIDDLE-WELSH LL]
+				b.WriteRune('L')
+				b.WriteRune('L')
+				folded = true
+			case
+				'\u01C8': // ǈ  [LATIN CAPITAL LETTER L WITH SMALL LETTER J]
+				b.WriteRune('L')
+				b.WriteRune('j')
+				folded = true
+			case
+				'\u24A7': // ⒧  [PARENTHESIZED LATIN SMALL LETTER L]
+				b.WriteRune('(')
+				b.WriteRune('l')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u01C9': // ǉ  [LATIN SMALL LETTER LJ]
+				b.WriteRune('l')
+				b.WriteRune('j')
+				folded = true
+			case
+				'\u1EFB': // ỻ  [LATIN SMALL LETTER MIDDLE-WELSH LL]
+				b.WriteRune('l')
+				b.WriteRune('l')
+				folded = true
+			case
+				'\u02AA': // ʪ  [LATIN SMALL LETTER LS DIGRAPH]
+				b.WriteRune('l')
+				b.WriteRune('s')
+				folded = true
+			case
+				'\u02AB': // ʫ  [LATIN SMALL LETTER LZ DIGRAPH]
+				b.WriteRune('l')
+				b.WriteRune('z')
+				folded = true
+			case
+				'\u019C', // Ɯ  [LATIN CAPITAL LETTER TURNED M]
+				'\u1D0D', // ᴍ  [LATIN LETTER SMALL CAPITAL M]
+				'\u1E3E', // Ḿ  [LATIN CAPITAL LETTER M WITH ACUTE]
+				'\u1E40', // Ṁ  [LATIN CAPITAL LETTER M WITH DOT ABOVE]
+				'\u1E42', // Ṃ  [LATIN CAPITAL LETTER M WITH DOT BELOW]
+				'\u24C2', // Ⓜ  [CIRCLED LATIN CAPITAL LETTER M]
+				'\u2C6E', // Ɱ  [LATIN CAPITAL LETTER M WITH HOOK]
+				'\uA7FD', // ꟽ  [LATIN EPIGRAPHIC LETTER INVERTED M]
+				'\uA7FF', // ꟿ  [LATIN EPIGRAPHIC LETTER ARCHAIC M]
+				'\uFF2D': // Ｍ  [FULLWIDTH LATIN CAPITAL LETTER M]
+				b.WriteRune('M')
+				folded = true
+			case
+				'\u026F', // ɯ  [LATIN SMALL LETTER TURNED M]
+				'\u0270', // ɰ  [LATIN SMALL LETTER TURNED M WITH LONG LEG]
+				'\u0271', // ɱ  [LATIN SMALL LETTER M WITH HOOK]
+				'\u1D6F', // ᵯ  [LATIN SMALL LETTER M WITH MIDDLE TILDE]
+				'\u1D86', // ᶆ  [LATIN SMALL LETTER M WITH PALATAL HOOK]
+				'\u1E3F', // ḿ  [LATIN SMALL LETTER M WITH ACUTE]
+				'\u1E41', // ṁ  [LATIN SMALL LETTER M WITH DOT ABOVE]
+				'\u1E43', // ṃ  [LATIN SMALL LETTER M WITH DOT BELOW]
+				'\u24DC', // ⓜ  [CIRCLED LATIN SMALL LETTER M]
+				'\uFF4D': // ｍ  [FULLWIDTH LATIN SMALL LETTER M]
+				b.WriteRune('m')
+				folded = true
+			case
+				'\u24A8': // ⒨  [PARENTHESIZED LATIN SMALL LETTER M]
+				b.WriteRune('(')
+				b.WriteRune('m')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u00D1', // Ñ  [LATIN CAPITAL LETTER N WITH TILDE]
+				'\u0143', // Ń  [LATIN CAPITAL LETTER N WITH ACUTE]
+				'\u0145', // Ņ  [LATIN CAPITAL LETTER N WITH CEDILLA]
+				'\u0147', // Ň  [LATIN CAPITAL LETTER N WITH CARON]
+				'\u014A', // Ŋ  http://en.wikipedia.org/wiki/Eng_(letter)  [LATIN CAPITAL LETTER ENG]
+				'\u019D', // Ɲ  [LATIN CAPITAL LETTER N WITH LEFT HOOK]
+				'\u01F8', // Ǹ  [LATIN CAPITAL LETTER N WITH GRAVE]
+				'\u0220', // Ƞ  [LATIN CAPITAL LETTER N WITH LONG RIGHT LEG]
+				'\u0274', // ɴ  [LATIN LETTER SMALL CAPITAL N]
+				'\u1D0E', // ᴎ  [LATIN LETTER SMALL CAPITAL REVERSED N]
+				'\u1E44', // Ṅ  [LATIN CAPITAL LETTER N WITH DOT ABOVE]
+				'\u1E46', // Ṇ  [LATIN CAPITAL LETTER N WITH DOT BELOW]
+				'\u1E48', // Ṉ  [LATIN CAPITAL LETTER N WITH LINE BELOW]
+				'\u1E4A', // Ṋ  [LATIN CAPITAL LETTER N WITH CIRCUMFLEX BELOW]
+				'\u24C3', // Ⓝ  [CIRCLED LATIN CAPITAL LETTER N]
+				'\uFF2E': // Ｎ  [FULLWIDTH LATIN CAPITAL LETTER N]
+				b.WriteRune('N')
+				folded = true
+			case
+				'\u00F1', // ñ  [LATIN SMALL LETTER N WITH TILDE]
+				'\u0144', // ń  [LATIN SMALL LETTER N WITH ACUTE]
+				'\u0146', // ņ  [LATIN SMALL LETTER N WITH CEDILLA]
+				'\u0148', // ň  [LATIN SMALL LETTER N WITH CARON]
+				'\u0149', // ŉ  [LATIN SMALL LETTER N PRECEDED BY APOSTROPHE]
+				'\u014B', // ŋ  http://en.wikipedia.org/wiki/Eng_(letter)  [LATIN SMALL LETTER ENG]
+				'\u019E', // ƞ  [LATIN SMALL LETTER N WITH LONG RIGHT LEG]
+				'\u01F9', // ǹ  [LATIN SMALL LETTER N WITH GRAVE]
+				'\u0235', // ȵ  [LATIN SMALL LETTER N WITH CURL]
+				'\u0272', // ɲ  [LATIN SMALL LETTER N WITH LEFT HOOK]
+				'\u0273', // ɳ  [LATIN SMALL LETTER N WITH RETROFLEX HOOK]
+				'\u1D70', // ᵰ  [LATIN SMALL LETTER N WITH MIDDLE TILDE]
+				'\u1D87', // ᶇ  [LATIN SMALL LETTER N WITH PALATAL HOOK]
+				'\u1E45', // ṅ  [LATIN SMALL LETTER N WITH DOT ABOVE]
+				'\u1E47', // ṇ  [LATIN SMALL LETTER N WITH DOT BELOW]
+				'\u1E49', // ṉ  [LATIN SMALL LETTER N WITH LINE BELOW]
+				'\u1E4B', // ṋ  [LATIN SMALL LETTER N WITH CIRCUMFLEX BELOW]
+				'\u207F', // ⁿ  [SUPERSCRIPT LATIN SMALL LETTER N]
+				'\u24DD', // ⓝ  [CIRCLED LATIN SMALL LETTER N]
+				'\uFF4E': // ｎ  [FULLWIDTH LATIN SMALL LETTER N]
+				b.WriteRune('n')
+				folded = true
+			case
+				'\u01CA': // Ǌ  [LATIN CAPITAL LETTER NJ]
+				b.WriteRune('N')
+				b.WriteRune('J')
+				folded = true
+			case
+				'\u01CB': // ǋ  [LATIN CAPITAL LETTER N WITH SMALL LETTER J]
+				b.WriteRune('N')
+				b.WriteRune('j')
+				folded = true
+			case
+				'\u24A9': // ⒩  [PARENTHESIZED LATIN SMALL LETTER N]
+				b.WriteRune('(')
+				b.WriteRune('n')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u01CC': // ǌ  [LATIN SMALL LETTER NJ]
+				b.WriteRune('n')
+				b.WriteRune('j')
+				folded = true
+			case
+				'\u00D2', // Ò  [LATIN CAPITAL LETTER O WITH GRAVE]
+				'\u00D3', // Ó  [LATIN CAPITAL LETTER O WITH ACUTE]
+				'\u00D4', // Ô  [LATIN CAPITAL LETTER O WITH CIRCUMFLEX]
+				'\u00D5', // Õ  [LATIN CAPITAL LETTER O WITH TILDE]
+				'\u00D6', // Ö  [LATIN CAPITAL LETTER O WITH DIAERESIS]
+				'\u00D8', // Ø  [LATIN CAPITAL LETTER O WITH STROKE]
+				'\u014C', // Ō  [LATIN CAPITAL LETTER O WITH MACRON]
+				'\u014E', // Ŏ  [LATIN CAPITAL LETTER O WITH BREVE]
+				'\u0150', // Ő  [LATIN CAPITAL LETTER O WITH DOUBLE ACUTE]
+				'\u0186', // Ɔ  [LATIN CAPITAL LETTER OPEN O]
+				'\u019F', // Ɵ  [LATIN CAPITAL LETTER O WITH MIDDLE TILDE]
+				'\u01A0', // Ơ  [LATIN CAPITAL LETTER O WITH HORN]
+				'\u01D1', // Ǒ  [LATIN CAPITAL LETTER O WITH CARON]
+				'\u01EA', // Ǫ  [LATIN CAPITAL LETTER O WITH OGONEK]
+				'\u01EC', // Ǭ  [LATIN CAPITAL LETTER O WITH OGONEK AND MACRON]
+				'\u01FE', // Ǿ  [LATIN CAPITAL LETTER O WITH STROKE AND ACUTE]
+				'\u020C', // Ȍ  [LATIN CAPITAL LETTER O WITH DOUBLE GRAVE]
+				'\u020E', // Ȏ  [LATIN CAPITAL LETTER O WITH INVERTED BREVE]
+				'\u022A', // Ȫ  [LATIN CAPITAL LETTER O WITH DIAERESIS AND MACRON]
+				'\u022C', // Ȭ  [LATIN CAPITAL LETTER O WITH TILDE AND MACRON]
+				'\u022E', // Ȯ  [LATIN CAPITAL LETTER O WITH DOT ABOVE]
+				'\u0230', // Ȱ  [LATIN CAPITAL LETTER O WITH DOT ABOVE AND MACRON]
+				'\u1D0F', // ᴏ  [LATIN LETTER SMALL CAPITAL O]
+				'\u1D10', // ᴐ  [LATIN LETTER SMALL CAPITAL OPEN O]
+				'\u1E4C', // Ṍ  [LATIN CAPITAL LETTER O WITH TILDE AND ACUTE]
+				'\u1E4E', // Ṏ  [LATIN CAPITAL LETTER O WITH TILDE AND DIAERESIS]
+				'\u1E50', // Ṑ  [LATIN CAPITAL LETTER O WITH MACRON AND GRAVE]
+				'\u1E52', // Ṓ  [LATIN CAPITAL LETTER O WITH MACRON AND ACUTE]
+				'\u1ECC', // Ọ  [LATIN CAPITAL LETTER O WITH DOT BELOW]
+				'\u1ECE', // Ỏ  [LATIN CAPITAL LETTER O WITH HOOK ABOVE]
+				'\u1ED0', // Ố  [LATIN CAPITAL LETTER O WITH CIRCUMFLEX AND ACUTE]
+				'\u1ED2', // Ồ  [LATIN CAPITAL LETTER O WITH CIRCUMFLEX AND GRAVE]
+				'\u1ED4', // Ổ  [LATIN CAPITAL LETTER O WITH CIRCUMFLEX AND HOOK ABOVE]
+				'\u1ED6', // Ỗ  [LATIN CAPITAL LETTER O WITH CIRCUMFLEX AND TILDE]
+				'\u1ED8', // Ộ  [LATIN CAPITAL LETTER O WITH CIRCUMFLEX AND DOT BELOW]
+				'\u1EDA', // Ớ  [LATIN CAPITAL LETTER O WITH HORN AND ACUTE]
+				'\u1EDC', // Ờ  [LATIN CAPITAL LETTER O WITH HORN AND GRAVE]
+				'\u1EDE', // Ở  [LATIN CAPITAL LETTER O WITH HORN AND HOOK ABOVE]
+				'\u1EE0', // Ỡ  [LATIN CAPITAL LETTER O WITH HORN AND TILDE]
+				'\u1EE2', // Ợ  [LATIN CAPITAL LETTER O WITH HORN AND DOT BELOW]
+				'\u24C4', // Ⓞ  [CIRCLED LATIN CAPITAL LETTER O]
+				'\uA74A', // Ꝋ  [LATIN CAPITAL LETTER O WITH LONG STROKE OVERLAY]
+				'\uA74C', // Ꝍ  [LATIN CAPITAL LETTER O WITH LOOP]
+				'\uFF2F': // Ｏ  [FULLWIDTH LATIN CAPITAL LETTER O]
+				b.WriteRune('O')
+				folded = true
+			case
+				'\u00F2', // ò  [LATIN SMALL LETTER O WITH GRAVE]
+				'\u00F3', // ó  [LATIN SMALL LETTER O WITH ACUTE]
+				'\u00F4', // ô  [LATIN SMALL LETTER O WITH CIRCUMFLEX]
+				'\u00F5', // õ  [LATIN SMALL LETTER O WITH TILDE]
+				'\u00F6', // ö  [LATIN SMALL LETTER O WITH DIAERESIS]
+				'\u00F8', // ø  [LATIN SMALL LETTER O WITH STROKE]
+				'\u014D', // ō  [LATIN SMALL LETTER O WITH MACRON]
+				'\u014F', // ŏ  [LATIN SMALL LETTER O WITH BREVE]
+				'\u0151', // ő  [LATIN SMALL LETTER O WITH DOUBLE ACUTE]
+				'\u01A1', // ơ  [LATIN SMALL LETTER O WITH HORN]
+				'\u01D2', // ǒ  [LATIN SMALL LETTER O WITH CARON]
+				'\u01EB', // ǫ  [LATIN SMALL LETTER O WITH OGONEK]
+				'\u01ED', // ǭ  [LATIN SMALL LETTER O WITH OGONEK AND MACRON]
+				'\u01FF', // ǿ  [LATIN SMALL LETTER O WITH STROKE AND ACUTE]
+				'\u020D', // ȍ  [LATIN SMALL LETTER O WITH DOUBLE GRAVE]
+				'\u020F', // ȏ  [LATIN SMALL LETTER O WITH INVERTED BREVE]
+				'\u022B', // ȫ  [LATIN SMALL LETTER O WITH DIAERESIS AND MACRON]
+				'\u022D', // ȭ  [LATIN SMALL LETTER O WITH TILDE AND MACRON]
+				'\u022F', // ȯ  [LATIN SMALL LETTER O WITH DOT ABOVE]
+				'\u0231', // ȱ  [LATIN SMALL LETTER O WITH DOT ABOVE AND MACRON]
+				'\u0254', // ɔ  [LATIN SMALL LETTER OPEN O]
+				'\u0275', // ɵ  [LATIN SMALL LETTER BARRED O]
+				'\u1D16', // ᴖ  [LATIN SMALL LETTER TOP HALF O]
+				'\u1D17', // ᴗ  [LATIN SMALL LETTER BOTTOM HALF O]
+				'\u1D97', // ᶗ  [LATIN SMALL LETTER OPEN O WITH RETROFLEX HOOK]
+				'\u1E4D', // ṍ  [LATIN SMALL LETTER O WITH TILDE AND ACUTE]
+				'\u1E4F', // ṏ  [LATIN SMALL LETTER O WITH TILDE AND DIAERESIS]
+				'\u1E51', // ṑ  [LATIN SMALL LETTER O WITH MACRON AND GRAVE]
+				'\u1E53', // ṓ  [LATIN SMALL LETTER O WITH MACRON AND ACUTE]
+				'\u1ECD', // ọ  [LATIN SMALL LETTER O WITH DOT BELOW]
+				'\u1ECF', // ỏ  [LATIN SMALL LETTER O WITH HOOK ABOVE]
+				'\u1ED1', // ố  [LATIN SMALL LETTER O WITH CIRCUMFLEX AND ACUTE]
+				'\u1ED3', // ồ  [LATIN SMALL LETTER O WITH CIRCUMFLEX AND GRAVE]
+				'\u1ED5', // ổ  [LATIN SMALL LETTER O WITH CIRCUMFLEX AND HOOK ABOVE]
+				'\u1ED7', // ỗ  [LATIN SMALL LETTER O WITH CIRCUMFLEX AND TILDE]
+				'\u1ED9', // ộ  [LATIN SMALL LETTER O WITH CIRCUMFLEX AND DOT BELOW]
+				'\u1EDB', // ớ  [LATIN SMALL LETTER O WITH HORN AND ACUTE]
+				'\u1EDD', // ờ  [LATIN SMALL LETTER O WITH HORN AND GRAVE]
+				'\u1EDF', // ở  [LATIN SMALL LETTER O WITH HORN AND HOOK ABOVE]
+				'\u1EE1', // ỡ  [LATIN SMALL LETTER O WITH HORN AND TILDE]
+				'\u1EE3', // ợ  [LATIN SMALL LETTER O WITH HORN AND DOT BELOW]
+				'\u2092', // ₒ  [LATIN SUBSCRIPT SMALL LETTER O]
+				'\u24DE', // ⓞ  [CIRCLED LATIN SMALL LETTER O]
+				'\u2C7A', // ⱺ  [LATIN SMALL LETTER O WITH LOW RING INSIDE]
+				'\uA74B', // ꝋ  [LATIN SMALL LETTER O WITH LONG STROKE OVERLAY]
+				'\uA74D', // ꝍ  [LATIN SMALL LETTER O WITH LOOP]
+				'\uFF4F': // ｏ  [FULLWIDTH LATIN SMALL LETTER O]
+				b.WriteRune('o')
+				folded = true
+			case
+				'\u0152', // Œ  [LATIN CAPITAL LIGATURE OE]
+				'\u0276': // ɶ  [LATIN LETTER SMALL CAPITAL OE]
+				b.WriteRune('O')
+				b.WriteRune('E')
+				folded = true
+			case
+				'\uA74E': // Ꝏ  [LATIN CAPITAL LETTER OO]
+				b.WriteRune('O')
+				b.WriteRune('O')
+				folded = true
+			case
+				'\u0222', // Ȣ  http://en.wikipedia.org/wiki/OU  [LATIN CAPITAL LETTER OU]
+				'\u1D15': // ᴕ  [LATIN LETTER SMALL CAPITAL OU]
+				b.WriteRune('O')
+				b.WriteRune('U')
+				folded = true
+			case
+				'\u24AA': // ⒪  [PARENTHESIZED LATIN SMALL LETTER O]
+				b.WriteRune('(')
+				b.WriteRune('o')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u0153', // œ  [LATIN SMALL LIGATURE OE]
+				'\u1D14': // ᴔ  [LATIN SMALL LETTER TURNED OE]
+				b.WriteRune('o')
+				b.WriteRune('e')
+				folded = true
+			case
+				'\uA74F': // ꝏ  [LATIN SMALL LETTER OO]
+				b.WriteRune('o')
+				b.WriteRune('o')
+				folded = true
+			case
+				'\u0223': // ȣ  http://en.wikipedia.org/wiki/OU  [LATIN SMALL LETTER OU]
+				b.WriteRune('o')
+				b.WriteRune('u')
+				folded = true
+			case
+				'\u01A4', // Ƥ  [LATIN CAPITAL LETTER P WITH HOOK]
+				'\u1D18', // ᴘ  [LATIN LETTER SMALL CAPITAL P]
+				'\u1E54', // Ṕ  [LATIN CAPITAL LETTER P WITH ACUTE]
+				'\u1E56', // Ṗ  [LATIN CAPITAL LETTER P WITH DOT ABOVE]
+				'\u24C5', // Ⓟ  [CIRCLED LATIN CAPITAL LETTER P]
+				'\u2C63', // Ᵽ  [LATIN CAPITAL LETTER P WITH STROKE]
+				'\uA750', // Ꝑ  [LATIN CAPITAL LETTER P WITH STROKE THROUGH DESCENDER]
+				'\uA752', // Ꝓ  [LATIN CAPITAL LETTER P WITH FLOURISH]
+				'\uA754', // Ꝕ  [LATIN CAPITAL LETTER P WITH SQUIRREL TAIL]
+				'\uFF30': // Ｐ  [FULLWIDTH LATIN CAPITAL LETTER P]
+				b.WriteRune('P')
+				folded = true
+			case
+				'\u01A5', // ƥ  [LATIN SMALL LETTER P WITH HOOK]
+				'\u1D71', // ᵱ  [LATIN SMALL LETTER P WITH MIDDLE TILDE]
+				'\u1D7D', // ᵽ  [LATIN SMALL LETTER P WITH STROKE]
+				'\u1D88', // ᶈ  [LATIN SMALL LETTER P WITH PALATAL HOOK]
+				'\u1E55', // ṕ  [LATIN SMALL LETTER P WITH ACUTE]
+				'\u1E57', // ṗ  [LATIN SMALL LETTER P WITH DOT ABOVE]
+				'\u24DF', // ⓟ  [CIRCLED LATIN SMALL LETTER P]
+				'\uA751', // ꝑ  [LATIN SMALL LETTER P WITH STROKE THROUGH DESCENDER]
+				'\uA753', // ꝓ  [LATIN SMALL LETTER P WITH FLOURISH]
+				'\uA755', // ꝕ  [LATIN SMALL LETTER P WITH SQUIRREL TAIL]
+				'\uA7FC', // ꟼ  [LATIN EPIGRAPHIC LETTER REVERSED P]
+				'\uFF50': // ｐ  [FULLWIDTH LATIN SMALL LETTER P]
+				b.WriteRune('p')
+				folded = true
+			case
+				'\u24AB': // ⒫  [PARENTHESIZED LATIN SMALL LETTER P]
+				b.WriteRune('(')
+				b.WriteRune('p')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u024A', // Ɋ  [LATIN CAPITAL LETTER SMALL Q WITH HOOK TAIL]
+				'\u24C6', // Ⓠ  [CIRCLED LATIN CAPITAL LETTER Q]
+				'\uA756', // Ꝗ  [LATIN CAPITAL LETTER Q WITH STROKE THROUGH DESCENDER]
+				'\uA758', // Ꝙ  [LATIN CAPITAL LETTER Q WITH DIAGONAL STROKE]
+				'\uFF31': // Ｑ  [FULLWIDTH LATIN CAPITAL LETTER Q]
+				b.WriteRune('Q')
+				folded = true
+			case
+				'\u0138', // ĸ  http://en.wikipedia.org/wiki/Kra_(letter)  [LATIN SMALL LETTER KRA]
+				'\u024B', // ɋ  [LATIN SMALL LETTER Q WITH HOOK TAIL]
+				'\u02A0', // ʠ  [LATIN SMALL LETTER Q WITH HOOK]
+				'\u24E0', // ⓠ  [CIRCLED LATIN SMALL LETTER Q]
+				'\uA757', // ꝗ  [LATIN SMALL LETTER Q WITH STROKE THROUGH DESCENDER]
+				'\uA759', // ꝙ  [LATIN SMALL LETTER Q WITH DIAGONAL STROKE]
+				'\uFF51': // ｑ  [FULLWIDTH LATIN SMALL LETTER Q]
+				b.WriteRune('q')
+				folded = true
+			case
+				'\u24AC': // ⒬  [PARENTHESIZED LATIN SMALL LETTER Q]
+				b.WriteRune('(')
+				b.WriteRune('q')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u0239': // ȹ  [LATIN SMALL LETTER QP DIGRAPH]
+				b.WriteRune('q')
+				b.WriteRune('p')
+				folded = true
+			case
+				'\u0154', // Ŕ  [LATIN CAPITAL LETTER R WITH ACUTE]
+				'\u0156', // Ŗ  [LATIN CAPITAL LETTER R WITH CEDILLA]
+				'\u0158', // Ř  [LATIN CAPITAL LETTER R WITH CARON]
+				'\u0210', // Ȓ  [LATIN CAPITAL LETTER R WITH DOUBLE GRAVE]
+				'\u0212', // Ȓ  [LATIN CAPITAL LETTER R WITH INVERTED BREVE]
+				'\u024C', // Ɍ  [LATIN CAPITAL LETTER R WITH STROKE]
+				'\u0280', // ʀ  [LATIN LETTER SMALL CAPITAL R]
+				'\u0281', // ʁ  [LATIN LETTER SMALL CAPITAL INVERTED R]
+				'\u1D19', // ᴙ  [LATIN LETTER SMALL CAPITAL REVERSED R]
+				'\u1D1A', // ᴚ  [LATIN LETTER SMALL CAPITAL TURNED R]
+				'\u1E58', // Ṙ  [LATIN CAPITAL LETTER R WITH DOT ABOVE]
+				'\u1E5A', // Ṛ  [LATIN CAPITAL LETTER R WITH DOT BELOW]
+				'\u1E5C', // Ṝ  [LATIN CAPITAL LETTER R WITH DOT BELOW AND MACRON]
+				'\u1E5E', // Ṟ  [LATIN CAPITAL LETTER R WITH LINE BELOW]
+				'\u24C7', // Ⓡ  [CIRCLED LATIN CAPITAL LETTER R]
+				'\u2C64', // Ɽ  [LATIN CAPITAL LETTER R WITH TAIL]
+				'\uA75A', // Ꝛ  [LATIN CAPITAL LETTER R ROTUNDA]
+				'\uA782', // Ꞃ  [LATIN CAPITAL LETTER INSULAR R]
+				'\uFF32': // Ｒ  [FULLWIDTH LATIN CAPITAL LETTER R]
+				b.WriteRune('R')
+				folded = true
+			case
+				'\u0155', // ŕ  [LATIN SMALL LETTER R WITH ACUTE]
+				'\u0157', // ŗ  [LATIN SMALL LETTER R WITH CEDILLA]
+				'\u0159', // ř  [LATIN SMALL LETTER R WITH CARON]
+				'\u0211', // ȑ  [LATIN SMALL LETTER R WITH DOUBLE GRAVE]
+				'\u0213', // ȓ  [LATIN SMALL LETTER R WITH INVERTED BREVE]
+				'\u024D', // ɍ  [LATIN SMALL LETTER R WITH STROKE]
+				'\u027C', // ɼ  [LATIN SMALL LETTER R WITH LONG LEG]
+				'\u027D', // ɽ  [LATIN SMALL LETTER R WITH TAIL]
+				'\u027E', // ɾ  [LATIN SMALL LETTER R WITH FISHHOOK]
+				'\u027F', // ɿ  [LATIN SMALL LETTER REVERSED R WITH FISHHOOK]
+				'\u1D63', // ᵣ  [LATIN SUBSCRIPT SMALL LETTER R]
+				'\u1D72', // ᵲ  [LATIN SMALL LETTER R WITH MIDDLE TILDE]
+				'\u1D73', // ᵳ  [LATIN SMALL LETTER R WITH FISHHOOK AND MIDDLE TILDE]
+				'\u1D89', // ᶉ  [LATIN SMALL LETTER R WITH PALATAL HOOK]
+				'\u1E59', // ṙ  [LATIN SMALL LETTER R WITH DOT ABOVE]
+				'\u1E5B', // ṛ  [LATIN SMALL LETTER R WITH DOT BELOW]
+				'\u1E5D', // ṝ  [LATIN SMALL LETTER R WITH DOT BELOW AND MACRON]
+				'\u1E5F', // ṟ  [LATIN SMALL LETTER R WITH LINE BELOW]
+				'\u24E1', // ⓡ  [CIRCLED LATIN SMALL LETTER R]
+				'\uA75B', // ꝛ  [LATIN SMALL LETTER R ROTUNDA]
+				'\uA783', // ꞃ  [LATIN SMALL LETTER INSULAR R]
+				'\uFF52': // ｒ  [FULLWIDTH LATIN SMALL LETTER R]
+				b.WriteRune('r')
+				folded = true
+			case
+				'\u24AD': // ⒭  [PARENTHESIZED LATIN SMALL LETTER R]
+				b.WriteRune('(')
+				b.WriteRune('r')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u015A', // Ś  [LATIN CAPITAL LETTER S WITH ACUTE]
+				'\u015C', // Ŝ  [LATIN CAPITAL LETTER S WITH CIRCUMFLEX]
+				'\u015E', // Ş  [LATIN CAPITAL LETTER S WITH CEDILLA]
+				'\u0160', // Š  [LATIN CAPITAL LETTER S WITH CARON]
+				'\u0218', // Ș  [LATIN CAPITAL LETTER S WITH COMMA BELOW]
+				'\u1E60', // Ṡ  [LATIN CAPITAL LETTER S WITH DOT ABOVE]
+				'\u1E62', // Ṣ  [LATIN CAPITAL LETTER S WITH DOT BELOW]
+				'\u1E64', // Ṥ  [LATIN CAPITAL LETTER S WITH ACUTE AND DOT ABOVE]
+				'\u1E66', // Ṧ  [LATIN CAPITAL LETTER S WITH CARON AND DOT ABOVE]
+				'\u1E68', // Ṩ  [LATIN CAPITAL LETTER S WITH DOT BELOW AND DOT ABOVE]
+				'\u24C8', // Ⓢ  [CIRCLED LATIN CAPITAL LETTER S]
+				'\uA731', // ꜱ  [LATIN LETTER SMALL CAPITAL S]
+				'\uA785', // ꞅ  [LATIN SMALL LETTER INSULAR S]
+				'\uFF33': // Ｓ  [FULLWIDTH LATIN CAPITAL LETTER S]
+				b.WriteRune('S')
+				folded = true
+			case
+				'\u015B', // ś  [LATIN SMALL LETTER S WITH ACUTE]
+				'\u015D', // ŝ  [LATIN SMALL LETTER S WITH CIRCUMFLEX]
+				'\u015F', // ş  [LATIN SMALL LETTER S WITH CEDILLA]
+				'\u0161', // š  [LATIN SMALL LETTER S WITH CARON]
+				'\u017F', // ſ  http://en.wikipedia.org/wiki/Long_S  [LATIN SMALL LETTER LONG S]
+				'\u0219', // ș  [LATIN SMALL LETTER S WITH COMMA BELOW]
+				'\u023F', // ȿ  [LATIN SMALL LETTER S WITH SWASH TAIL]
+				'\u0282', // ʂ  [LATIN SMALL LETTER S WITH HOOK]
+				'\u1D74', // ᵴ  [LATIN SMALL LETTER S WITH MIDDLE TILDE]
+				'\u1D8A', // ᶊ  [LATIN SMALL LETTER S WITH PALATAL HOOK]
+				'\u1E61', // ṡ  [LATIN SMALL LETTER S WITH DOT ABOVE]
+				'\u1E63', // ṣ  [LATIN SMALL LETTER S WITH DOT BELOW]
+				'\u1E65', // ṥ  [LATIN SMALL LETTER S WITH ACUTE AND DOT ABOVE]
+				'\u1E67', // ṧ  [LATIN SMALL LETTER S WITH CARON AND DOT ABOVE]
+				'\u1E69', // ṩ  [LATIN SMALL LETTER S WITH DOT BELOW AND DOT ABOVE]
+				'\u1E9C', // ẜ  [LATIN SMALL LETTER LONG S WITH DIAGONAL STROKE]
+				'\u1E9D', // ẝ  [LATIN SMALL LETTER LONG S WITH HIGH STROKE]
+				'\u24E2', // ⓢ  [CIRCLED LATIN SMALL LETTER S]
+				'\uA784', // Ꞅ  [LATIN CAPITAL LETTER INSULAR S]
+				'\uFF53': // ｓ  [FULLWIDTH LATIN SMALL LETTER S]
+				b.WriteRune('s')
+				folded = true
+			case
+				'\u1E9E': // ẞ  [LATIN CAPITAL LETTER SHARP S]
+				b.WriteRune('S')
+				b.WriteRune('S')
+				folded = true
+			case
+				'\u24AE': // ⒮  [PARENTHESIZED LATIN SMALL LETTER S]
+				b.WriteRune('(')
+				b.WriteRune('s')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u00DF': // ß  [LATIN SMALL LETTER SHARP S]
+				b.WriteRune('s')
+				b.WriteRune('s')
+				folded = true
+			case
+				'\uFB06': // ﬆ  [LATIN SMALL LIGATURE ST]
+				b.WriteRune('s')
+				b.WriteRune('t')
+				folded = true
+			case
+				'\u0162', // Ţ  [LATIN CAPITAL LETTER T WITH CEDILLA]
+				'\u0164', // Ť  [LATIN CAPITAL LETTER T WITH CARON]
+				'\u0166', // Ŧ  [LATIN CAPITAL LETTER T WITH STROKE]
+				'\u01AC', // Ƭ  [LATIN CAPITAL LETTER T WITH HOOK]
+				'\u01AE', // Ʈ  [LATIN CAPITAL LETTER T WITH RETROFLEX HOOK]
+				'\u021A', // Ț  [LATIN CAPITAL LETTER T WITH COMMA BELOW]
+				'\u023E', // Ⱦ  [LATIN CAPITAL LETTER T WITH DIAGONAL STROKE]
+				'\u1D1B', // ᴛ  [LATIN LETTER SMALL CAPITAL T]
+				'\u1E6A', // Ṫ  [LATIN CAPITAL LETTER T WITH DOT ABOVE]
+				'\u1E6C', // Ṭ  [LATIN CAPITAL LETTER T WITH DOT BELOW]
+				'\u1E6E', // Ṯ  [LATIN CAPITAL LETTER T WITH LINE BELOW]
+				'\u1E70', // Ṱ  [LATIN CAPITAL LETTER T WITH CIRCUMFLEX BELOW]
+				'\u24C9', // Ⓣ  [CIRCLED LATIN CAPITAL LETTER T]
+				'\uA786', // Ꞇ  [LATIN CAPITAL LETTER INSULAR T]
+				'\uFF34': // Ｔ  [FULLWIDTH LATIN CAPITAL LETTER T]
+				b.WriteRune('T')
+				folded = true
+			case
+				'\u0163', // ţ  [LATIN SMALL LETTER T WITH CEDILLA]
+				'\u0165', // ť  [LATIN SMALL LETTER T WITH CARON]
+				'\u0167', // ŧ  [LATIN SMALL LETTER T WITH STROKE]
+				'\u01AB', // ƫ  [LATIN SMALL LETTER T WITH PALATAL HOOK]
+				'\u01AD', // ƭ  [LATIN SMALL LETTER T WITH HOOK]
+				'\u021B', // ț  [LATIN SMALL LETTER T WITH COMMA BELOW]
+				'\u0236', // ȶ  [LATIN SMALL LETTER T WITH CURL]
+				'\u0287', // ʇ  [LATIN SMALL LETTER TURNED T]
+				'\u0288', // ʈ  [LATIN SMALL LETTER T WITH RETROFLEX HOOK]
+				'\u1D75', // ᵵ  [LATIN SMALL LETTER T WITH MIDDLE TILDE]
+				'\u1E6B', // ṫ  [LATIN SMALL LETTER T WITH DOT ABOVE]
+				'\u1E6D', // ṭ  [LATIN SMALL LETTER T WITH DOT BELOW]
+				'\u1E6F', // ṯ  [LATIN SMALL LETTER T WITH LINE BELOW]
+				'\u1E71', // ṱ  [LATIN SMALL LETTER T WITH CIRCUMFLEX BELOW]
+				'\u1E97', // ẗ  [LATIN SMALL LETTER T WITH DIAERESIS]
+				'\u24E3', // ⓣ  [CIRCLED LATIN SMALL LETTER T]
+				'\u2C66', // ⱦ  [LATIN SMALL LETTER T WITH DIAGONAL STROKE]
+				'\uFF54': // ｔ  [FULLWIDTH LATIN SMALL LETTER T]
+				b.WriteRune('t')
+				folded = true
+			case
+				'\u00DE', // Þ  [LATIN CAPITAL LETTER THORN]
+				'\uA766': // Ꝧ  [LATIN CAPITAL LETTER THORN WITH STROKE THROUGH DESCENDER]
+				b.WriteRune('T')
+				b.WriteRune('H')
+				folded = true
+			case
+				'\uA728': // Ꜩ  [LATIN CAPITAL LETTER TZ]
+				b.WriteRune('T')
+				b.WriteRune('Z')
+				folded = true
+			case
+				'\u24AF': // ⒯  [PARENTHESIZED LATIN SMALL LETTER T]
+				b.WriteRune('(')
+				b.WriteRune('t')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u02A8': // ʨ  [LATIN SMALL LETTER TC DIGRAPH WITH CURL]
+				b.WriteRune('t')
+				b.WriteRune('r')
+				folded = true
+			case
+				'\u00FE', // þ  [LATIN SMALL LETTER THORN]
+				'\u1D7A', // ᵺ  [LATIN SMALL LETTER TH WITH STRIKETHROUGH]
+				'\uA767': // ꝧ  [LATIN SMALL LETTER THORN WITH STROKE THROUGH DESCENDER]
+				b.WriteRune('t')
+				b.WriteRune('h')
+				folded = true
+			case
+				'\u02A6': // ʦ  [LATIN SMALL LETTER TS DIGRAPH]
+				b.WriteRune('t')
+				b.WriteRune('s')
+				folded = true
+			case
+				'\uA729': // ꜩ  [LATIN SMALL LETTER TZ]
+				b.WriteRune('t')
+				b.WriteRune('z')
+				folded = true
+			case
+				'\u00D9', // Ù  [LATIN CAPITAL LETTER U WITH GRAVE]
+				'\u00DA', // Ú  [LATIN CAPITAL LETTER U WITH ACUTE]
+				'\u00DB', // Û  [LATIN CAPITAL LETTER U WITH CIRCUMFLEX]
+				'\u00DC', // Ü  [LATIN CAPITAL LETTER U WITH DIAERESIS]
+				'\u0168', // Ũ  [LATIN CAPITAL LETTER U WITH TILDE]
+				'\u016A', // Ū  [LATIN CAPITAL LETTER U WITH MACRON]
+				'\u016C', // Ŭ  [LATIN CAPITAL LETTER U WITH BREVE]
+				'\u016E', // Ů  [LATIN CAPITAL LETTER U WITH RING ABOVE]
+				'\u0170', // Ű  [LATIN CAPITAL LETTER U WITH DOUBLE ACUTE]
+				'\u0172', // Ų  [LATIN CAPITAL LETTER U WITH OGONEK]
+				'\u01AF', // Ư  [LATIN CAPITAL LETTER U WITH HORN]
+				'\u01D3', // Ǔ  [LATIN CAPITAL LETTER U WITH CARON]
+				'\u01D5', // Ǖ  [LATIN CAPITAL LETTER U WITH DIAERESIS AND MACRON]
+				'\u01D7', // Ǘ  [LATIN CAPITAL LETTER U WITH DIAERESIS AND ACUTE]
+				'\u01D9', // Ǚ  [LATIN CAPITAL LETTER U WITH DIAERESIS AND CARON]
+				'\u01DB', // Ǜ  [LATIN CAPITAL LETTER U WITH DIAERESIS AND GRAVE]
+				'\u0214', // Ȕ  [LATIN CAPITAL LETTER U WITH DOUBLE GRAVE]
+				'\u0216', // Ȗ  [LATIN CAPITAL LETTER U WITH INVERTED BREVE]
+				'\u0244', // Ʉ  [LATIN CAPITAL LETTER U BAR]
+				'\u1D1C', // ᴜ  [LATIN LETTER SMALL CAPITAL U]
+				'\u1D7E', // ᵾ  [LATIN SMALL CAPITAL LETTER U WITH STROKE]
+				'\u1E72', // Ṳ  [LATIN CAPITAL LETTER U WITH DIAERESIS BELOW]
+				'\u1E74', // Ṵ  [LATIN CAPITAL LETTER U WITH TILDE BELOW]
+				'\u1E76', // Ṷ  [LATIN CAPITAL LETTER U WITH CIRCUMFLEX BELOW]
+				'\u1E78', // Ṹ  [LATIN CAPITAL LETTER U WITH TILDE AND ACUTE]
+				'\u1E7A', // Ṻ  [LATIN CAPITAL LETTER U WITH MACRON AND DIAERESIS]
+				'\u1EE4', // Ụ  [LATIN CAPITAL LETTER U WITH DOT BELOW]
+				'\u1EE6', // Ủ  [LATIN CAPITAL LETTER U WITH HOOK ABOVE]
+				'\u1EE8', // Ứ  [LATIN CAPITAL LETTER U WITH HORN AND ACUTE]
+				'\u1EEA', // Ừ  [LATIN CAPITAL LETTER U WITH HORN AND GRAVE]
+				'\u1EEC', // Ử  [LATIN CAPITAL LETTER U WITH HORN AND HOOK ABOVE]
+				'\u1EEE', // Ữ  [LATIN CAPITAL LETTER U WITH HORN AND TILDE]
+				'\u1EF0', // Ự  [LATIN CAPITAL LETTER U WITH HORN AND DOT BELOW]
+				'\u24CA', // Ⓤ  [CIRCLED LATIN CAPITAL LETTER U]
+				'\uFF35': // Ｕ  [FULLWIDTH LATIN CAPITAL LETTER U]
+				b.WriteRune('U')
+				folded = true
+			case
+				'\u00F9', // ù  [LATIN SMALL LETTER U WITH GRAVE]
+				'\u00FA', // ú  [LATIN SMALL LETTER U WITH ACUTE]
+				'\u00FB', // û  [LATIN SMALL LETTER U WITH CIRCUMFLEX]
+				'\u00FC', // ü  [LATIN SMALL LETTER U WITH DIAERESIS]
+				'\u0169', // ũ  [LATIN SMALL LETTER U WITH TILDE]
+				'\u016B', // ū  [LATIN SMALL LETTER U WITH MACRON]
+				'\u016D', // ŭ  [LATIN SMALL LETTER U WITH BREVE]
+				'\u016F', // ů  [LATIN SMALL LETTER U WITH RING ABOVE]
+				'\u0171', // ű  [LATIN SMALL LETTER U WITH DOUBLE ACUTE]
+				'\u0173', // ų  [LATIN SMALL LETTER U WITH OGONEK]
+				'\u01B0', // ư  [LATIN SMALL LETTER U WITH HORN]
+				'\u01D4', // ǔ  [LATIN SMALL LETTER U WITH CARON]
+				'\u01D6', // ǖ  [LATIN SMALL LETTER U WITH DIAERESIS AND MACRON]
+				'\u01D8', // ǘ  [LATIN SMALL LETTER U WITH DIAERESIS AND ACUTE]
+				'\u01DA', // ǚ  [LATIN SMALL LETTER U WITH DIAERESIS AND CARON]
+				'\u01DC', // ǜ  [LATIN SMALL LETTER U WITH DIAERESIS AND GRAVE]
+				'\u0215', // ȕ  [LATIN SMALL LETTER U WITH DOUBLE GRAVE]
+				'\u0217', // ȗ  [LATIN SMALL LETTER U WITH INVERTED BREVE]
+				'\u0289', // ʉ  [LATIN SMALL LETTER U BAR]
+				'\u1D64', // ᵤ  [LATIN SUBSCRIPT SMALL LETTER U]
+				'\u1D99', // ᶙ  [LATIN SMALL LETTER U WITH RETROFLEX HOOK]
+				'\u1E73', // ṳ  [LATIN SMALL LETTER U WITH DIAERESIS BELOW]
+				'\u1E75', // ṵ  [LATIN SMALL LETTER U WITH TILDE BELOW]
+				'\u1E77', // ṷ  [LATIN SMALL LETTER U WITH CIRCUMFLEX BELOW]
+				'\u1E79', // ṹ  [LATIN SMALL LETTER U WITH TILDE AND ACUTE]
+				'\u1E7B', // ṻ  [LATIN SMALL LETTER U WITH MACRON AND DIAERESIS]
+				'\u1EE5', // ụ  [LATIN SMALL LETTER U WITH DOT BELOW]
+				'\u1EE7', // ủ  [LATIN SMALL LETTER U WITH HOOK ABOVE]
+				'\u1EE9', // ứ  [LATIN SMALL LETTER U WITH HORN AND ACUTE]
+				'\u1EEB', // ừ  [LATIN SMALL LETTER U WITH HORN AND GRAVE]
+				'\u1EED', // ử  [LATIN SMALL LETTER U WITH HORN AND HOOK ABOVE]
+				'\u1EEF', // ữ  [LATIN SMALL LETTER U WITH HORN AND TILDE]
+				'\u1EF1', // ự  [LATIN SMALL LETTER U WITH HORN AND DOT BELOW]
+				'\u24E4', // ⓤ  [CIRCLED LATIN SMALL LETTER U]
+				'\uFF55': // ｕ  [FULLWIDTH LATIN SMALL LETTER U]
+				b.WriteRune('u')
+				folded = true
+			case
+				'\u24B0': // ⒰  [PARENTHESIZED LATIN SMALL LETTER U]
+				b.WriteRune('(')
+				b.WriteRune('u')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u1D6B': // ᵫ  [LATIN SMALL LETTER UE]
+				b.WriteRune('u')
+				b.WriteRune('e')
+				folded = true
+			case
+				'\u01B2', // Ʋ  [LATIN CAPITAL LETTER V WITH HOOK]
+				'\u0245', // Ʌ  [LATIN CAPITAL LETTER TURNED V]
+				'\u1D20', // ᴠ  [LATIN LETTER SMALL CAPITAL V]
+				'\u1E7C', // Ṽ  [LATIN CAPITAL LETTER V WITH TILDE]
+				'\u1E7E', // Ṿ  [LATIN CAPITAL LETTER V WITH DOT BELOW]
+				'\u1EFC', // Ỽ  [LATIN CAPITAL LETTER MIDDLE-WELSH V]
+				'\u24CB', // Ⓥ  [CIRCLED LATIN CAPITAL LETTER V]
+				'\uA75E', // Ꝟ  [LATIN CAPITAL LETTER V WITH DIAGONAL STROKE]
+				'\uA768', // Ꝩ  [LATIN CAPITAL LETTER VEND]
+				'\uFF36': // Ｖ  [FULLWIDTH LATIN CAPITAL LETTER V]
+				b.WriteRune('V')
+				folded = true
+			case
+				'\u028B', // ʋ  [LATIN SMALL LETTER V WITH HOOK]
+				'\u028C', // ʌ  [LATIN SMALL LETTER TURNED V]
+				'\u1D65', // ᵥ  [LATIN SUBSCRIPT SMALL LETTER V]
+				'\u1D8C', // ᶌ  [LATIN SMALL LETTER V WITH PALATAL HOOK]
+				'\u1E7D', // ṽ  [LATIN SMALL LETTER V WITH TILDE]
+				'\u1E7F', // ṿ  [LATIN SMALL LETTER V WITH DOT BELOW]
+				'\u24E5', // ⓥ  [CIRCLED LATIN SMALL LETTER V]
+				'\u2C71', // ⱱ  [LATIN SMALL LETTER V WITH RIGHT HOOK]
+				'\u2C74', // ⱴ  [LATIN SMALL LETTER V WITH CURL]
+				'\uA75F', // ꝟ  [LATIN SMALL LETTER V WITH DIAGONAL STROKE]
+				'\uFF56': // ｖ  [FULLWIDTH LATIN SMALL LETTER V]
+				b.WriteRune('v')
+				folded = true
+			case
+				'\uA760': // Ꝡ  [LATIN CAPITAL LETTER VY]
+				b.WriteRune('V')
+				b.WriteRune('Y')
+				folded = true
+			case
+				'\u24B1': // ⒱  [PARENTHESIZED LATIN SMALL LETTER V]
+				b.WriteRune('(')
+				b.WriteRune('v')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\uA761': // ꝡ  [LATIN SMALL LETTER VY]
+				b.WriteRune('v')
+				b.WriteRune('y')
+				folded = true
+			case
+				'\u0174', // Ŵ  [LATIN CAPITAL LETTER W WITH CIRCUMFLEX]
+				'\u01F7', // Ƿ  http://en.wikipedia.org/wiki/Wynn  [LATIN CAPITAL LETTER WYNN]
+				'\u1D21', // ᴡ  [LATIN LETTER SMALL CAPITAL W]
+				'\u1E80', // Ẁ  [LATIN CAPITAL LETTER W WITH GRAVE]
+				'\u1E82', // Ẃ  [LATIN CAPITAL LETTER W WITH ACUTE]
+				'\u1E84', // Ẅ  [LATIN CAPITAL LETTER W WITH DIAERESIS]
+				'\u1E86', // Ẇ  [LATIN CAPITAL LETTER W WITH DOT ABOVE]
+				'\u1E88', // Ẉ  [LATIN CAPITAL LETTER W WITH DOT BELOW]
+				'\u24CC', // Ⓦ  [CIRCLED LATIN CAPITAL LETTER W]
+				'\u2C72', // Ⱳ  [LATIN CAPITAL LETTER W WITH HOOK]
+				'\uFF37': // Ｗ  [FULLWIDTH LATIN CAPITAL LETTER W]
+				b.WriteRune('W')
+				folded = true
+			case
+				'\u0175', // ŵ  [LATIN SMALL LETTER W WITH CIRCUMFLEX]
+				'\u01BF', // ƿ  http://en.wikipedia.org/wiki/Wynn  [LATIN LETTER WYNN]
+				'\u028D', // ʍ  [LATIN SMALL LETTER TURNED W]
+				'\u1E81', // ẁ  [LATIN SMALL LETTER W WITH GRAVE]
+				'\u1E83', // ẃ  [LATIN SMALL LETTER W WITH ACUTE]
+				'\u1E85', // ẅ  [LATIN SMALL LETTER W WITH DIAERESIS]
+				'\u1E87', // ẇ  [LATIN SMALL LETTER W WITH DOT ABOVE]
+				'\u1E89', // ẉ  [LATIN SMALL LETTER W WITH DOT BELOW]
+				'\u1E98', // ẘ  [LATIN SMALL LETTER W WITH RING ABOVE]
+				'\u24E6', // ⓦ  [CIRCLED LATIN SMALL LETTER W]
+				'\u2C73', // ⱳ  [LATIN SMALL LETTER W WITH HOOK]
+				'\uFF57': // ｗ  [FULLWIDTH LATIN SMALL LETTER W]
+				b.WriteRune('w')
+				folded = true
+			case
+				'\u24B2': // ⒲  [PARENTHESIZED LATIN SMALL LETTER W]
+				b.WriteRune('(')
+				b.WriteRune('w')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u1E8A', // Ẋ  [LATIN CAPITAL LETTER X WITH DOT ABOVE]
+				'\u1E8C', // Ẍ  [LATIN CAPITAL LETTER X WITH DIAERESIS]
+				'\u24CD', // Ⓧ  [CIRCLED LATIN CAPITAL LETTER X]
+				'\uFF38': // Ｘ  [FULLWIDTH LATIN CAPITAL LETTER X]
+				b.WriteRune('X')
+				folded = true
+			case
+				'\u1D8D', // ᶍ  [LATIN SMALL LETTER X WITH PALATAL HOOK]
+				'\u1E8B', // ẋ  [LATIN SMALL LETTER X WITH DOT ABOVE]
+				'\u1E8D', // ẍ  [LATIN SMALL LETTER X WITH DIAERESIS]
+				'\u2093', // ₓ  [LATIN SUBSCRIPT SMALL LETTER X]
+				'\u24E7', // ⓧ  [CIRCLED LATIN SMALL LETTER X]
+				'\uFF58': // ｘ  [FULLWIDTH LATIN SMALL LETTER X]
+				b.WriteRune('x')
+				folded = true
+			case
+				'\u24B3': // ⒳  [PARENTHESIZED LATIN SMALL LETTER X]
+				b.WriteRune('(')
+				b.WriteRune('x')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u00DD', // Ý  [LATIN CAPITAL LETTER Y WITH ACUTE]
+				'\u0176', // Ŷ  [LATIN CAPITAL LETTER Y WITH CIRCUMFLEX]
+				'\u0178', // Ÿ  [LATIN CAPITAL LETTER Y WITH DIAERESIS]
+				'\u01B3', // Ƴ  [LATIN CAPITAL LETTER Y WITH HOOK]
+				'\u0232', // Ȳ  [LATIN CAPITAL LETTER Y WITH MACRON]
+				'\u024E', // Ɏ  [LATIN CAPITAL LETTER Y WITH STROKE]
+				'\u028F', // ʏ  [LATIN LETTER SMALL CAPITAL Y]
+				'\u1E8E', // Ẏ  [LATIN CAPITAL LETTER Y WITH DOT ABOVE]
+				'\u1EF2', // Ỳ  [LATIN CAPITAL LETTER Y WITH GRAVE]
+				'\u1EF4', // Ỵ  [LATIN CAPITAL LETTER Y WITH DOT BELOW]
+				'\u1EF6', // Ỷ  [LATIN CAPITAL LETTER Y WITH HOOK ABOVE]
+				'\u1EF8', // Ỹ  [LATIN CAPITAL LETTER Y WITH TILDE]
+				'\u1EFE', // Ỿ  [LATIN CAPITAL LETTER Y WITH LOOP]
+				'\u24CE', // Ⓨ  [CIRCLED LATIN CAPITAL LETTER Y]
+				'\uFF39': // Ｙ  [FULLWIDTH LATIN CAPITAL LETTER Y]
+				b.WriteRune('Y')
+				folded = true
+			case
+				'\u00FD', // ý  [LATIN SMALL LETTER Y WITH ACUTE]
+				'\u00FF', // ÿ  [LATIN SMALL LETTER Y WITH DIAERESIS]
+				'\u0177', // ŷ  [LATIN SMALL LETTER Y WITH CIRCUMFLEX]
+				'\u01B4', // ƴ  [LATIN SMALL LETTER Y WITH HOOK]
+				'\u0233', // ȳ  [LATIN SMALL LETTER Y WITH MACRON]
+				'\u024F', // ɏ  [LATIN SMALL LETTER Y WITH STROKE]
+				'\u028E', // ʎ  [LATIN SMALL LETTER TURNED Y]
+				'\u1E8F', // ẏ  [LATIN SMALL LETTER Y WITH DOT ABOVE]
+				'\u1E99', // ẙ  [LATIN SMALL LETTER Y WITH RING ABOVE]
+				'\u1EF3', // ỳ  [LATIN SMALL LETTER Y WITH GRAVE]
+				'\u1EF5', // ỵ  [LATIN SMALL LETTER Y WITH DOT BELOW]
+				'\u1EF7', // ỷ  [LATIN SMALL LETTER Y WITH HOOK ABOVE]
+				'\u1EF9', // ỹ  [LATIN SMALL LETTER Y WITH TILDE]
+				'\u1EFF', // ỿ  [LATIN SMALL LETTER Y WITH LOOP]
+				'\u24E8', // ⓨ  [CIRCLED LATIN SMALL LETTER Y]
+				'\uFF59': // ｙ  [FULLWIDTH LATIN SMALL LETTER Y]
+				b.WriteRune('y')
+				folded = true
+			case
+				'\u24B4': // ⒴  [PARENTHESIZED LATIN SMALL LETTER Y]
+				b.WriteRune('(')
+				b.WriteRune('y')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u0179', // Ź  [LATIN CAPITAL LETTER Z WITH ACUTE]
+				'\u017B', // Ż  [LATIN CAPITAL LETTER Z WITH DOT ABOVE]
+				'\u017D', // Ž  [LATIN CAPITAL LETTER Z WITH CARON]
+				'\u01B5', // Ƶ  [LATIN CAPITAL LETTER Z WITH STROKE]
+				'\u021C', // Ȝ  http://en.wikipedia.org/wiki/Yogh  [LATIN CAPITAL LETTER YOGH]
+				'\u0224', // Ȥ  [LATIN CAPITAL LETTER Z WITH HOOK]
+				'\u1D22', // ᴢ  [LATIN LETTER SMALL CAPITAL Z]
+				'\u1E90', // Ẑ  [LATIN CAPITAL LETTER Z WITH CIRCUMFLEX]
+				'\u1E92', // Ẓ  [LATIN CAPITAL LETTER Z WITH DOT BELOW]
+				'\u1E94', // Ẕ  [LATIN CAPITAL LETTER Z WITH LINE BELOW]
+				'\u24CF', // Ⓩ  [CIRCLED LATIN CAPITAL LETTER Z]
+				'\u2C6B', // Ⱬ  [LATIN CAPITAL LETTER Z WITH DESCENDER]
+				'\uA762', // Ꝣ  [LATIN CAPITAL LETTER VISIGOTHIC Z]
+				'\uFF3A': // Ｚ  [FULLWIDTH LATIN CAPITAL LETTER Z]
+				b.WriteRune('Z')
+				folded = true
+			case
+				'\u017A', // ź  [LATIN SMALL LETTER Z WITH ACUTE]
+				'\u017C', // ż  [LATIN SMALL LETTER Z WITH DOT ABOVE]
+				'\u017E', // ž  [LATIN SMALL LETTER Z WITH CARON]
+				'\u01B6', // ƶ  [LATIN SMALL LETTER Z WITH STROKE]
+				'\u021D', // ȝ  http://en.wikipedia.org/wiki/Yogh  [LATIN SMALL LETTER YOGH]
+				'\u0225', // ȥ  [LATIN SMALL LETTER Z WITH HOOK]
+				'\u0240', // ɀ  [LATIN SMALL LETTER Z WITH SWASH TAIL]
+				'\u0290', // ʐ  [LATIN SMALL LETTER Z WITH RETROFLEX HOOK]
+				'\u0291', // ʑ  [LATIN SMALL LETTER Z WITH CURL]
+				'\u1D76', // ᵶ  [LATIN SMALL LETTER Z WITH MIDDLE TILDE]
+				'\u1D8E', // ᶎ  [LATIN SMALL LETTER Z WITH PALATAL HOOK]
+				'\u1E91', // ẑ  [LATIN SMALL LETTER Z WITH CIRCUMFLEX]
+				'\u1E93', // ẓ  [LATIN SMALL LETTER Z WITH DOT BELOW]
+				'\u1E95', // ẕ  [LATIN SMALL LETTER Z WITH LINE BELOW]
+				'\u24E9', // ⓩ  [CIRCLED LATIN SMALL LETTER Z]
+				'\u2C6C', // ⱬ  [LATIN SMALL LETTER Z WITH DESCENDER]
+				'\uA763', // ꝣ  [LATIN SMALL LETTER VISIGOTHIC Z]
+				'\uFF5A': // ｚ  [FULLWIDTH LATIN SMALL LETTER Z]
+				b.WriteRune('z')
+				folded = true
+			case
+				'\u24B5': // ⒵  [PARENTHESIZED LATIN SMALL LETTER Z]
+				b.WriteRune('(')
+				b.WriteRune('z')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u2070', // ⁰  [SUPERSCRIPT ZERO]
+				'\u2080', // ₀  [SUBSCRIPT ZERO]
+				'\u24EA', // ⓪  [CIRCLED DIGIT ZERO]
+				'\u24FF', // ⓿  [NEGATIVE CIRCLED DIGIT ZERO]
+				'\uFF10': // ０  [FULLWIDTH DIGIT ZERO]
+				b.WriteRune('0')
+				folded = true
+			case
+				'\u00B9', // ¹  [SUPERSCRIPT ONE]
+				'\u2081', // ₁  [SUBSCRIPT ONE]
+				'\u2460', // ①  [CIRCLED DIGIT ONE]
+				'\u24F5', // ⓵  [DOUBLE CIRCLED DIGIT ONE]
+				'\u2776', // ❶  [DINGBAT NEGATIVE CIRCLED DIGIT ONE]
+				'\u2780', // ➀  [DINGBAT CIRCLED SANS-SERIF DIGIT ONE]
+				'\u278A', // ➊  [DINGBAT NEGATIVE CIRCLED SANS-SERIF DIGIT ONE]
+				'\uFF11': // １  [FULLWIDTH DIGIT ONE]
+				b.WriteRune('1')
+				folded = true
+			case
+				'\u2488': // ⒈  [DIGIT ONE FULL STOP]
+				b.WriteRune('1')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u2474': // ⑴  [PARENTHESIZED DIGIT ONE]
+				b.WriteRune('(')
+				b.WriteRune('1')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u00B2', // ²  [SUPERSCRIPT TWO]
+				'\u2082', // ₂  [SUBSCRIPT TWO]
+				'\u2461', // ②  [CIRCLED DIGIT TWO]
+				'\u24F6', // ⓶  [DOUBLE CIRCLED DIGIT TWO]
+				'\u2777', // ❷  [DINGBAT NEGATIVE CIRCLED DIGIT TWO]
+				'\u2781', // ➁  [DINGBAT CIRCLED SANS-SERIF DIGIT TWO]
+				'\u278B', // ➋  [DINGBAT NEGATIVE CIRCLED SANS-SERIF DIGIT TWO]
+				'\uFF12': // ２  [FULLWIDTH DIGIT TWO]
+				b.WriteRune('2')
+				folded = true
+			case
+				'\u2489': // ⒉  [DIGIT TWO FULL STOP]
+				b.WriteRune('2')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u2475': // ⑵  [PARENTHESIZED DIGIT TWO]
+				b.WriteRune('(')
+				b.WriteRune('2')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u00B3', // ³  [SUPERSCRIPT THREE]
+				'\u2083', // ₃  [SUBSCRIPT THREE]
+				'\u2462', // ③  [CIRCLED DIGIT THREE]
+				'\u24F7', // ⓷  [DOUBLE CIRCLED DIGIT THREE]
+				'\u2778', // ❸  [DINGBAT NEGATIVE CIRCLED DIGIT THREE]
+				'\u2782', // ➂  [DINGBAT CIRCLED SANS-SERIF DIGIT THREE]
+				'\u278C', // ➌  [DINGBAT NEGATIVE CIRCLED SANS-SERIF DIGIT THREE]
+				'\uFF13': // ３  [FULLWIDTH DIGIT THREE]
+				b.WriteRune('3')
+				folded = true
+			case
+				'\u248A': // ⒊  [DIGIT THREE FULL STOP]
+				b.WriteRune('3')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u2476': // ⑶  [PARENTHESIZED DIGIT THREE]
+				b.WriteRune('(')
+				b.WriteRune('3')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u2074', // ⁴  [SUPERSCRIPT FOUR]
+				'\u2084', // ₄  [SUBSCRIPT FOUR]
+				'\u2463', // ④  [CIRCLED DIGIT FOUR]
+				'\u24F8', // ⓸  [DOUBLE CIRCLED DIGIT FOUR]
+				'\u2779', // ❹  [DINGBAT NEGATIVE CIRCLED DIGIT FOUR]
+				'\u2783', // ➃  [DINGBAT CIRCLED SANS-SERIF DIGIT FOUR]
+				'\u278D', // ➍  [DINGBAT NEGATIVE CIRCLED SANS-SERIF DIGIT FOUR]
+				'\uFF14': // ４  [FULLWIDTH DIGIT FOUR]
+				b.WriteRune('4')
+				folded = true
+			case
+				'\u248B': // ⒋  [DIGIT FOUR FULL STOP]
+				b.WriteRune('4')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u2477': // ⑷  [PARENTHESIZED DIGIT FOUR]
+				b.WriteRune('(')
+				b.WriteRune('4')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u2075', // ⁵  [SUPERSCRIPT FIVE]
+				'\u2085', // ₅  [SUBSCRIPT FIVE]
+				'\u2464', // ⑤  [CIRCLED DIGIT FIVE]
+				'\u24F9', // ⓹  [DOUBLE CIRCLED DIGIT FIVE]
+				'\u277A', // ❺  [DINGBAT NEGATIVE CIRCLED DIGIT FIVE]
+				'\u2784', // ➄  [DINGBAT CIRCLED SANS-SERIF DIGIT FIVE]
+				'\u278E', // ➎  [DINGBAT NEGATIVE CIRCLED SANS-SERIF DIGIT FIVE]
+				'\uFF15': // ５  [FULLWIDTH DIGIT FIVE]
+				b.WriteRune('5')
+				folded = true
+			case
+				'\u248C': // ⒌  [DIGIT FIVE FULL STOP]
+				b.WriteRune('5')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u2478': // ⑸  [PARENTHESIZED DIGIT FIVE]
+				b.WriteRune('(')
+				b.WriteRune('5')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u2076', // ⁶  [SUPERSCRIPT SIX]
+				'\u2086', // ₆  [SUBSCRIPT SIX]
+				'\u2465', // ⑥  [CIRCLED DIGIT SIX]
+				'\u24FA', // ⓺  [DOUBLE CIRCLED DIGIT SIX]
+				'\u277B', // ❻  [DINGBAT NEGATIVE CIRCLED DIGIT SIX]
+				'\u2785', // ➅  [DINGBAT CIRCLED SANS-SERIF DIGIT SIX]
+				'\u278F', // ➏  [DINGBAT NEGATIVE CIRCLED SANS-SERIF DIGIT SIX]
+				'\uFF16': // ６  [FULLWIDTH DIGIT SIX]
+				b.WriteRune('6')
+				folded = true
+			case
+				'\u248D': // ⒍  [DIGIT SIX FULL STOP]
+				b.WriteRune('6')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u2479': // ⑹  [PARENTHESIZED DIGIT SIX]
+				b.WriteRune('(')
+				b.WriteRune('6')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u2077', // ⁷  [SUPERSCRIPT SEVEN]
+				'\u2087', // ₇  [SUBSCRIPT SEVEN]
+				'\u2466', // ⑦  [CIRCLED DIGIT SEVEN]
+				'\u24FB', // ⓻  [DOUBLE CIRCLED DIGIT SEVEN]
+				'\u277C', // ❼  [DINGBAT NEGATIVE CIRCLED DIGIT SEVEN]
+				'\u2786', // ➆  [DINGBAT CIRCLED SANS-SERIF DIGIT SEVEN]
+				'\u2790', // ➐  [DINGBAT NEGATIVE CIRCLED SANS-SERIF DIGIT SEVEN]
+				'\uFF17': // ７  [FULLWIDTH DIGIT SEVEN]
+				b.WriteRune('7')
+				folded = true
+			case
+				'\u248E': // ⒎  [DIGIT SEVEN FULL STOP]
+				b.WriteRune('7')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u247A': // ⑺  [PARENTHESIZED DIGIT SEVEN]
+				b.WriteRune('(')
+				b.WriteRune('7')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u2078', // ⁸  [SUPERSCRIPT EIGHT]
+				'\u2088', // ₈  [SUBSCRIPT EIGHT]
+				'\u2467', // ⑧  [CIRCLED DIGIT EIGHT]
+				'\u24FC', // ⓼  [DOUBLE CIRCLED DIGIT EIGHT]
+				'\u277D', // ❽  [DINGBAT NEGATIVE CIRCLED DIGIT EIGHT]
+				'\u2787', // ➇  [DINGBAT CIRCLED SANS-SERIF DIGIT EIGHT]
+				'\u2791', // ➑  [DINGBAT NEGATIVE CIRCLED SANS-SERIF DIGIT EIGHT]
+				'\uFF18': // ８  [FULLWIDTH DIGIT EIGHT]
+				b.WriteRune('8')
+				folded = true
+			case
+				'\u248F': // ⒏  [DIGIT EIGHT FULL STOP]
+				b.WriteRune('8')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u247B': // ⑻  [PARENTHESIZED DIGIT EIGHT]
+				b.WriteRune('(')
+				b.WriteRune('8')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u2079', // ⁹  [SUPERSCRIPT NINE]
+				'\u2089', // ₉  [SUBSCRIPT NINE]
+				'\u2468', // ⑨  [CIRCLED DIGIT NINE]
+				'\u24FD', // ⓽  [DOUBLE CIRCLED DIGIT NINE]
+				'\u277E', // ❾  [DINGBAT NEGATIVE CIRCLED DIGIT NINE]
+				'\u2788', // ➈  [DINGBAT CIRCLED SANS-SERIF DIGIT NINE]
+				'\u2792', // ➒  [DINGBAT NEGATIVE CIRCLED SANS-SERIF DIGIT NINE]
+				'\uFF19': // ９  [FULLWIDTH DIGIT NINE]
+				b.WriteRune('9')
+				folded = true
+			case
+				'\u2490': // ⒐  [DIGIT NINE FULL STOP]
+				b.WriteRune('9')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u247C': // ⑼  [PARENTHESIZED DIGIT NINE]
+				b.WriteRune('(')
+				b.WriteRune('9')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u2469', // ⑩  [CIRCLED NUMBER TEN]
+				'\u24FE', // ⓾  [DOUBLE CIRCLED NUMBER TEN]
+				'\u277F', // ❿  [DINGBAT NEGATIVE CIRCLED NUMBER TEN]
+				'\u2789', // ➉  [DINGBAT CIRCLED SANS-SERIF NUMBER TEN]
+				'\u2793': // ➓  [DINGBAT NEGATIVE CIRCLED SANS-SERIF NUMBER TEN]
+				b.WriteRune('1')
+				b.WriteRune('0')
+				folded = true
+			case
+				'\u2491': // ⒑  [NUMBER TEN FULL STOP]
+				b.WriteRune('1')
+				b.WriteRune('0')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u247D': // ⑽  [PARENTHESIZED NUMBER TEN]
+				b.WriteRune('(')
+				b.WriteRune('1')
+				b.WriteRune('0')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u246A', // ⑪  [CIRCLED NUMBER ELEVEN]
+				'\u24EB': // ⓫  [NEGATIVE CIRCLED NUMBER ELEVEN]
+				b.WriteRune('1')
+				b.WriteRune('1')
+				folded = true
+			case
+				'\u2492': // ⒒  [NUMBER ELEVEN FULL STOP]
+				b.WriteRune('1')
+				b.WriteRune('1')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u247E': // ⑾  [PARENTHESIZED NUMBER ELEVEN]
+				b.WriteRune('(')
+				b.WriteRune('1')
+				b.WriteRune('1')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u246B', // ⑫  [CIRCLED NUMBER TWELVE]
+				'\u24EC': // ⓬  [NEGATIVE CIRCLED NUMBER TWELVE]
+				b.WriteRune('1')
+				b.WriteRune('2')
+				folded = true
+			case
+				'\u2493': // ⒓  [NUMBER TWELVE FULL STOP]
+				b.WriteRune('1')
+				b.WriteRune('2')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u247F': // ⑿  [PARENTHESIZED NUMBER TWELVE]
+				b.WriteRune('(')
+				b.WriteRune('1')
+				b.WriteRune('2')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u246C', // ⑬  [CIRCLED NUMBER THIRTEEN]
+				'\u24ED': // ⓭  [NEGATIVE CIRCLED NUMBER THIRTEEN]
+				b.WriteRune('1')
+				b.WriteRune('3')
+				folded = true
+			case
+				'\u2494': // ⒔  [NUMBER THIRTEEN FULL STOP]
+				b.WriteRune('1')
+				b.WriteRune('3')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u2480': // ⒀  [PARENTHESIZED NUMBER THIRTEEN]
+				b.WriteRune('(')
+				b.WriteRune('1')
+				b.WriteRune('3')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u246D', // ⑭  [CIRCLED NUMBER FOURTEEN]
+				'\u24EE': // ⓮  [NEGATIVE CIRCLED NUMBER FOURTEEN]
+				b.WriteRune('1')
+				b.WriteRune('4')
+				folded = true
+			case
+				'\u2495': // ⒕  [NUMBER FOURTEEN FULL STOP]
+				b.WriteRune('1')
+				b.WriteRune('4')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u2481': // ⒁  [PARENTHESIZED NUMBER FOURTEEN]
+				b.WriteRune('(')
+				b.WriteRune('1')
+				b.WriteRune('4')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u246E', // ⑮  [CIRCLED NUMBER FIFTEEN]
+				'\u24EF': // ⓯  [NEGATIVE CIRCLED NUMBER FIFTEEN]
+				b.WriteRune('1')
+				b.WriteRune('5')
+				folded = true
+			case
+				'\u2496': // ⒖  [NUMBER FIFTEEN FULL STOP]
+				b.WriteRune('1')
+				b.WriteRune('5')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u2482': // ⒂  [PARENTHESIZED NUMBER FIFTEEN]
+				b.WriteRune('(')
+				b.WriteRune('1')
+				b.WriteRune('5')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u246F', // ⑯  [CIRCLED NUMBER SIXTEEN]
+				'\u24F0': // ⓰  [NEGATIVE CIRCLED NUMBER SIXTEEN]
+				b.WriteRune('1')
+				b.WriteRune('6')
+				folded = true
+			case
+				'\u2497': // ⒗  [NUMBER SIXTEEN FULL STOP]
+				b.WriteRune('1')
+				b.WriteRune('6')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u2483': // ⒃  [PARENTHESIZED NUMBER SIXTEEN]
+				b.WriteRune('(')
+				b.WriteRune('1')
+				b.WriteRune('6')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u2470', // ⑰  [CIRCLED NUMBER SEVENTEEN]
+				'\u24F1': // ⓱  [NEGATIVE CIRCLED NUMBER SEVENTEEN]
+				b.WriteRune('1')
+				b.WriteRune('7')
+				folded = true
+			case
+				'\u2498': // ⒘  [NUMBER SEVENTEEN FULL STOP]
+				b.WriteRune('1')
+				b.WriteRune('7')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u2484': // ⒄  [PARENTHESIZED NUMBER SEVENTEEN]
+				b.WriteRune('(')
+				b.WriteRune('1')
+				b.WriteRune('7')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u2471', // ⑱  [CIRCLED NUMBER EIGHTEEN]
+				'\u24F2': // ⓲  [NEGATIVE CIRCLED NUMBER EIGHTEEN]
+				b.WriteRune('1')
+				b.WriteRune('8')
+				folded = true
+			case
+				'\u2499': // ⒙  [NUMBER EIGHTEEN FULL STOP]
+				b.WriteRune('1')
+				b.WriteRune('8')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u2485': // ⒅  [PARENTHESIZED NUMBER EIGHTEEN]
+				b.WriteRune('(')
+				b.WriteRune('1')
+				b.WriteRune('8')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u2472', // ⑲  [CIRCLED NUMBER NINETEEN]
+				'\u24F3': // ⓳  [NEGATIVE CIRCLED NUMBER NINETEEN]
+				b.WriteRune('1')
+				b.WriteRune('9')
+				folded = true
+			case
+				'\u249A': // ⒚  [NUMBER NINETEEN FULL STOP]
+				b.WriteRune('1')
+				b.WriteRune('9')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u2486': // ⒆  [PARENTHESIZED NUMBER NINETEEN]
+				b.WriteRune('(')
+				b.WriteRune('1')
+				b.WriteRune('9')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u2473', // ⑳  [CIRCLED NUMBER TWENTY]
+				'\u24F4': // ⓴  [NEGATIVE CIRCLED NUMBER TWENTY]
+				b.WriteRune('2')
+				b.WriteRune('0')
+				folded = true
+			case
+				'\u249B': // ⒛  [NUMBER TWENTY FULL STOP]
+				b.WriteRune('2')
+				b.WriteRune('0')
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u2487': // ⒇  [PARENTHESIZED NUMBER TWENTY]
+				b.WriteRune('(')
+				b.WriteRune('2')
+				b.WriteRune('0')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u00AB', // «  [LEFT-POINTING DOUBLE ANGLE QUOTATION MARK]
+				'\u00BB', // »  [RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK]
+				'\u201C', // “  [LEFT DOUBLE QUOTATION MARK]
+				'\u201D', // ”  [RIGHT DOUBLE QUOTATION MARK]
+				'\u201E', // „  [DOUBLE LOW-9 QUOTATION MARK]
+				'\u2033', // ″  [DOUBLE PRIME]
+				'\u2036', // ‶  [REVERSED DOUBLE PRIME]
+				'\u275D', // ❝  [HEAVY DOUBLE TURNED COMMA QUOTATION MARK ORNAMENT]
+				'\u275E', // ❞  [HEAVY DOUBLE COMMA QUOTATION MARK ORNAMENT]
+				'\u276E', // ❮  [HEAVY LEFT-POINTING ANGLE QUOTATION MARK ORNAMENT]
+				'\u276F', // ❯  [HEAVY RIGHT-POINTING ANGLE QUOTATION MARK ORNAMENT]
+				'\uFF02': // ＂  [FULLWIDTH QUOTATION MARK]
+				b.WriteRune('"')
+				folded = true
+			case
+				'\u2018', // ‘  [LEFT SINGLE QUOTATION MARK]
+				'\u2019', // ’  [RIGHT SINGLE QUOTATION MARK]
+				'\u201A', // ‚  [SINGLE LOW-9 QUOTATION MARK]
+				'\u201B', // ‛  [SINGLE HIGH-REVERSED-9 QUOTATION MARK]
+				'\u2032', // ′  [PRIME]
+				'\u2035', // ‵  [REVERSED PRIME]
+				'\u2039', // ‹  [SINGLE LEFT-POINTING ANGLE QUOTATION MARK]
+				'\u203A', // ›  [SINGLE RIGHT-POINTING ANGLE QUOTATION MARK]
+				'\u275B', // ❛  [HEAVY SINGLE TURNED COMMA QUOTATION MARK ORNAMENT]
+				'\u275C', // ❜  [HEAVY SINGLE COMMA QUOTATION MARK ORNAMENT]
+				'\uFF07': // ＇  [FULLWIDTH APOSTROPHE]
+				b.WriteRune('\'')
+				folded = true
+			case
+				'\u2010', // ‐  [HYPHEN]
+				'\u2011', // ‑  [NON-BREAKING HYPHEN]
+				'\u2012', // ‒  [FIGURE DASH]
+				'\u2013', // –  [EN DASH]
+				'\u2014', // —  [EM DASH]
+				'\u207B', // ⁻  [SUPERSCRIPT MINUS]
+				'\u208B', // ₋  [SUBSCRIPT MINUS]
+				'\uFF0D': // －  [FULLWIDTH HYPHEN-MINUS]
+				b.WriteRune('-')
+				folded = true
+			case
+				'\u2045', // ⁅  [LEFT SQUARE BRACKET WITH QUILL]
+				'\u2772', // ❲  [LIGHT LEFT TORTOISE SHELL BRACKET ORNAMENT]
+				'\uFF3B': // ［  [FULLWIDTH LEFT SQUARE BRACKET]
+				b.WriteRune('[')
+				folded = true
+			case
+				'\u2046', // ⁆  [RIGHT SQUARE BRACKET WITH QUILL]
+				'\u2773', // ❳  [LIGHT RIGHT TORTOISE SHELL BRACKET ORNAMENT]
+				'\uFF3D': // ］  [FULLWIDTH RIGHT SQUARE BRACKET]
+				b.WriteRune(']')
+				folded = true
+			case
+				'\u207D', // ⁽  [SUPERSCRIPT LEFT PARENTHESIS]
+				'\u208D', // ₍  [SUBSCRIPT LEFT PARENTHESIS]
+				'\u2768', // ❨  [MEDIUM LEFT PARENTHESIS ORNAMENT]
+				'\u276A', // ❪  [MEDIUM FLATTENED LEFT PARENTHESIS ORNAMENT]
+				'\uFF08': // （  [FULLWIDTH LEFT PARENTHESIS]
+				b.WriteRune('(')
+				folded = true
+			case
+				'\u2E28': // ⸨  [LEFT DOUBLE PARENTHESIS]
+				b.WriteRune('(')
+				b.WriteRune('(')
+				folded = true
+			case
+				'\u207E', // ⁾  [SUPERSCRIPT RIGHT PARENTHESIS]
+				'\u208E', // ₎  [SUBSCRIPT RIGHT PARENTHESIS]
+				'\u2769', // ❩  [MEDIUM RIGHT PARENTHESIS ORNAMENT]
+				'\u276B', // ❫  [MEDIUM FLATTENED RIGHT PARENTHESIS ORNAMENT]
+				'\uFF09': // ）  [FULLWIDTH RIGHT PARENTHESIS]
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u2E29': // ⸩  [RIGHT DOUBLE PARENTHESIS]
+				b.WriteRune(')')
+				b.WriteRune(')')
+				folded = true
+			case
+				'\u276C', // ❬  [MEDIUM LEFT-POINTING ANGLE BRACKET ORNAMENT]
+				'\u2770', // ❰  [HEAVY LEFT-POINTING ANGLE BRACKET ORNAMENT]
+				'\uFF1C': // ＜  [FULLWIDTH LESS-THAN SIGN]
+				b.WriteRune('<')
+				folded = true
+			case
+				'\u276D', // ❭  [MEDIUM RIGHT-POINTING ANGLE BRACKET ORNAMENT]
+				'\u2771', // ❱  [HEAVY RIGHT-POINTING ANGLE BRACKET ORNAMENT]
+				'\uFF1E': // ＞  [FULLWIDTH GREATER-THAN SIGN]
+				b.WriteRune('>')
+				folded = true
+			case
+				'\u2774', // ❴  [MEDIUM LEFT CURLY BRACKET ORNAMENT]
+				'\uFF5B': // ｛  [FULLWIDTH LEFT CURLY BRACKET]
+				b.WriteRune('{')
+				folded = true
+			case
+				'\u2775', // ❵  [MEDIUM RIGHT CURLY BRACKET ORNAMENT]
+				'\uFF5D': // ｝  [FULLWIDTH RIGHT CURLY BRACKET]
+				b.WriteRune('}')
+				folded = true
+			case
+				'\u207A', // ⁺  [SUPERSCRIPT PLUS SIGN]
+				'\u208A', // ₊  [SUBSCRIPT PLUS SIGN]
+				'\uFF0B': // ＋  [FULLWIDTH PLUS SIGN]
+				b.WriteRune('+')
+				folded = true
+			case
+				'\u207C', // ⁼  [SUPERSCRIPT EQUALS SIGN]
+				'\u208C', // ₌  [SUBSCRIPT EQUALS SIGN]
+				'\uFF1D': // ＝  [FULLWIDTH EQUALS SIGN]
+				b.WriteRune('=')
+				folded = true
+			case
+				'\uFF01': // ！  [FULLWIDTH EXCLAMATION MARK]
+				b.WriteRune('!')
+				folded = true
+			case
+				'\u203C': // ‼  [DOUBLE EXCLAMATION MARK]
+				b.WriteRune('!')
+				b.WriteRune('!')
+				folded = true
+			case
+				'\u2049': // ⁉  [EXCLAMATION QUESTION MARK]
+				b.WriteRune('!')
+				b.WriteRune('?')
+				folded = true
+			case
+				'\uFF03': // ＃  [FULLWIDTH NUMBER SIGN]
+				b.WriteRune('#')
+				folded = true
+			case
+				'\uFF04': // ＄  [FULLWIDTH DOLLAR SIGN]
+				b.WriteRune('$')
+				folded = true
+			case
+				'\u2052', // ⁒  [COMMERCIAL MINUS SIGN]
+				'\uFF05': // ％  [FULLWIDTH PERCENT SIGN]
+				b.WriteRune('%')
+				folded = true
+			case
+				'\uFF06': // ＆  [FULLWIDTH AMPERSAND]
+				b.WriteRune('&')
+				folded = true
+			case
+				'\u204E', // ⁎  [LOW ASTERISK]
+				'\uFF0A': // ＊  [FULLWIDTH ASTERISK]
+				b.WriteRune('*')
+				folded = true
+			case
+				'\uFF0C': // ，  [FULLWIDTH COMMA]
+				b.WriteRune(',')
+				folded = true
+			case
+				'\uFF0E': // ．  [FULLWIDTH FULL STOP]
+				b.WriteRune('.')
+				folded = true
+			case
+				'\u2044', // ⁄  [FRACTION SLASH]
+				'\uFF0F': // ／  [FULLWIDTH SOLIDUS]
+				b.WriteRune('/')
+				folded = true
+			case
+				'\uFF1A': // ：  [FULLWIDTH COLON]
+				b.WriteRune(':')
+				folded = true
+			case
+				'\u204F', // ⁏  [REVERSED SEMICOLON]
+				'\uFF1B': // ；  [FULLWIDTH SEMICOLON]
+				b.WriteRune(';')
+				folded = true
+			case
+				'\uFF1F': // ？  [FULLWIDTH QUESTION MARK]
+				b.WriteRune('?')
+				folded = true
+			case
+				'\u2047': // ⁇  [DOUBLE QUESTION MARK]
+				b.WriteRune('?')
+				b.WriteRune('?')
+				folded = true
+			case
+				'\u2048': // ⁈  [QUESTION EXCLAMATION MARK]
+				b.WriteRune('?')
+				b.WriteRune('!')
+				folded = true
+			case
+				'\uFF20': // ＠  [FULLWIDTH COMMERCIAL AT]
+				b.WriteRune('@')
+				folded = true
+			case
+				'\uFF3C': // ＼  [FULLWIDTH REVERSE SOLIDUS]
+				b.WriteRune('\\')
+				folded = true
+			case
+				'\u2038', // ‸  [CARET]
+				'\uFF3E': // ＾  [FULLWIDTH CIRCUMFLEX ACCENT]
+				b.WriteRune('^')
+				folded = true
+			case
+				'\uFF3F': // ＿  [FULLWIDTH LOW LINE]
+				b.WriteRune('_')
+				folded = true
+			case
+				'\u2053', // ⁓  [SWUNG DASH]
+				'\uFF5E': // ～  [FULLWIDTH TILDE]
+				b.WriteRune('~')
+			default:
+				b.WriteRune(r)
+			}
+		}
+	}
+	return string(b.String()), folded
+}

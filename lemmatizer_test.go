@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/clipperhouse/jargon/ascii"
 	"github.com/clipperhouse/jargon/contractions"
 	"github.com/clipperhouse/jargon/numbers"
 	"github.com/clipperhouse/jargon/stackexchange"
@@ -168,16 +169,17 @@ bar	42	javascript`)
 }
 
 func TestMultiple(t *testing.T) {
-	s := `Here is the story of five and Rails and ASPNET and couldn't three hundred thousand.`
+	s := `Here is the story of five and Rails and ASPNET in the CAFÉS and couldn't three hundred thousand.`
 
 	got := LemmatizeString(s,
 		stackexchange.Dictionary,
 		contractions.Dictionary,
 		numbers.Dictionary,
 		stemmer.English,
+		ascii.Fold,
 	)
 
-	expected := `here is the stori of 5 and ruby-on-rail and asp.net and could not 300000.`
+	expected := `here is the stori of 5 and ruby-on-rail and asp.net in the cafe and could not 300000.`
 
 	if got != expected {
 		t.Errorf("expected %q, got %q", expected, got)
