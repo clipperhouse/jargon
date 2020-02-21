@@ -108,7 +108,7 @@ func (lem *lemmatizer) ngrams() error {
 			return err
 		}
 
-		canonical, found := lem.filter.Lookup(wordrun.words)
+		canonical, found := lem.filter.Lookup(wordrun.words...)
 
 		if found {
 			// if returned value is empty, interpret as "remove token", e.g. the stopwords filter

@@ -27,7 +27,7 @@ func TestCaseSensitive(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		output, stopped := filter.Lookup([]string{test.input})
+		output, stopped := filter.Lookup(test.input)
 		if output != test.output {
 			t.Errorf("output should have been %q, got %q", test.output, output)
 		}
@@ -60,7 +60,7 @@ func TestCaseInsensitive(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		output, stopped := filter.Lookup([]string{test.input})
+		output, stopped := filter.Lookup(test.input)
 		if output != test.output {
 			t.Errorf("output should have been %q, got %q", test.output, output)
 		}

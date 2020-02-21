@@ -44,7 +44,11 @@ var Swedish = &filter{
 	stemmer: swedish.Stem,
 }
 
-func (f *filter) Lookup(s []string) (string, bool) {
+func (f *filter) Lookup(s ...string) (string, bool) {
+	if len(s) < 1 {
+		return "", false
+	}
+
 	word := s[0]
 	stem := f.stemmer(word, true)
 

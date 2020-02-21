@@ -28,7 +28,11 @@ type filter struct {
 	caseSensitive bool
 }
 
-func (f *filter) Lookup(s []string) (string, bool) {
+func (f *filter) Lookup(s ...string) (string, bool) {
+	if len(s) < 1 {
+		return "", false
+	}
+
 	word := s[0] // max gram length is 1
 
 	var key string

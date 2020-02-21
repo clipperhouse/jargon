@@ -27,7 +27,10 @@ var Fold = &filter{}
 
 type filter struct{}
 
-func (f *filter) Lookup(s []string) (string, bool) {
+func (f *filter) Lookup(s ...string) (string, bool) {
+	if len(s) < 1 {
+		return "", false
+	}
 	word := s[0]
 	return fold(word)
 }

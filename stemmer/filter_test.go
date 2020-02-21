@@ -20,7 +20,7 @@ func TestEnglish(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		stem, stemmed := English.Lookup([]string{test.word})
+		stem, stemmed := English.Lookup(test.word)
 
 		if test.stemmed != stemmed {
 			t.Errorf("expected stemmed %t, got %t", test.stemmed, stemmed)

@@ -13,8 +13,8 @@ type filter struct{}
 // don't → does not
 // We’ve → We have
 // SHE'S -> SHE IS
-func (f *filter) Lookup(s []string) (string, bool) {
-	if len(s) != 1 {
+func (f *filter) Lookup(s ...string) (string, bool) {
+	if len(s) < 1 {
 		return "", false
 	}
 

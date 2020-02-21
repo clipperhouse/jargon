@@ -15,7 +15,7 @@ var Tags = &filter{}
 // filter satisfies the jargon.TokenFilter interface
 type filter struct{}
 
-func (f *filter) Lookup(s []string) (string, bool) {
+func (f *filter) Lookup(s ...string) (string, bool) {
 	gram := strings.Join(s, "")
 	key := normalize(gram)
 	canonical1, found1 := tags[key]

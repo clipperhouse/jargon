@@ -44,7 +44,7 @@ var Filter = &filter{}
 // Lookup does not handle 'compound' or 'additive' phrases like "one thousand five hundred twenty".
 // In the above example, 'thirty-five' only works when it is a single token, no spaces, hyphen optional.
 // Commas are ignored, so long as there are no spaces.
-func (f *filter) Lookup(s []string) (string, bool) {
+func (f *filter) Lookup(s ...string) (string, bool) {
 	if len(s) == 0 {
 		return "", false
 	}
