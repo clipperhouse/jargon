@@ -12,6 +12,7 @@ import (
 	"github.com/clipperhouse/jargon/numbers"
 	"github.com/clipperhouse/jargon/stackexchange"
 	"github.com/clipperhouse/jargon/stemmer"
+	"github.com/clipperhouse/jargon/stopwords"
 )
 
 func TestLemmatize(t *testing.T) {
@@ -209,6 +210,30 @@ func TestFill(t *testing.T) {
 				t.Errorf("for tokens of count %d, at i == %d, there should be an error on fill", i, count)
 			}
 		}
+	}
+}
+
+func TestEmptyCanonical(t *testing.T) {
+	stops := []string{
+		"This",
+		"a",
+	}
+	filter := stopwords.NewFilter(stops, true)
+
+	input := Tokenize(strings.NewReader("This is a test."))
+	inputCount := 8 // tokens
+
+	tokens := input.Lemmatize(filter)
+	outputCount, err := tokens.count()
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	expectedCount := inputCount - 2
+
+	if outputCount != expectedCount {
+		t.Errorf("expected output count of %d, got %d", expectedCount, outputCount)
 	}
 }
 

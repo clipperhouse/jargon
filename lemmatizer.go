@@ -111,7 +111,13 @@ func (lem *lemmatizer) ngrams() error {
 		canonical, found := lem.filter.Lookup(wordrun.words)
 
 		if found {
-			// the canonical can have space or punct, so we want to return separate tokens
+			// if returned value is empty, interpret as "remove token", e.g. the stopwords filter
+			if canonical == "" {
+				lem.buffer.drop(wordrun.consumed)
+				continue
+			}
+
+			// the canonical might have space or punct, so we want to re-tokenize
 
 			// optimization: check if tokenization is needed, avoid expense if not
 			var tokenize bool
