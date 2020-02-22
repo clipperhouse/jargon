@@ -1,4 +1,3 @@
-// Package jargon offers tokenizers and lemmatizers, for use in text processing and NLP
 package jargon
 
 import (
@@ -99,7 +98,7 @@ func (lem *lemmatizer) next() (*Token, error) {
 func (lem *lemmatizer) ngrams() error {
 	// Try n-grams, longest to shortest (greedy)
 	for desired := lem.filter.MaxGramLength(); desired > 0; desired-- {
-		wordrun, err := lem.wordrun(desired)
+		words, consumed, err := lem.wordrun(desired)
 		if err != nil {
 			if err == errInsufficient {
 				// No problem, try the next (smaller) n-gram
@@ -108,12 +107,12 @@ func (lem *lemmatizer) ngrams() error {
 			return err
 		}
 
-		canonical, found := lem.filter.Lookup(wordrun.words...)
+		canonical, found := lem.filter.Lookup(words...)
 
 		if found {
 			// if returned value is empty, interpret as "remove token", e.g. the stopwords filter
 			if canonical == "" {
-				lem.buffer.drop(wordrun.consumed)
+				lem.buffer.drop(consumed)
 				continue
 			}
 
@@ -155,7 +154,7 @@ func (lem *lemmatizer) ngrams() error {
 			}
 
 			// discard the incoming tokens that comprised the lemma
-			lem.buffer.drop(wordrun.consumed)
+			lem.buffer.drop(consumed)
 			return nil
 		}
 
@@ -185,17 +184,11 @@ func (lem *lemmatizer) fill(desired int) error {
 	return nil
 }
 
-type wordrun struct {
-	words    []string
-	consumed int
-}
-
 var (
-	empty           = wordrun{}
 	errInsufficient = errors.New("could not find word run of desired length")
 )
 
-func (lem *lemmatizer) wordrun(desired int) (wordrun, error) {
+func (lem *lemmatizer) wordrun(desired int) ([]string, int, error) {
 	var (
 		words    []string
 		consumed int // tokens consumed or 'seen', not necessarily equal to desired
@@ -207,7 +200,7 @@ func (lem *lemmatizer) wordrun(desired int) (wordrun, error) {
 			// If errInsufficient, not enough (buffered) tokens to continue,
 			// so a word run of desired length is impossible; be handled by ngrams().
 			// Other errors are just errors; pass 'em back.
-			return empty, err
+			return nil, 0, err
 		}
 
 		token := lem.buffer.tokens[consumed]
@@ -216,7 +209,7 @@ func (lem *lemmatizer) wordrun(desired int) (wordrun, error) {
 			// Note: test for punct before space; newlines and tabs can be
 			// considered both punct and space (depending on the tokenizer!)
 			// and we want to treat them as breaking word runs.
-			return empty, errInsufficient
+			return nil, 0, errInsufficient
 		case token.IsSpace():
 			// Ignore and continue
 			consumed++
@@ -227,10 +220,5 @@ func (lem *lemmatizer) wordrun(desired int) (wordrun, error) {
 		}
 	}
 
-	result := wordrun{
-		words:    words,
-		consumed: consumed,
-	}
-
-	return result, nil
+	return words, consumed, nil
 }

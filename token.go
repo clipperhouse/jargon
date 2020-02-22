@@ -11,22 +11,6 @@ type Tokens struct {
 	Next func() (*Token, error)
 }
 
-// convenience method for testing
-func (tokens Tokens) count() (int, error) {
-	count := 0
-	for {
-		t, err := tokens.Next()
-		if err != nil {
-			return count, err
-		}
-		if t == nil {
-			break
-		}
-		count++
-	}
-	return count, nil
-}
-
 // ToSlice converts the Tokens iterator into a slice (array). Calling ToSlice will exhaust the iterator. For big files, putting everything into an array may cause memory pressure.
 func (tokens Tokens) ToSlice() ([]*Token, error) {
 	var result []*Token

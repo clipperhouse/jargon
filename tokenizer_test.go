@@ -1,13 +1,14 @@
-package jargon
+package jargon_test
 
 import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"strings"
 	"testing"
 	"unicode/utf8"
+
+	"github.com/clipperhouse/jargon"
 )
 
 func TestTokenize(t *testing.T) {
@@ -18,7 +19,7 @@ It should—wait for it—break on things like em-dashes and "quotes" and it end
 It'd be great it it’ll handle apostrophes.
 `
 	r := strings.NewReader(text)
-	tokens := Tokenize(r)
+	tokens := jargon.Tokenize(r)
 	got, err := tokens.ToSlice()
 	if err != nil {
 		t.Error(err)
@@ -64,17 +65,34 @@ It'd be great it it’ll handle apostrophes.
 	}
 }
 
-func BenchmarkTokenize(b *testing.B) {
-	file, err := ioutil.ReadFile("testdata/wikipedia.txt")
+func TestTokenizeHTML(t *testing.T) {
+	h := `<html>
+<p foo="bar">
+Hi! Let's talk Ruby on Rails.
+<!-- Ignore ASPNET MVC in comments -->
+</p>
+</html>
+`
+	r := strings.NewReader(h)
+	got, err := jargon.TokenizeHTML(r).ToSlice()
 
 	if err != nil {
-		b.Error(err)
+		t.Error(err)
 	}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		r := bytes.NewReader(file)
-		consume(Tokenize(r))
+	expected := []string{
+		`<p foo="bar">`, // tags kept whole
+		"\n",            // whitespace preserved
+		"Hi", "!",
+		"Ruby", "on", "Rails", // make sure text node got tokenized
+		"<!-- Ignore ASPNET MVC in comments -->", // make sure comment kept whole
+		"</p>",
+	}
+
+	for _, e := range expected {
+		if !contains(e, got) {
+			t.Errorf("Expected to find token %q, but did not.", e)
+		}
 	}
 }
 
@@ -97,7 +115,7 @@ func TestURLs(t *testing.T) {
 
 	for input, expected := range tests {
 		r := strings.NewReader(input)
-		got, err := Tokenize(r).Next() // just take the first token
+		got, err := jargon.Tokenize(r).Next() // just take the first token
 		if err != nil {
 			t.Error(err)
 		}
@@ -108,93 +126,16 @@ func TestURLs(t *testing.T) {
 	}
 }
 
-func TestTokenizeHTML(t *testing.T) {
-	h := `<html>
-<p foo="bar">
-Hi! Let's talk Ruby on Rails.
-<!-- Ignore ASPNET MVC in comments -->
-</p>
-</html>
-`
-	r := strings.NewReader(h)
-	got, err := TokenizeHTML(r).ToSlice()
+func BenchmarkTokenize(b *testing.B) {
+	file, err := ioutil.ReadFile("testdata/wikipedia.txt")
 
 	if err != nil {
-		t.Error(err)
+		b.Error(err)
 	}
 
-	expected := []string{
-		`<p foo="bar">`, // tags kept whole
-		"\n",            // whitespace preserved
-		"Hi", "!",
-		"Ruby", "on", "Rails", // make sure text node got tokenized
-		"<!-- Ignore ASPNET MVC in comments -->", // make sure comment kept whole
-		"</p>",
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		r := bytes.NewReader(file)
+		consume(jargon.Tokenize(r))
 	}
-
-	for _, e := range expected {
-		if !contains(e, got) {
-			t.Errorf("Expected to find token %q, but did not.", e)
-		}
-	}
-}
-
-func ExampleTokenize() {
-	// Tokenize takes an io.Reader
-	text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
-	r := strings.NewReader(text)
-
-	tokens := Tokenize(r)
-
-	// Tokenize returns a Tokens iterator. Iterate by calling Next() until nil, which
-	// indicates that the iterator is exhausted.
-	for {
-		token, err := tokens.Next()
-		if err != nil {
-			// Because the source is I/O, errors are possible
-			log.Fatal(err)
-		}
-		if token == nil {
-			break
-		}
-
-		// Do stuff with token
-	}
-
-	// Tokens is lazily evaluated; it does the tokenization work as you call Next.
-	// This is done to ensure predictble memory usage and performance. It is
-	// 'forward-only', which means that once you consume a token, you can't go back.
-
-	// Usually, Tokenize serves as input to Lemmatize
-}
-
-func contains(value string, tokens []*Token) bool {
-	for _, t := range tokens {
-		if t.String() == value {
-			return true
-		}
-	}
-	return false
-}
-
-// Checks that value, punct and space are equal for two slices of token; deliberately does not check lemma
-func equals(a, b []*Token) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := range a {
-		if a[i].String() != b[i].String() {
-			return false
-		}
-		if a[i].IsPunct() != b[i].IsPunct() {
-			return false
-		}
-		if a[i].IsSpace() != b[i].IsSpace() {
-			return false
-		}
-		// deliberately not checking for IsLemma(); use reflect.DeepEquals
-	}
-
-	return true
 }
