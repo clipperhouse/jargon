@@ -43,9 +43,6 @@ func newTokenizer(r io.Reader) *tokenizer {
 
 // next returns the next token. Call until it returns nil.
 func (t *tokenizer) next() (*Token, error) {
-	if t == nil {
-		return nil, nil
-	}
 	if t.outgoing.Len() > 0 {
 		// Punct or space accepted in previous call to readWord
 		return t.token(), nil
@@ -54,8 +51,8 @@ func (t *tokenizer) next() (*Token, error) {
 		switch r, _, err := t.incoming.ReadRune(); {
 		case err != nil:
 			if err == io.EOF {
-				// No problem
-				return t.token(), nil
+				// No problem, we're done
+				return nil, nil
 			}
 			return nil, err
 		case unicode.IsSpace(r):
@@ -63,7 +60,7 @@ func (t *tokenizer) next() (*Token, error) {
 			return t.token(), nil
 		case isPunct(r):
 			t.accept(r)
-			isLeadingPunct := leadingPunct.includes(r) && !t.peekTerminator()
+			isLeadingPunct := leadingPunct[r] && !t.peekTerminator()
 			if isLeadingPunct {
 				// Treat it as start of a word
 				return t.readWord()
@@ -89,7 +86,7 @@ func (t *tokenizer) readWord() (*Token, error) {
 				return t.token(), nil
 			}
 			return nil, err
-		case midPunct.includes(r):
+		case midPunct[r]:
 			// Look ahead to see if it's followed by space or more punctuation
 			followedByTerminator := t.peekTerminator()
 			if followedByTerminator {
@@ -124,9 +121,6 @@ func (t *tokenizer) readWord() (*Token, error) {
 
 func (t *tokenizer) token() *Token {
 	b := t.outgoing.Bytes()
-	if len(b) == 0 { // eof
-		return nil
-	}
 
 	// Got the bytes, can reset
 	t.outgoing.Reset()
