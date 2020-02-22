@@ -60,7 +60,13 @@ func (t *tokenizer) next() (*Token, error) {
 			return t.token(), nil
 		case isPunct(r):
 			t.accept(r)
-			isLeadingPunct := leadingPunct[r] && !t.peekTerminator()
+
+			followedByTerminator, err := t.peekTerminator()
+			if err != nil {
+				return nil, err
+			}
+
+			isLeadingPunct := leadingPunct[r] && !followedByTerminator
 			if isLeadingPunct {
 				// Treat it as start of a word
 				return t.readWord()
@@ -88,7 +94,11 @@ func (t *tokenizer) readWord() (*Token, error) {
 			return nil, err
 		case midPunct[r]:
 			// Look ahead to see if it's followed by space or more punctuation
-			followedByTerminator := t.peekTerminator()
+			followedByTerminator, err := t.peekTerminator()
+			if err != nil {
+				return nil, err
+			}
+
 			if followedByTerminator {
 				// It's just regular punct, treat it as such
 
@@ -101,6 +111,7 @@ func (t *tokenizer) readWord() (*Token, error) {
 				// Emit the word token
 				return token, nil
 			}
+
 			// Else, it's mid-word punct, treat it like a letter
 			t.accept(r)
 		case isPunct(r) || unicode.IsSpace(r):
@@ -169,22 +180,22 @@ func (t *tokenizer) accept(r rune) {
 }
 
 // PeekTerminator looks to the next rune and determines if it breaks a word
-func (t *tokenizer) peekTerminator() bool {
+func (t *tokenizer) peekTerminator() (bool, error) {
 	r, _, err := t.incoming.ReadRune()
 
 	if err != nil {
 		if err == io.EOF {
-			return true
+			return true, nil
 		}
-		panic(err)
+		return false, err
 	}
 
 	// Unread ASAP!
-	if uerr := t.incoming.UnreadRune(); uerr != nil {
-		panic(uerr)
+	if err := t.incoming.UnreadRune(); err != nil {
+		return false, err
 	}
 
-	return isPunct(r) || unicode.IsSpace(r)
+	return isPunct(r) || unicode.IsSpace(r), nil
 }
 
 // TokenizeHTML tokenizes HTML. Text nodes are tokenized using jargon.Tokenize; everything else (tags, comments) are left verbatim.
