@@ -12,11 +12,11 @@ var punctAsSymbol = runeSet{
 	// In some cases, we want to consider a rune a symbol, even though Unicode defines it as punctuation
 	// See http://www.unicode.org/faq/punctuation_symbols.html
 	'-':  true,
+	'+':  true,
 	'#':  true,
 	'@':  true,
 	'*':  true,
 	'%':  true,
-	'_':  true,
 	'/':  true,
 	'\\': true,
 }
@@ -30,6 +30,7 @@ var spaceAsPunct = runeSet{
 var leadingPunct = runeSet{
 	// Punctuation that can lead a word, like .Net
 	'.': true,
+	'-': true,
 }
 
 var midPunct = runeSet{

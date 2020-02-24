@@ -23,7 +23,7 @@ func TestLemmatize(t *testing.T) {
 
 	original := `Here is the story of Ruby on Rails nodeJS, "Java Script", html5 and ASPNET mvc plus TCP/IP.`
 	r1 := strings.NewReader(original)
-	tokens := jargon.Tokenize(r1)
+	tokens := jargon.Tokenize2(r1)
 
 	got, err := tokens.Lemmatize(dict).ToSlice()
 	if err != nil {
@@ -31,7 +31,7 @@ func TestLemmatize(t *testing.T) {
 	}
 
 	r2 := strings.NewReader(`Here is the story of ruby-on-rails node.js, "javascript", html5 and asp.net-mvc plus tcpip.`)
-	expected, err := jargon.Tokenize(r2).ToSlice()
+	expected, err := jargon.Tokenize2(r2).ToSlice()
 	if err != nil {
 		t.Error(err)
 	}
@@ -242,7 +242,7 @@ func TestEmptyCanonical(t *testing.T) {
 }
 
 func TestWordrun(t *testing.T) {
-	original := `java script and: foo `
+	original := `java script and, foo `
 	r := strings.NewReader(original)
 	tokens := jargon.Tokenize(r)
 
