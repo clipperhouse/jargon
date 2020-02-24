@@ -101,13 +101,18 @@ func (t *tokenizer2) next() (*Token, error) {
 
 		// At this point, it's punct
 
-		mightBeLeading := leadingPunct[r] // expressions like .Net
-		if mightBeLeading {
+		// Expressions like .Net, #hashtags and @handles
+		// Must be one of our leading chars, and must be start of a new token
+		mightBeLeadingAlpha := len(t.buffer) == 0 && leadingAlphas[r]
+
+		if mightBeLeadingAlpha {
 			// Look ahead
 			if t.segmenter.Segment() {
 				lookahead := t.segment()
-				isleading := lookahead.Is(segment.Letter) || lookahead.Is(segment.Number)
-				if isleading {
+
+				// Must precede an alpha
+				isLeadingAlpha := lookahead.Is(segment.Letter)
+				if isLeadingAlpha {
 					// Current bytes
 					t.accept(current)
 					// Lookahead bytes
@@ -116,31 +121,131 @@ func (t *tokenizer2) next() (*Token, error) {
 				}
 
 				// Else, consider it terminating
+				// Gotta handle the lookahead, we've consumed it
 
-				// Queue the existing buffer
-				if len(t.buffer) > 0 {
-					t.outgoing.push(t.token())
-				}
-
-				// Current bytes
+				// Current rune is punct
 				t.accept(current)
 				t.outgoing.push(t.token())
 
-				// Lookahead bytes
+				// Lookahead is number, space or punct
 				t.accept(lookahead)
 				t.outgoing.push(t.token())
 				continue
 			}
 		}
 
-		// Trailing symbol?
-		symbol := punctAsSymbol[r]
-		if symbol {
-			t.accept(current)
-			continue
+		// Expressions like -123 or +345
+		// Must be one of our leading chars, and must be start of a new token
+		mightBeLeadingNumeric := len(t.buffer) == 0 && leadingNumerics[r]
+
+		if mightBeLeadingNumeric {
+			// Look ahead
+			if t.segmenter.Segment() {
+				lookahead := t.segment()
+
+				// Must precede a number
+				isLeadingAlpha := lookahead.Is(segment.Number)
+				if isLeadingAlpha {
+					// Current bytes
+					t.accept(current)
+					// Lookahead bytes
+					t.accept(lookahead)
+					continue
+				}
+
+				// Else, consider it terminating
+				// Gotta handle the lookahead, we've consumed it
+
+				// Current rune is punct
+				t.accept(current)
+				t.outgoing.push(t.token())
+
+				// Lookahead is number, space or punct
+				t.accept(lookahead)
+				t.outgoing.push(t.token())
+				continue
+			}
 		}
 
-		// Truly terminating punct
+		// Expressions like me@email.com, wishy-washy or basic URLs
+		// Must be one of our leading chars, and must not be start of a new token
+		mightBeMiddle := len(t.buffer) > 0 && middles[r]
+
+		if mightBeMiddle {
+			// Look ahead
+			if t.segmenter.Segment() {
+				lookahead := t.segment()
+
+				// Must precede an alphanumeric or another middle char
+				isMiddle := lookahead.Is(segment.Letter) || lookahead.Is(segment.Number)
+				if !isMiddle {
+					// Keep trying
+					r, ok := tryRune(lookahead.Bytes)
+					isMiddle = ok && middles[r]
+				}
+
+				if isMiddle {
+					// Current bytes
+					t.accept(current)
+					// Lookahead bytes
+					t.accept(lookahead)
+					continue
+				}
+
+				// Else, consider it terminating
+				// Gotta handle the lookahead, we've consumed it
+
+				// Current rune is punct
+				t.accept(current)
+				t.outgoing.push(t.token())
+
+				// Lookahead is space or punct
+				t.accept(lookahead)
+				t.outgoing.push(t.token())
+				continue
+			}
+		}
+
+		// Expressions like F# and C++
+		// Must be one of our trailing chars, and must not be start of a new token
+		mightBeTrailing := len(t.buffer) > 0 && trailings[r]
+
+		if mightBeTrailing {
+			// Look ahead
+			if t.segmenter.Segment() {
+				lookahead := t.segment()
+
+				// Must precede a terminator or another trailing char
+				isTrailing := lookahead.Is(segment.None)
+				if !isTrailing {
+					// Keep trying
+					r, ok := tryRune(lookahead.Bytes)
+					isTrailing = ok && trailings[r]
+				}
+
+				if isTrailing {
+					// Current bytes
+					t.accept(current)
+					// Lookahead bytes
+					t.accept(lookahead)
+					continue
+				}
+
+				// Else, consider it terminating
+				// Gotta handle the lookahead, we've consumed it
+
+				// Current rune is punct
+				t.accept(current)
+				t.outgoing.push(t.token())
+
+				// Lookahead is a alphanumeric, space or punct
+				t.accept(lookahead)
+				t.outgoing.push(t.token())
+				continue
+			}
+		}
+
+		// Truly terminating punct at this point
 
 		// Queue the existing buffer
 		if len(t.buffer) > 0 {
@@ -198,4 +303,34 @@ func tryRune(b []byte) (rune, bool) {
 	}
 
 	return utf8.RuneError, false
+}
+
+var leadingAlphas = runeSet{
+	'.': true,
+	'#': true,
+	'@': true,
+}
+
+var leadingNumerics = runeSet{
+	'.': true,
+	'-': true,
+	'+': true,
+}
+
+var middles = runeSet{
+	'-':  true,
+	'+':  true,
+	'#':  true,
+	'@':  true,
+	'/':  true,
+	':':  true,
+	'?':  true,
+	'=':  true,
+	'&':  true,
+	'\\': true,
+}
+
+var trailings = runeSet{
+	'+': true,
+	'#': true,
 }
