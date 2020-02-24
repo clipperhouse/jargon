@@ -26,7 +26,7 @@ func Tokenize2(r io.Reader) *Tokens {
 
 type tokenizer2 struct {
 	segmenter *segment.Segmenter
-	buffer    bytes.Buffer
+	buffer    []seg
 	outgoing  *queue
 }
 
@@ -71,7 +71,7 @@ func (t *tokenizer2) next() (*Token, error) {
 		// Something like a word or a grapheme?
 		isword := current.Type != segment.None
 		if isword {
-			t.accept(current.Bytes)
+			t.accept(current)
 
 			// We continue to look for allowed trailing chars, such as F# or C++
 			continue
@@ -87,12 +87,12 @@ func (t *tokenizer2) next() (*Token, error) {
 			// Always terminating
 
 			// Queue the existing buffer
-			if t.buffer.Len() > 0 {
+			if len(t.buffer) > 0 {
 				t.outgoing.push(t.token())
 			}
 
 			// Accept the space & queue it
-			t.accept(current.Bytes)
+			t.accept(current)
 			t.outgoing.push(t.token())
 
 			// Send it back
@@ -109,25 +109,25 @@ func (t *tokenizer2) next() (*Token, error) {
 				isleading := lookahead.Is(segment.Letter) || lookahead.Is(segment.Number)
 				if isleading {
 					// Current bytes
-					t.accept(current.Bytes)
+					t.accept(current)
 					// Lookahead bytes
-					t.accept(lookahead.Bytes)
+					t.accept(lookahead)
 					continue
 				}
 
 				// Else, consider it terminating
 
 				// Queue the existing buffer
-				if t.buffer.Len() > 0 {
+				if len(t.buffer) > 0 {
 					t.outgoing.push(t.token())
 				}
 
 				// Current bytes
-				t.accept(current.Bytes)
+				t.accept(current)
 				t.outgoing.push(t.token())
 
 				// Lookahead bytes
-				t.accept(lookahead.Bytes)
+				t.accept(lookahead)
 				t.outgoing.push(t.token())
 				continue
 			}
@@ -136,24 +136,24 @@ func (t *tokenizer2) next() (*Token, error) {
 		// Trailing symbol?
 		symbol := punctAsSymbol[r]
 		if symbol {
-			t.accept(current.Bytes)
+			t.accept(current)
 			continue
 		}
 
 		// Truly terminating punct
 
 		// Queue the existing buffer
-		if t.buffer.Len() > 0 {
+		if len(t.buffer) > 0 {
 			t.outgoing.push(t.token())
 		}
 
-		t.accept(current.Bytes)
+		t.accept(current)
 		t.outgoing.push(t.token())
 
 		return t.outgoing.pop(), nil
 	}
 
-	if t.buffer.Len() > 0 {
+	if len(t.buffer) > 0 {
 		t.outgoing.push(t.token())
 	}
 
@@ -162,6 +162,31 @@ func (t *tokenizer2) next() (*Token, error) {
 	}
 
 	return nil, nil
+}
+
+func (t *tokenizer2) accept(s seg) {
+	t.buffer = append(t.buffer, s)
+}
+
+func (t *tokenizer2) token() *Token {
+	var b bytes.Buffer
+
+	for _, seg := range t.buffer {
+		b.Write(seg.Bytes)
+	}
+
+	// Got the bytes, can reset
+	t.buffer = t.buffer[:0]
+
+	// Determine punct / space
+	r, ok := tryRune(b.Bytes())
+	if ok {
+		return newTokenFromRune(r)
+	}
+
+	return &Token{
+		value: b.String(),
+	}
 }
 
 func tryRune(b []byte) (rune, bool) {
@@ -173,33 +198,4 @@ func tryRune(b []byte) (rune, bool) {
 	}
 
 	return utf8.RuneError, false
-}
-
-func (t *tokenizer2) accept(b []byte) {
-	t.buffer.Write(b)
-}
-
-func (t *tokenizer2) token() *Token {
-	b := t.buffer.Bytes()
-
-	// Got the bytes, can reset
-	t.buffer.Reset()
-
-	// Determine punct and/or space
-	if utf8.RuneCount(b) == 1 {
-		// Punct and space are always one rune in our usage
-		r, _ := utf8.DecodeRune(b)
-
-		known, ok := common[r]
-
-		if ok {
-			return known
-		}
-
-		return newTokenFromRune(r)
-	}
-
-	return &Token{
-		value: string(b),
-	}
 }

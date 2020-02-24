@@ -155,26 +155,6 @@ func (t *tokenizer) token() *Token {
 	}
 }
 
-func newTokenFromRune(r rune) *Token {
-	return &Token{
-		value: string(r),
-		punct: isPunct(r),
-		space: unicode.IsSpace(r),
-	}
-}
-
-var common = make(map[rune]*Token)
-
-func init() {
-	runes := []rune{
-		' ', '\r', '\n', '\t', '.', ',',
-	}
-
-	for _, r := range runes {
-		common[r] = newTokenFromRune(r)
-	}
-}
-
 func (t *tokenizer) accept(r rune) {
 	t.outgoing.WriteRune(r)
 }

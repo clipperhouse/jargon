@@ -3,6 +3,7 @@ package jargon
 import (
 	"io"
 	"strings"
+	"unicode"
 )
 
 // Tokens represents an 'iterator' of Token, the result of a call to Tokenize or Lemmatize. Call Next() until it returns nil.
@@ -96,4 +97,30 @@ func (t *Token) IsSpace() bool {
 // IsLemma indicates that the token is a lemma, i.e., a canonical term that replaced original token(s).
 func (t Token) IsLemma() bool {
 	return t.lemma
+}
+
+func newTokenFromRune(r rune) *Token {
+	token, found := common[r]
+
+	if found {
+		return token
+	}
+
+	return &Token{
+		value: string(r),
+		punct: isPunct(r),
+		space: unicode.IsSpace(r),
+	}
+}
+
+var common = make(map[rune]*Token)
+
+func init() {
+	runes := []rune{
+		' ', '\r', '\n', '\t', '.', ',',
+	}
+
+	for _, r := range runes {
+		common[r] = newTokenFromRune(r)
+	}
 }
