@@ -134,39 +134,6 @@ func (t *tokenizer2) next() (*Token, error) {
 			}
 		}
 
-		// Expressions like -123 or +345
-		// Must be one of our leading chars, and must be start of a new token
-		mightBeLeadingNumeric := len(t.buffer) == 0 && leadingNumerics[r]
-
-		if mightBeLeadingNumeric {
-			// Look ahead
-			if t.segmenter.Segment() {
-				lookahead := t.segment()
-
-				// Must precede a number
-				isLeadingAlpha := lookahead.Is(segment.Number)
-				if isLeadingAlpha {
-					// Current bytes
-					t.accept(current)
-					// Lookahead bytes
-					t.accept(lookahead)
-					continue
-				}
-
-				// Else, consider it terminating
-				// Gotta handle the lookahead, we've consumed it
-
-				// Current rune is punct
-				t.accept(current)
-				t.outgoing.push(t.token())
-
-				// Lookahead is number, space or punct
-				t.accept(lookahead)
-				t.outgoing.push(t.token())
-				continue
-			}
-		}
-
 		// Expressions like me@email.com, wishy-washy or basic URLs
 		// Must be one of our leading chars, and must not be start of a new token
 		mightBeMiddle := len(t.buffer) > 0 && middles[r]
@@ -309,12 +276,6 @@ var leadingAlphas = runeSet{
 	'.': true,
 	'#': true,
 	'@': true,
-}
-
-var leadingNumerics = runeSet{
-	'.': true,
-	'-': true,
-	'+': true,
 }
 
 var middles = runeSet{

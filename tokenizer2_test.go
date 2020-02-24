@@ -54,7 +54,7 @@ func TestSegmenter(t *testing.T) {
 }
 
 func TestLeading(t *testing.T) {
-	text := `Hi. This is a test of .net, and -123.4 and +567.8, and #hashtag and @handle, and React.js.`
+	text := `Hi. This is a test of .net, and #hashtag and @handle, and React.js.`
 
 	r := strings.NewReader(text)
 	tokens := jargon.Tokenize2(r)
@@ -70,10 +70,6 @@ func TestLeading(t *testing.T) {
 		{"Hi.", false},
 		{".net", true},
 		{"net", false},
-		{"-123.4", true},
-		{"123.4", false},
-		{"+567.8", true},
-		{"567.8", false},
 		{"#hashtag", true},
 		{"hashtag", false},
 		{"@handle", true},

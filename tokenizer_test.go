@@ -13,7 +13,7 @@ import (
 
 func TestTokenize(t *testing.T) {
 	text := `Hi! This is a test of tech terms.
-It should consider F#, C++, .net, Node.JS and 3.141592 and -123 to be their own tokens. 
+It should consider F#, C++, .net, Node.JS and 3.141592 to be their own tokens. 
 Similarly, #hashtag and @handle should work, as should an first.last+@example.com.
 It should—wait for it—break on things like em-dashes and "quotes" and it ends.
 It'd be great it it’ll handle apostrophes.
@@ -27,7 +27,7 @@ It'd be great it it’ll handle apostrophes.
 
 	expected := []string{
 		"Hi", "!", "a",
-		"F#", "C++", ".net", "Node.JS", "3.141592", "-123",
+		"F#", "C++", ".net", "Node.JS", "3.141592",
 		"#hashtag", "@handle", "first.last+@example.com",
 		"should", "—", "wait", "it", "break", "em-dashes", "\"", "quotes", "ends",
 		"It'd", "it’ll", "apostrophes",
