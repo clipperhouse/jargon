@@ -19,7 +19,7 @@ It should—wait for it—break on things like em-dashes and "quotes" and it end
 It'd be great it it’ll handle apostrophes.
 `
 	r := strings.NewReader(text)
-	tokens := jargon.Tokenize(r)
+	tokens := jargon.Tokenize2(r)
 	got, err := tokens.ToSlice()
 	if err != nil {
 		t.Error(err)

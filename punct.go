@@ -19,6 +19,7 @@ var punctAsSymbol = runeSet{
 	'%':  true,
 	'/':  true,
 	'\\': true,
+	':':  true,
 }
 
 var spaceAsPunct = runeSet{

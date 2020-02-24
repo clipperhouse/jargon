@@ -60,7 +60,6 @@ func (t *tokenizer2) next() (*Token, error) {
 	if t.outgoing.len() > 0 {
 		return t.outgoing.pop(), nil
 	}
-
 	for t.segmenter.Segment() {
 		seg := t.segment()
 		if err := seg.Err; err != nil {
@@ -154,9 +153,12 @@ func (t *tokenizer2) next() (*Token, error) {
 		return t.outgoing.pop(), nil
 	}
 
-	// Propably need to send stuff back?
 	if t.buffer.Len() > 0 {
-		return t.token(), nil
+		t.outgoing.push(t.token())
+	}
+
+	if t.outgoing.len() > 0 {
+		return t.outgoing.pop(), nil
 	}
 
 	return nil, nil
