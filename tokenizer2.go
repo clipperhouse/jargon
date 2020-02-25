@@ -57,45 +57,48 @@ func (t *tokenizer2) segment() seg {
 
 // next returns the next token. Call until it returns nil.
 func (t *tokenizer2) next() (*Token, error) {
+	// First, look for something to send back
 	if t.outgoing.len() > 0 {
 		return t.outgoing.pop(), nil
 	}
+
+	// Else, pull new segment(s)
 	for t.segmenter.Segment() {
-		seg := t.segment()
-		if err := seg.Err; err != nil {
+		current := t.segment()
+
+		if err := current.Err; err != nil {
 			return nil, err
 		}
 
-		current := t.segment()
+	handle_current:
 
 		// Something like a word or a grapheme?
-		isword := current.Type != segment.None
-		if isword {
+		isWord := !current.Is(segment.None)
+		if isWord {
 			t.accept(current)
 
-			// We continue to look for allowed trailing chars, such as F# or C++
+			// We continue to look for allowed middle and trailing chars, such as wishy-washy or C++
 			continue
 		}
 
-		// It can only be a rune at this point? Guard statement, in case that's wrong
+		// At this point, it must be a rune (right?)
+		// Guard statement, in case that's wrong
 		r, ok := tryRune(current.Bytes)
 		if !ok {
 			return nil, fmt.Errorf("should be a rune, but it's %q, this is likely a bug in the tokenizer", current)
 		}
 
 		if unicode.IsSpace(r) {
-			// Always terminating
+			// Space is always terminating
 
-			// Queue the existing buffer
-			if len(t.buffer) > 0 {
-				t.outgoing.push(t.token())
-			}
+			// Anything in the buffer can go out
+			t.emit()
 
-			// Accept the space & queue it
+			// Accept the space & emit it
 			t.accept(current)
-			t.outgoing.push(t.token())
+			t.emit()
 
-			// Send it back
+			// We know everything in outgoing is a complete token
 			return t.outgoing.pop(), nil
 		}
 
@@ -103,39 +106,40 @@ func (t *tokenizer2) next() (*Token, error) {
 
 		// Expressions like .Net, #hashtags and @handles
 		// Must be one of our leading chars, and must be start of a new token
-		mightBeLeadingAlpha := len(t.buffer) == 0 && leadingAlphas[r]
+		mightBeLeading := len(t.buffer) == 0 && leadings[r]
 
-		if mightBeLeadingAlpha {
+		if mightBeLeading {
 			// Look ahead
 			if t.segmenter.Segment() {
 				lookahead := t.segment()
 
-				// Must precede an alpha
-				isLeadingAlpha := lookahead.Is(segment.Letter)
-				if isLeadingAlpha {
-					// Current bytes
+				// Is it a word/grapheme?
+				isLeading := !lookahead.Is(segment.None)
+				if isLeading {
+					// If so, we can concatenate in the buffer
 					t.accept(current)
-					// Lookahead bytes
 					t.accept(lookahead)
+
+					// But we don't know if it's a complete token
+					// Might be something like .net-core
 					continue
 				}
 
-				// Else, consider it terminating
+				// Else, consider it regular punctuation
 				// Gotta handle the lookahead, we've consumed it
 
-				// Current rune is punct
+				// Current rune is not leading, therefore it is a token
 				t.accept(current)
-				t.outgoing.push(t.token())
+				t.emit()
 
-				// Lookahead is number, space or punct
-				t.accept(lookahead)
-				t.outgoing.push(t.token())
-				continue
+				// Lookahead is space or punct, let the main loop handle it
+				current = lookahead
+				goto handle_current
 			}
 		}
 
-		// Expressions like me@email.com, wishy-washy or basic URLs
-		// Must be one of our leading chars, and must not be start of a new token
+		// Expressions like wishy-washy or basic URLs
+		// Must be one of our allowed middle chars, and must *not* be start of a new token
 		mightBeMiddle := len(t.buffer) > 0 && middles[r]
 
 		if mightBeMiddle {
@@ -143,33 +147,28 @@ func (t *tokenizer2) next() (*Token, error) {
 			if t.segmenter.Segment() {
 				lookahead := t.segment()
 
-				// Must precede an alphanumeric or another middle char
-				isMiddle := lookahead.Is(segment.Letter) || lookahead.Is(segment.Number)
-				if !isMiddle {
-					// Keep trying
-					r, ok := tryRune(lookahead.Bytes)
-					isMiddle = ok && middles[r]
-				}
-
+				// Must precede a word
+				isMiddle := !lookahead.Is(segment.None)
 				if isMiddle {
-					// Current bytes
+					// Concatenate segments in the buffer
 					t.accept(current)
-					// Lookahead bytes
 					t.accept(lookahead)
+
+					// But we don't know if it's a complete token
+					// Might be something like ruby-on-rails
 					continue
 				}
 
 				// Else, consider it terminating
 				// Gotta handle the lookahead, we've consumed it
 
-				// Current rune is punct
+				// Current rune must be punct or space
 				t.accept(current)
-				t.outgoing.push(t.token())
+				t.emit()
 
-				// Lookahead is space or punct
-				t.accept(lookahead)
-				t.outgoing.push(t.token())
-				continue
+				// Lookahead is space or punct, let the main loop handle it
+				current = lookahead
+				goto handle_current
 			}
 		}
 
@@ -177,56 +176,47 @@ func (t *tokenizer2) next() (*Token, error) {
 		// Must be one of our trailing chars, and must not be start of a new token
 		mightBeTrailing := len(t.buffer) > 0 && trailings[r]
 
+		//		fmt.Printf("current: %q\n", current.Bytes)
+		//		fmt.Printf("mightBeTrailing: %t\n", mightBeTrailing)
+
 		if mightBeTrailing {
 			// Look ahead
 			if t.segmenter.Segment() {
 				lookahead := t.segment()
 
-				// Must precede a terminator or another trailing char
-				isTrailing := lookahead.Is(segment.None)
-				if !isTrailing {
-					// Keep trying
-					r, ok := tryRune(lookahead.Bytes)
-					isTrailing = ok && trailings[r]
-				}
-
-				if isTrailing {
-					// Current bytes
+				// May precede another (identical) trailing, like C++
+				lr, ok := tryRune(lookahead.Bytes)
+				if ok && r == lr {
+					// Append them both & emit
 					t.accept(current)
-					// Lookahead bytes
 					t.accept(lookahead)
+					t.emit()
 					continue
 				}
 
-				// Else, consider it terminating
-				// Gotta handle the lookahead, we've consumed it
-
-				// Current rune is punct
+				// Complete the token & queue it
 				t.accept(current)
-				t.outgoing.push(t.token())
+				t.emit()
 
-				// Lookahead is a alphanumeric, space or punct
-				t.accept(lookahead)
-				t.outgoing.push(t.token())
-				continue
+				// Lookahead can be anything, let the main loop handle it
+				current = lookahead
+				goto handle_current
 			}
 		}
 
 		// Truly terminating punct at this point
 
 		// Queue the existing buffer
-		if len(t.buffer) > 0 {
-			t.outgoing.push(t.token())
-		}
+		t.emit()
 
 		t.accept(current)
-		t.outgoing.push(t.token())
+		t.emit()
 
 		return t.outgoing.pop(), nil
 	}
 
 	if len(t.buffer) > 0 {
-		t.outgoing.push(t.token())
+		t.emit()
 	}
 
 	if t.outgoing.len() > 0 {
@@ -238,6 +228,12 @@ func (t *tokenizer2) next() (*Token, error) {
 
 func (t *tokenizer2) accept(s seg) {
 	t.buffer = append(t.buffer, s)
+}
+
+func (t *tokenizer2) emit() {
+	if len(t.buffer) > 0 {
+		t.outgoing.push(t.token())
+	}
 }
 
 func (t *tokenizer2) token() *Token {
@@ -272,23 +268,15 @@ func tryRune(b []byte) (rune, bool) {
 	return utf8.RuneError, false
 }
 
-var leadingAlphas = runeSet{
+var leadings = runeSet{
 	'.': true,
 	'#': true,
 	'@': true,
 }
 
 var middles = runeSet{
-	'-':  true,
-	'+':  true,
-	'#':  true,
-	'@':  true,
-	'/':  true,
-	':':  true,
-	'?':  true,
-	'=':  true,
-	'&':  true,
-	'\\': true,
+	'-': true,
+	'/': true,
 }
 
 var trailings = runeSet{

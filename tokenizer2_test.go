@@ -100,7 +100,7 @@ func TestLeading(t *testing.T) {
 }
 
 func TestMiddle(t *testing.T) {
-	text := `Hi. This is a test of https://foo.com:443/thing-stuff.html/ https://foo.com/?query=bar+baz&qux and some_name+spam@example.com and wishy-washy.`
+	text := `Hi. This is a test of asp.net, TCP/IP, first_last and wishy-washy.`
 
 	r := strings.NewReader(text)
 	tokens := jargon.Tokenize2(r)
@@ -110,32 +110,24 @@ func TestMiddle(t *testing.T) {
 		found bool
 	}
 
+	// The segment (bleve) tokenizer handles middle dots and underscores
+	// Our tokenizer handles middle hyphens and forward slashes
+
 	expecteds := []test{
-		{"Hi", true},
-		{".", true},
-		{"Hi.", false},
-		{"some_name+spam@example.com", true},
-		{"_", false},
-		{"+", false},
-		{"@", false},
-		{"example.com", false},
+		{"asp.net", true},
+		{"asp", false},
+		{"net", false},
+		{"TCP/IP", true},
+		{"TCP", false},
+		{"/", false},
+		{"IP", false},
+		{"first_last", true},
+		{"first", false},
+		{"last", false},
 		{"wishy-washy", true},
 		{"wishy", false},
 		{"-", false},
 		{"washy", false},
-		{"wishy-washy", true},
-		{"https://foo.com:443/thing-stuff.html/", true},
-		{"https", false},
-		{":", false},
-		{"/", false},
-		{"thing-stuff", false},
-		{"html", false},
-		{"https://foo.com/?query=bar+baz&qux", true},
-		{"?", false},
-		{"query", false},
-		{"=", false},
-		{"bar", false},
-		{"baz", false},
 	}
 
 	got := map[string]bool{}
@@ -194,7 +186,9 @@ func TestTrailing(t *testing.T) {
 			break
 		}
 
-		got[token.String()] = true
+		s := token.String()
+		t.Log(s)
+		got[s] = true
 	}
 
 	for _, expected := range expecteds {
