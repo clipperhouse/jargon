@@ -1,14 +1,13 @@
 package jargon
 
 import (
-	"bufio"
 	"bytes"
+	"fmt"
 	"io"
-	"strings"
 	"unicode"
 	"unicode/utf8"
 
-	"golang.org/x/net/html"
+	"github.com/blevesearch/segment"
 )
 
 // Tokenize returns an 'iterator' of Tokens from a io.Reader. Call .Next() until it returns nil:
@@ -26,222 +25,261 @@ func Tokenize(r io.Reader) *Tokens {
 }
 
 type tokenizer struct {
-	incoming *bufio.Reader
-	outgoing bytes.Buffer
+	segmenter *segment.Segmenter
+	buffer    []seg
+	outgoing  *queue
 }
 
 func newTokenizer(r io.Reader) *tokenizer {
 	return &tokenizer{
-		incoming: bufio.NewReaderSize(r, 4*4096),
+		segmenter: segment.NewSegmenter(r),
+		outgoing:  &queue{},
 	}
 }
 
-// TODO: the parsing below is practical but should probably implement unicode text sgementation:
-//	https://unicode.org/reports/tr29/
-// is there a library detecting Unicode 'word break'?
-// unicode.Pattern_White_Space is one place to look
+type seg struct {
+	Bytes []byte
+	Type  int
+	Err   error
+}
+
+func (seg seg) Is(typ int) bool {
+	return seg.Type == typ
+}
+
+func (t *tokenizer) segment() seg {
+	return seg{
+		Bytes: t.segmenter.Bytes(),
+		Type:  t.segmenter.Type(),
+		Err:   t.segmenter.Err(),
+	}
+}
 
 // next returns the next token. Call until it returns nil.
 func (t *tokenizer) next() (*Token, error) {
-	if t.outgoing.Len() > 0 {
-		// Punct or space accepted in previous call to readWord
-		return t.token(), nil
+	// First, look for something to send back
+	if t.outgoing.len() > 0 {
+		return t.outgoing.pop(), nil
 	}
-	for {
-		switch r, _, err := t.incoming.ReadRune(); {
-		case err != nil:
-			if err == io.EOF {
-				// No problem, we're done
-				return nil, nil
-			}
+
+	// Else, pull new segment(s)
+	for t.segmenter.Segment() {
+		current := t.segment()
+
+		if err := current.Err; err != nil {
 			return nil, err
-		case unicode.IsSpace(r):
-			t.accept(r)
-			return t.token(), nil
-		case isPunct(r):
-			t.accept(r)
-
-			followedByTerminator, err := t.peekTerminator()
-			if err != nil {
-				return nil, err
-			}
-
-			isLeadingPunct := leadingPunct[r] && !followedByTerminator
-			if isLeadingPunct {
-				// Treat it as start of a word
-				return t.readWord()
-			}
-			// Regular punct, emit it
-			return t.token(), nil
-		default:
-			// It's a letter
-			t.accept(r)
-			return t.readWord()
 		}
+
+	handle_current:
+
+		// Something like a word or a grapheme?
+		isWord := !current.Is(segment.None)
+		if isWord {
+			t.accept(current)
+
+			// We continue to look for allowed middle and trailing chars, such as wishy-washy or C++
+			continue
+		}
+
+		// At this point, it must be a rune (right?)
+		// Guard statement, in case that's wrong
+		r, ok := tryRune(current.Bytes)
+		if !ok {
+			return nil, fmt.Errorf("should be a rune, but it's %q, this is likely a bug in the tokenizer", current)
+		}
+
+		if unicode.IsSpace(r) {
+			// Space is always terminating
+
+			// Anything in the buffer can go out
+			t.emit()
+
+			// Accept the space & emit it
+			t.accept(current)
+			t.emit()
+
+			// We know everything in outgoing is a complete token
+			return t.outgoing.pop(), nil
+		}
+
+		// At this point, it's punct
+
+		// Expressions like .Net, #hashtags and @handles
+		// Must be one of our leading chars, and must be start of a new token
+		mightBeLeading := len(t.buffer) == 0 && leadings[r]
+
+		if mightBeLeading {
+			// Look ahead
+			if t.segmenter.Segment() {
+				lookahead := t.segment()
+
+				// Is it a word/grapheme?
+				isLeading := !lookahead.Is(segment.None)
+				if isLeading {
+					// If so, we can concatenate in the buffer
+					t.accept(current)
+					t.accept(lookahead)
+
+					// But we don't know if it's a complete token
+					// Might be something like .net-core
+					continue
+				}
+
+				// Else, consider it regular punctuation
+				// Gotta handle the lookahead, we've consumed it
+
+				// Current rune is not leading, therefore it is a token
+				t.accept(current)
+				t.emit()
+
+				// Lookahead is space or punct, let the main loop handle it
+				current = lookahead
+				goto handle_current
+			}
+		}
+
+		// Expressions like wishy-washy or basic URLs
+		// Must be one of our allowed middle chars, and must *not* be start of a new token
+		mightBeMiddle := len(t.buffer) > 0 && middles[r]
+
+		if mightBeMiddle {
+			// Look ahead
+			if t.segmenter.Segment() {
+				lookahead := t.segment()
+
+				// Must precede a word
+				isMiddle := !lookahead.Is(segment.None)
+				if isMiddle {
+					// Concatenate segments in the buffer
+					t.accept(current)
+					t.accept(lookahead)
+
+					// But we don't know if it's a complete token
+					// Might be something like ruby-on-rails
+					continue
+				}
+
+				// Else, consider it terminating
+				// Gotta handle the lookahead, we've consumed it
+
+				// Current rune must be punct or space
+				t.accept(current)
+				t.emit()
+
+				// Lookahead is space or punct, let the main loop handle it
+				current = lookahead
+				goto handle_current
+			}
+		}
+
+		// Expressions like F# and C++
+		// Must be one of our trailing chars, and must not be start of a new token
+		mightBeTrailing := len(t.buffer) > 0 && trailings[r]
+
+		//		fmt.Printf("current: %q\n", current.Bytes)
+		//		fmt.Printf("mightBeTrailing: %t\n", mightBeTrailing)
+
+		if mightBeTrailing {
+			// Look ahead
+			if t.segmenter.Segment() {
+				lookahead := t.segment()
+
+				// May precede another (identical) trailing, like C++
+				lr, ok := tryRune(lookahead.Bytes)
+				if ok && r == lr {
+					// Append them both & emit
+					t.accept(current)
+					t.accept(lookahead)
+					t.emit()
+					continue
+				}
+
+				// Complete the token & queue it
+				t.accept(current)
+				t.emit()
+
+				// Lookahead can be anything, let the main loop handle it
+				current = lookahead
+				goto handle_current
+			}
+		}
+
+		// Truly terminating punct at this point
+
+		// Queue the existing buffer
+		t.emit()
+
+		t.accept(current)
+		t.emit()
+
+		return t.outgoing.pop(), nil
 	}
+
+	if len(t.buffer) > 0 {
+		t.emit()
+	}
+
+	if t.outgoing.len() > 0 {
+		return t.outgoing.pop(), nil
+	}
+
+	return nil, nil
 }
 
-// Important that this function only gets entered from the Next() loop, which determines 'word start'
-func (t *tokenizer) readWord() (*Token, error) {
-	for {
-		r, _, err := t.incoming.ReadRune()
-		switch {
-		case err != nil:
-			if err == io.EOF {
-				// No problem
-				return t.token(), nil
-			}
-			return nil, err
-		case midPunct[r]:
-			// Look ahead to see if it's followed by space or more punctuation
-			followedByTerminator, err := t.peekTerminator()
-			if err != nil {
-				return nil, err
-			}
+func (t *tokenizer) accept(s seg) {
+	t.buffer = append(t.buffer, s)
+}
 
-			if followedByTerminator {
-				// It's just regular punct, treat it as such
-
-				// Get the current word token without the punct
-				token := t.token()
-
-				// Accept the punct for later
-				t.accept(r)
-
-				// Emit the word token
-				return token, nil
-			}
-
-			// Else, it's mid-word punct, treat it like a letter
-			t.accept(r)
-		case isPunct(r) || unicode.IsSpace(r):
-			// Get the current word token without the punct
-			token := t.token()
-
-			// Accept the punct for later
-			t.accept(r)
-
-			// Emit the word token
-			return token, nil
-		default:
-			// Otherwise it's a letter, keep going
-			t.accept(r)
-		}
+func (t *tokenizer) emit() {
+	if len(t.buffer) > 0 {
+		t.outgoing.push(t.token())
 	}
 }
 
 func (t *tokenizer) token() *Token {
-	b := t.outgoing.Bytes()
+	var b bytes.Buffer
+
+	for _, seg := range t.buffer {
+		b.Write(seg.Bytes)
+	}
 
 	// Got the bytes, can reset
-	t.outgoing.Reset()
+	t.buffer = t.buffer[:0]
 
-	// Determine punct and/or space
-	if utf8.RuneCount(b) == 1 {
-		// Punct and space are always one rune in our usage
-		r, _ := utf8.DecodeRune(b)
-
-		known, ok := common[r]
-
-		if ok {
-			return known
-		}
-
+	// Determine punct / space
+	r, ok := tryRune(b.Bytes())
+	if ok {
 		return newTokenFromRune(r)
 	}
 
 	return &Token{
-		value: string(b),
+		value: b.String(),
 	}
 }
 
-func (t *tokenizer) accept(r rune) {
-	t.outgoing.WriteRune(r)
+func tryRune(b []byte) (rune, bool) {
+	ok := utf8.RuneCount(b) == 1
+
+	if ok {
+		r, _ := utf8.DecodeRune(b)
+		return r, true
+	}
+
+	return utf8.RuneError, false
 }
 
-// PeekTerminator looks to the next rune and determines if it breaks a word
-func (t *tokenizer) peekTerminator() (bool, error) {
-	r, _, err := t.incoming.ReadRune()
-
-	if err != nil {
-		if err == io.EOF {
-			return true, nil
-		}
-		return false, err
-	}
-
-	// Unread ASAP!
-	if err := t.incoming.UnreadRune(); err != nil {
-		return false, err
-	}
-
-	return isPunct(r) || unicode.IsSpace(r), nil
+var leadings = runeSet{
+	'.': true,
+	'#': true,
+	'@': true,
 }
 
-// TokenizeHTML tokenizes HTML. Text nodes are tokenized using jargon.Tokenize; everything else (tags, comments) are left verbatim.
-// It returns a Tokens, intended to be iterated over by calling Next(), until nil
-//	tokens := jargon.TokenizeHTML(reader)
-//	for {
-//		tok := tokens.Next()
-//		if tok == nil {
-//			break
-//		}
-//		// Do stuff with tok...
-//	}
-// It returns all tokens (including white space), so text can be reconstructed with fidelity. Ignoring (say) whitespace is a decision for the caller.
-func TokenizeHTML(r io.Reader) *Tokens {
-	t := &htokenizer{
-		html: html.NewTokenizer(r),
-		text: dummy, // dummy to avoid nil
-	}
-	return &Tokens{
-		Next: t.next,
-	}
+var middles = runeSet{
+	'-': true,
+	'/': true,
 }
 
-var dummy = &Tokens{Next: func() (*Token, error) { return nil, nil }}
-
-type htokenizer struct {
-	html *html.Tokenizer
-	text *Tokens
-}
-
-// next is the implementation of the Tokens interface. To iterate, call until it returns nil
-func (t *htokenizer) next() (*Token, error) {
-	// Are we "inside" a text node?
-	text, err := t.text.Next()
-	if err != nil {
-		return nil, err
-	}
-	if text != nil {
-		return text, nil
-	}
-
-	for {
-		tt := t.html.Next()
-
-		if tt == html.ErrorToken {
-			err := t.html.Err()
-			if err == io.EOF {
-				// No problem
-				return nil, nil
-			}
-			return nil, err
-		}
-
-		switch tok := t.html.Token(); {
-		case tok.Type == html.TextToken:
-			r := strings.NewReader(tok.Data)
-			t.text = Tokenize(r)
-			return t.text.Next()
-		default:
-			// Everything else is punct for our purposes
-			token := &Token{
-				value: tok.String(),
-				punct: true,
-				space: false,
-			}
-			return token, nil
-		}
-	}
+var trailings = runeSet{
+	'+': true,
+	'#': true,
 }

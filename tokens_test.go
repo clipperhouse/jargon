@@ -10,7 +10,7 @@ func ExampleTokens() {
 
 	text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
 	r := strings.NewReader(text)
-	tokens := Tokenize(r)
+	tokens := TokenizeLegacy(r)
 
 	// Iterate by calling Next() until nil, which indicates that the iterator is exhausted.
 	for {
