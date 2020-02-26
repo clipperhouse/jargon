@@ -1,8 +1,6 @@
 package jargon_test
 
 import (
-	"bytes"
-	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -37,19 +35,5 @@ Hi! Let's talk Ruby on Rails.
 		if !contains(e, got) {
 			t.Errorf("Expected to find token %q, but did not.", e)
 		}
-	}
-}
-
-func BenchmarkTokenize(b *testing.B) {
-	file, err := ioutil.ReadFile("testdata/wikipedia.txt")
-
-	if err != nil {
-		b.Error(err)
-	}
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		r := bytes.NewReader(file)
-		consume(jargon.TokenizeLegacy(r))
 	}
 }
