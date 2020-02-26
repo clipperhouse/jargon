@@ -215,6 +215,11 @@ func (t *tokenizer) next() (*Token, error) {
 		return t.outgoing.pop(), nil
 	}
 
+	if err := t.segmenter.Err(); err != nil {
+		return nil, err
+	}
+
+	// Anything left
 	if len(t.buffer) > 0 {
 		t.emit()
 	}
