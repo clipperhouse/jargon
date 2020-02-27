@@ -1,6 +1,7 @@
 package synonyms
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -20,35 +21,51 @@ var IgnoreCase IgnoreFunc = strings.ToLower
 var IgnoreSpace IgnoreFunc = Ignore(' ')
 
 // Ignore instructs a synonyms filter to ignore (be insensitive to) specific characters when looking up synonyms.
-func Ignore(r ...rune) IgnoreFunc {
+func Ignore(runes ...rune) IgnoreFunc {
 	return func(s string) string {
-		return strings.ReplaceAll(s, string(r), "")
+		for _, r := range runes {
+			s = strings.ReplaceAll(s, string(r), "")
+		}
+		return s
 	}
 }
 
+// Filter implements the jargon.Filter interface
 type Filter struct {
 	ignoreFuncs   []IgnoreFunc
 	lookup        map[string]string
 	maxGramLength int
 }
 
-// New creates a new synonyms filter based on a set of Mappings and IgnoreFuncs. The latter are used to specify insensitivity to case or spaces, for example.
-func New(mappings []Mapping, ignoreFuncs ...IgnoreFunc) *Filter {
+// NewFilter creates a new synonyms filter based on a set of Mappings and IgnoreFuncs. The latter are used to specify insensitivity to case or spaces, for example.
+func NewFilter(mappings []Mapping, ignoreFuncs ...IgnoreFunc) (*Filter, error) {
 	lookup := make(map[string]string)
 	maxGramLength := 1
 
 	for _, m := range mappings {
 		synonyms := strings.Split(m.Synonyms, ",")
-		len := len(synonyms)
-		if len > maxGramLength {
-			maxGramLength = len
-		}
-		for _, s := range synonyms {
-			key := strings.TrimSpace(s)
-			key = normalize(ignoreFuncs, key)
-			if key != "" {
-				lookup[key] = m.Canonical
+
+		for _, synonym := range synonyms {
+			grams := len(strings.Fields(synonym))
+			if grams > maxGramLength {
+				maxGramLength = grams
 			}
+
+			key := strings.TrimSpace(synonym)
+			key = normalize(ignoreFuncs, key)
+			if key == "" {
+				err := fmt.Errorf("the synonym %q, from the {%q: %q} mapping, results in an empty string when normalized", synonym, m.Synonyms, m.Canonical)
+				return nil, err
+			}
+
+			// The same key should not point to multiple different synonyms
+			existing, found := lookup[key]
+			if found && existing != m.Canonical {
+				err := fmt.Errorf("the synonym %q (normalized to %q) from the {%q: %q} mapping, would overwrite an earlier mapping to %q", synonym, key, m.Synonyms, m.Canonical, existing)
+				return nil, err
+			}
+
+			lookup[key] = m.Canonical
 		}
 	}
 
@@ -56,7 +73,7 @@ func New(mappings []Mapping, ignoreFuncs ...IgnoreFunc) *Filter {
 		ignoreFuncs:   ignoreFuncs,
 		lookup:        lookup,
 		maxGramLength: maxGramLength,
-	}
+	}, nil
 }
 
 func normalize(ignoreFuncs []IgnoreFunc, ss ...string) string {
