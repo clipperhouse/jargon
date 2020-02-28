@@ -7,7 +7,7 @@ import (
 	"github.com/clipperhouse/jargon"
 	"github.com/clipperhouse/jargon/contractions"
 	"github.com/clipperhouse/jargon/numbers"
-	"github.com/clipperhouse/jargon/stackexchange"
+	"github.com/clipperhouse/jargon/stackoverflow"
 )
 
 func TestDefaultLemmatizer(t *testing.T) {
@@ -17,8 +17,8 @@ func TestDefaultLemmatizer(t *testing.T) {
 		t.Errorf("expected 1 lemmatizer, got %d", len(defaults))
 	}
 
-	if defaults[0] != stackexchange.Tags {
-		t.Errorf("expected default to be the stackexchange.Tags, got %T", defaults[0])
+	if defaults[0] != stackoverflow.Tags {
+		t.Errorf("expected default to be the stackoverflow.Tags, got %T", defaults[0])
 	}
 }
 
@@ -29,8 +29,8 @@ func TestTechLemmatizer(t *testing.T) {
 		t.Errorf("expected 1 lemmatizer, got %d", len(tech))
 	}
 
-	if tech[0] != stackexchange.Tags {
-		t.Errorf("expected tech lemmatizer to include stackexchange.Tags, got a %T", tech[0])
+	if tech[0] != stackoverflow.Tags {
+		t.Errorf("expected tech lemmatizer to include stackoverflow.Tags, got a %T", tech[0])
 	}
 }
 
@@ -65,8 +65,8 @@ func TestAllLemmatizers(t *testing.T) {
 		t.Errorf("expected 3 lemmatizers when tech and num and cont are specified, got %d", len(all))
 	}
 
-	if all[0] != stackexchange.Tags {
-		t.Errorf("expected first lemmatizer to be stackexchange.Tags, got a %T", all[0])
+	if all[0] != stackoverflow.Tags {
+		t.Errorf("expected first lemmatizer to be stackoverflow.Tags, got a %T", all[0])
 	}
 
 	if all[1] != numbers.Filter {
@@ -84,7 +84,7 @@ func TestLemAll(t *testing.T) {
 	tokens := jargon.Tokenize(r)
 
 	filters := []jargon.TokenFilter{
-		stackexchange.Tags,
+		stackoverflow.Tags,
 		numbers.Filter,
 		contractions.Expander,
 	}

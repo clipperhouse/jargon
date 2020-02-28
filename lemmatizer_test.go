@@ -13,13 +13,13 @@ import (
 	"github.com/clipperhouse/jargon/ascii"
 	"github.com/clipperhouse/jargon/contractions"
 	"github.com/clipperhouse/jargon/numbers"
-	"github.com/clipperhouse/jargon/stackexchange"
+	"github.com/clipperhouse/jargon/stackoverflow"
 	"github.com/clipperhouse/jargon/stemmer"
 	"github.com/clipperhouse/jargon/stopwords"
 )
 
 func TestLemmatize(t *testing.T) {
-	dict := stackexchange.Tags
+	dict := stackoverflow.Tags
 
 	original := `Here is the story of Ruby on Rails nodeJS, "Java Script", html5 and ASPNET mvc plus TCP/IP.`
 	r1 := strings.NewReader(original)
@@ -58,7 +58,7 @@ func TestLemmatize(t *testing.T) {
 }
 
 func TestLemmatizeString(t *testing.T) {
-	dict := stackexchange.Tags
+	dict := stackoverflow.Tags
 
 	s := `Here is the story of Ruby on Rails.`
 
@@ -102,7 +102,7 @@ func TestRetokenize(t *testing.T) {
 }
 
 func BenchmarkLemmatizer(b *testing.B) {
-	dict := stackexchange.Tags
+	dict := stackoverflow.Tags
 
 	file, err := ioutil.ReadFile("testdata/wikipedia.txt")
 
@@ -119,7 +119,7 @@ func BenchmarkLemmatizer(b *testing.B) {
 }
 
 func TestCSV(t *testing.T) {
-	dict := stackexchange.Tags
+	dict := stackoverflow.Tags
 
 	original := `"Ruby on Rails", 3.4, "foo"
 "bar",42, "java script"`
@@ -144,7 +144,7 @@ func TestCSV(t *testing.T) {
 }
 
 func TestTSV(t *testing.T) {
-	dict := stackexchange.Tags
+	dict := stackoverflow.Tags
 
 	original := `Ruby on Rails	3.4	foo
 ASPNET	MVC
@@ -174,7 +174,7 @@ func TestMultiple(t *testing.T) {
 	s := `Here is the story of five and Rails and ASPNET in the CAFÉS and couldn't three hundred thousand.`
 
 	got := jargon.LemmatizeString(s,
-		stackexchange.Tags,
+		stackoverflow.Tags,
 		contractions.Expander,
 		numbers.Filter,
 		stemmer.English,
@@ -280,7 +280,7 @@ func TestWordrun(t *testing.T) {
 }
 
 func BenchmarkLemmatize(b *testing.B) {
-	dict := stackexchange.Tags
+	dict := stackoverflow.Tags
 
 	file, err := ioutil.ReadFile("testdata/wikipedia.txt")
 

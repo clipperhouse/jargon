@@ -164,7 +164,7 @@ func writeDictionary() error {
 }
 
 var tmpl = template.Must(template.New("").Parse(`
-package stackexchange
+package stackoverflow
 
 // This file is generated. Best not to modify it, as it will likely be overwritten.
 

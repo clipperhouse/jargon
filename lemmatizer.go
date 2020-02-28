@@ -6,7 +6,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/clipperhouse/jargon/stackexchange"
+	"github.com/clipperhouse/jargon/stackoverflow"
 )
 
 // Lemmatize transforms Tokens to their canonicalized ("lemmatized") terms.
@@ -23,7 +23,7 @@ import (
 // representing Ruby<space>on<space>Rails are combined into a single token.
 func (incoming *Tokens) Lemmatize(filters ...TokenFilter) *Tokens {
 	if len(filters) == 0 {
-		filters = append(filters, stackexchange.Tags)
+		filters = append(filters, stackoverflow.Tags)
 	}
 
 	var result = incoming

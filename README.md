@@ -51,7 +51,7 @@ See [GoDoc](https://godoc.org/github.com/clipperhouse/jargon).
 
 Canonical terms (lemmas) are looked up in token filters. Three are available:
 
-- [Stack Exchange technology tags](https://github.com/clipperhouse/jargon/stackexchange)
+- [Stack Overflow technology tags](https://github.com/clipperhouse/jargon/stackoverflow)
   - `Ruby on Rails → ruby-on-rails`
   - `ObjC → objective-c`
 - [Contractions](https://github.com/clipperhouse/jargon/contractions)

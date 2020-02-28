@@ -12,7 +12,7 @@ import (
 	"github.com/clipperhouse/jargon"
 	"github.com/clipperhouse/jargon/contractions"
 	"github.com/clipperhouse/jargon/numbers"
-	"github.com/clipperhouse/jargon/stackexchange"
+	"github.com/clipperhouse/jargon/stackoverflow"
 )
 
 func main() {
@@ -49,7 +49,7 @@ func determineFilters(tech, num, cont bool) []jargon.TokenFilter {
 	none := !tech && !num && !cont
 
 	if tech || none {
-		result = append(result, stackexchange.Tags)
+		result = append(result, stackoverflow.Tags)
 	}
 
 	if num {
@@ -78,7 +78,7 @@ func init() {
 	flag.StringVar(&s, "s", "", "A (quoted) string to lemmatize")
 	flag.StringVar(&u, "u", "", "A URL to fetch and lemmatize")
 	flag.StringVar(&o, "o", "", "Output file path. If omitted, output goes to Stdout.")
-	flag.BoolVar(&tech, "tech", false, "Lemmatize technology terms using the StackExchange token filter")
+	flag.BoolVar(&tech, "tech", false, "Lemmatize technology terms using the Stack Overflow token filter")
 	flag.BoolVar(&num, "num", false, `Lemmatize number phrases (e.g. "three hundred → "300")`)
 	flag.BoolVar(&cont, "cont", false, `Expand contractions (e.g. "didn't → "did not")`)
 	flag.Usage = func() {

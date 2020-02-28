@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/clipperhouse/jargon"
-	"github.com/clipperhouse/jargon/stackexchange"
+	"github.com/clipperhouse/jargon/stackoverflow"
 )
 
 func ExampleTokenize() {
@@ -46,7 +46,7 @@ func ExampleTokens_Lemmatize() {
 	r := strings.NewReader(text)
 
 	tokens := jargon.Tokenize(r)
-	lemmatized := tokens.Lemmatize(stackexchange.Tags)
+	lemmatized := tokens.Lemmatize(stackoverflow.Tags)
 
 	// Lemmatize returns a Tokens iterator. Iterate by calling Next() until nil, which
 	// indicates that the iterator is exhausted.

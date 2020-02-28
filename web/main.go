@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/clipperhouse/jargon"
-	"github.com/clipperhouse/jargon/stackexchange"
+	"github.com/clipperhouse/jargon/stackoverflow"
 )
 
 func main() {
@@ -54,7 +54,7 @@ func jargonHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lemmatized := tokens.Lemmatize(stackexchange.Tags)
+	lemmatized := tokens.Lemmatize(stackoverflow.Tags)
 
 	var b bytes.Buffer
 
