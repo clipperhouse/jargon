@@ -13,7 +13,7 @@ import (
 	"github.com/clipperhouse/jargon/ascii"
 	"github.com/clipperhouse/jargon/contractions"
 	"github.com/clipperhouse/jargon/numbers"
-	"github.com/clipperhouse/jargon/stackexchange"
+	stackexchange "github.com/clipperhouse/jargon/stackexchange2"
 	"github.com/clipperhouse/jargon/stemmer"
 	"github.com/clipperhouse/jargon/stopwords"
 )
@@ -30,7 +30,7 @@ func TestLemmatize(t *testing.T) {
 		t.Error(err)
 	}
 
-	r2 := strings.NewReader(`Here is the story of ruby-on-rails node.js, "javascript", html5 and asp.net-mvc plus tcpip.`)
+	r2 := strings.NewReader(`Here is the story of ruby-on-rails node.js, "javascript", html and asp.net-mvc plus tcp.`)
 	expected, err := jargon.Tokenize(r2).ToSlice()
 	if err != nil {
 		t.Error(err)
@@ -40,7 +40,7 @@ func TestLemmatize(t *testing.T) {
 		t.Errorf("Given tokens:\n%v\nexpected\n%v\nbut got\n%v", original, expected, got)
 	}
 
-	lemmas := []string{"ruby-on-rails", "node.js", "javascript", "html5", "asp.net-mvc"}
+	lemmas := []string{"ruby-on-rails", "node.js", "javascript", "html", "asp.net-mvc"}
 
 	lookup := make(map[string]*jargon.Token)
 	for _, g := range got {
