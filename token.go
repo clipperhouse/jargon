@@ -13,7 +13,7 @@ type Tokens struct {
 }
 
 // ToSlice converts the Tokens iterator into a slice (array). Calling ToSlice will exhaust the iterator. For big files, putting everything into an array may cause memory pressure.
-func (tokens Tokens) ToSlice() ([]*Token, error) {
+func (tokens *Tokens) ToSlice() ([]*Token, error) {
 	var result []*Token
 
 	for {
@@ -30,7 +30,7 @@ func (tokens Tokens) ToSlice() ([]*Token, error) {
 	return result, nil
 }
 
-func (tokens Tokens) String() (string, error) {
+func (tokens *Tokens) String() (string, error) {
 	var b strings.Builder
 
 	for {
@@ -48,10 +48,10 @@ func (tokens Tokens) String() (string, error) {
 }
 
 // WriteTo writes all token string values to w
-func (tokens Tokens) WriteTo(w io.Writer) (int64, error) {
+func (incoming *Tokens) WriteTo(w io.Writer) (int64, error) {
 	var written int64
 	for {
-		t, err := tokens.Next()
+		t, err := incoming.Next()
 		if err != nil {
 			return written, err
 		}
@@ -68,6 +68,39 @@ func (tokens Tokens) WriteTo(w io.Writer) (int64, error) {
 	}
 
 	return written, nil
+}
+
+// Words returns only all non-punctuation and non-space tokens
+func (incoming *Tokens) Words() *Tokens {
+	isWord := func(t *Token) bool {
+		return !t.IsPunct() && !t.IsSpace()
+	}
+	w := &where{
+		incoming:  incoming,
+		predicate: isWord,
+	}
+	return &Tokens{
+		Next: w.next,
+	}
+}
+
+// Count counts all tokens. Note that it will consume all tokens, so you will not be able to iterate further after making this call.
+func (incoming *Tokens) Count() (int, error) {
+	var count int
+	for {
+		t, err := incoming.Next()
+		if err != nil {
+			return 0, err
+		}
+		if t == nil {
+			break
+		}
+		if t.IsPunct() || t.IsSpace() {
+			continue
+		}
+		count++
+	}
+	return count, nil
 }
 
 // Token represents a piece of text with metadata.

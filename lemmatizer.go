@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strings"
 	"unicode"
-
-	"github.com/clipperhouse/jargon/stackoverflow"
 )
 
 // Lemmatize transforms Tokens to their canonicalized ("lemmatized") terms.
@@ -21,29 +19,18 @@ import (
 //
 // Note that fewer tokens may be returned than were input. In this case, the five tokens
 // representing Ruby<space>on<space>Rails are combined into a single token.
-func (incoming *Tokens) Lemmatize(filters ...TokenFilter) *Tokens {
-	if len(filters) == 0 {
-		filters = append(filters, stackoverflow.Tags)
+func (incoming *Tokens) Lemmatize(filter TokenFilter) *Tokens {
+	lem := newLemmatizer(incoming, filter)
+	return &Tokens{
+		Next: lem.next,
 	}
-
-	var result = incoming
-
-	// new lemmatizer for each filter, results as input into next lemmatizer
-	for _, filter := range filters {
-		lem := newLemmatizer(result, filter)
-		result = &Tokens{
-			Next: lem.next,
-		}
-	}
-
-	return result
 }
 
 // LemmatizeString transforms words to their canonicalized ("lemmatized") terms
-func LemmatizeString(s string, filters ...TokenFilter) string {
+func LemmatizeString(s string, filter TokenFilter) string {
 	r := strings.NewReader(s)
 	tokens := Tokenize(r)
-	lemmatized := tokens.Lemmatize(filters...)
+	lemmatized := tokens.Lemmatize(filter)
 
 	// We can elide the error because it's coming from a string, no real I/O
 	result, _ := lemmatized.String()

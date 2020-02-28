@@ -19,13 +19,13 @@ import (
 )
 
 func TestLemmatize(t *testing.T) {
-	dict := stackoverflow.Tags
+	filter := stackoverflow.Tags
 
 	original := `Here is the story of Ruby on Rails nodeJS, "Java Script", html5 and ASPNET mvc plus TCP/IP.`
 	r1 := strings.NewReader(original)
 	tokens := jargon.Tokenize(r1)
 
-	got, err := tokens.Lemmatize(dict).ToSlice()
+	got, err := tokens.Lemmatize(filter).ToSlice()
 	if err != nil {
 		t.Error(err)
 	}
@@ -58,20 +58,20 @@ func TestLemmatize(t *testing.T) {
 }
 
 func TestLemmatizeString(t *testing.T) {
-	dict := stackoverflow.Tags
+	filter := stackoverflow.Tags
 
 	s := `Here is the story of Ruby on Rails.`
 
 	r := strings.NewReader(s)
 	tokens := jargon.Tokenize(r)
-	lemmatized := tokens.Lemmatize(dict)
+	lemmatized := tokens.Lemmatize(filter)
 
 	s1, err := lemmatized.String()
 	if err != nil {
 		t.Error(err)
 	}
 
-	s2 := jargon.LemmatizeString(s)
+	s2 := jargon.LemmatizeString(s, filter)
 
 	if s1 != s2 {
 		t.Errorf("Lemmatize and LemmatizeString should give the same result")
@@ -172,14 +172,19 @@ bar	42	javascript`)
 
 func TestMultiple(t *testing.T) {
 	s := `Here is the story of five and Rails and ASPNET in the CAFÉS and couldn't three hundred thousand.`
+	r := strings.NewReader(s)
 
-	got := jargon.LemmatizeString(s,
-		stackoverflow.Tags,
-		contractions.Expander,
-		numbers.Filter,
-		stemmer.English,
-		ascii.Fold,
-	)
+	tokens := jargon.Tokenize(r)
+	tokens = tokens.Lemmatize(stackoverflow.Tags)
+	tokens = tokens.Lemmatize(contractions.Expander)
+	tokens = tokens.Lemmatize(numbers.Filter)
+	tokens = tokens.Lemmatize(stemmer.English)
+	tokens = tokens.Lemmatize(ascii.Fold)
+
+	got, err := tokens.String()
+	if err != nil {
+		t.Error(err)
+	}
 
 	expected := `here is the stori of 5 and ruby-on-rail and asp.net in the cafe and could not 300000.`
 

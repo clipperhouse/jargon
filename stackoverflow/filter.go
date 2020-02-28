@@ -1,8 +1,6 @@
 package stackoverflow
 
 import (
-	"fmt"
-
 	"github.com/clipperhouse/jargon/synonyms"
 )
 
@@ -16,7 +14,6 @@ var Tags *synonyms.Filter
 func init() {
 	ignore := []rune{' ', '-', '.', '/'}
 	filter, err := synonyms.NewFilter(mappings, synonyms.IgnoreCase, synonyms.Ignore(ignore...))
-	fmt.Println(filter.MaxGramLength())
 	if err != nil {
 		panic(err)
 	}

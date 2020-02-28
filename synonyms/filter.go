@@ -3,6 +3,8 @@ package synonyms
 import (
 	"fmt"
 	"strings"
+
+	"github.com/clipperhouse/jargon"
 )
 
 // IgnoreFunc is a function type specifying 'what to ignore' when looking up synonyms.
@@ -34,15 +36,19 @@ type Filter struct {
 // NewFilter creates a new synonyms filter based on a set of Mappings and IgnoreFuncs. The latter are used to specify insensitivity to case or spaces, for example.
 func NewFilter(mappings map[string]string, ignoreFuncs ...IgnoreFunc) (*Filter, error) {
 	lookup := make(map[string]string)
-	maxGramLength := 1
+	var maxGramLength int = 1
 
 	for synonyms, canonical := range mappings {
 		for _, synonym := range strings.Split(synonyms, ",") {
 
-			// ↓ This is probably not quite correct. Need to count word tokens, which may or may not be split on space.
-			grams := len(strings.Fields(synonym))
-			if grams > maxGramLength {
-				maxGramLength = grams
+			// Need to count word tokens, not naively split on space.
+			tokens := jargon.Tokenize(strings.NewReader(synonym))
+			count, err := tokens.Words().Count()
+			if err != nil {
+				return nil, err
+			}
+			if count > maxGramLength {
+				maxGramLength = count
 			}
 
 			key := strings.TrimSpace(synonym)
