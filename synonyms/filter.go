@@ -38,6 +38,8 @@ func NewFilter(mappings map[string]string, ignoreFuncs ...IgnoreFunc) (*Filter, 
 
 	for synonyms, canonical := range mappings {
 		for _, synonym := range strings.Split(synonyms, ",") {
+
+			// ↓ This is probably not quite correct. Need to count word tokens, which may or may not be split on space.
 			grams := len(strings.Fields(synonym))
 			if grams > maxGramLength {
 				maxGramLength = grams
@@ -54,8 +56,7 @@ func NewFilter(mappings map[string]string, ignoreFuncs ...IgnoreFunc) (*Filter, 
 			existing, found := lookup[key]
 			if found && existing != canonical {
 				err := fmt.Errorf("the synonym %q (normalized to %q) from the {%q: %q} mapping, would overwrite an earlier mapping to %q", synonym, key, synonyms, canonical, existing)
-				fmt.Println(err)
-				//				return nil, err
+				return nil, err
 			}
 
 			lookup[key] = canonical
