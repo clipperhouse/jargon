@@ -15,9 +15,9 @@ func TestBasics(t *testing.T) {
 		{"thesame", false, ""},
 	}
 
-	mappings := []synonyms.Mapping{
-		{"developer, engineer, programmer, some word", "developer"},
-		{"synonym, equivalent, the same", "synonym"},
+	mappings := map[string]string{
+		"developer, engineer, programmer, some word": "developer",
+		"synonym, equivalent, the same":              "synonym",
 	}
 
 	filter, err := synonyms.NewFilter(mappings)
@@ -36,9 +36,9 @@ func TestSpaceAndCase(t *testing.T) {
 		{"imho", true, "imo"},
 	}
 
-	mappings := []synonyms.Mapping{
-		{"ecma script, java script, js", "javascript"},
-		{"in my opinion, in my humble  opinion, IMHO", "imo"},
+	mappings := map[string]string{
+		"ecma script, java script, js":               "javascript",
+		"in my opinion, in my humble  opinion, IMHO": "imo",
 	}
 
 	filter, err := synonyms.NewFilter(mappings, synonyms.IgnoreSpace, synonyms.IgnoreCase)
@@ -50,9 +50,9 @@ func TestSpaceAndCase(t *testing.T) {
 }
 
 func TestDuplicate(t *testing.T) {
-	mappings := []synonyms.Mapping{
-		{"foo", "bar"},
-		{"Foo", "qux"},
+	mappings := map[string]string{
+		"foo": "bar",
+		"Foo": "qux",
 	}
 
 	_, err := synonyms.NewFilter(mappings, synonyms.IgnoreCase)
@@ -63,8 +63,8 @@ func TestDuplicate(t *testing.T) {
 }
 
 func TestBlankKey(t *testing.T) {
-	mappings := []synonyms.Mapping{
-		{"foo", "bar"},
+	mappings := map[string]string{
+		"foo": "bar",
 	}
 
 	_, err := synonyms.NewFilter(mappings, synonyms.Ignore('f', 'o'))

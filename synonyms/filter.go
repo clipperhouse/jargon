@@ -5,12 +5,6 @@ import (
 	"strings"
 )
 
-// Mapping is a tuple for mapping Synonyms to a Canonical form, thesaurus-like. The Synonyms property can be a comma separated string, indicating that each variation will map to the Canonical.
-// For 'rules-based' synonyms, such as insensitivity to spaces or hyphens, pass an IgnoreFunc rather than trying to enumerate all the variations.
-type Mapping struct {
-	Synonyms, Canonical string
-}
-
 // IgnoreFunc is a function type specifying 'what to ignore' when looking up synonyms.
 type IgnoreFunc func(string) string
 
@@ -38,14 +32,12 @@ type Filter struct {
 }
 
 // NewFilter creates a new synonyms filter based on a set of Mappings and IgnoreFuncs. The latter are used to specify insensitivity to case or spaces, for example.
-func NewFilter(mappings []Mapping, ignoreFuncs ...IgnoreFunc) (*Filter, error) {
+func NewFilter(mappings map[string]string, ignoreFuncs ...IgnoreFunc) (*Filter, error) {
 	lookup := make(map[string]string)
 	maxGramLength := 1
 
-	for _, m := range mappings {
-		synonyms := strings.Split(m.Synonyms, ",")
-
-		for _, synonym := range synonyms {
+	for synonyms, canonical := range mappings {
+		for _, synonym := range strings.Split(synonyms, ",") {
 			grams := len(strings.Fields(synonym))
 			if grams > maxGramLength {
 				maxGramLength = grams
@@ -54,18 +46,19 @@ func NewFilter(mappings []Mapping, ignoreFuncs ...IgnoreFunc) (*Filter, error) {
 			key := strings.TrimSpace(synonym)
 			key = normalize(ignoreFuncs, key)
 			if key == "" {
-				err := fmt.Errorf("the synonym %q, from the {%q: %q} mapping, results in an empty string when normalized", synonym, m.Synonyms, m.Canonical)
+				err := fmt.Errorf("the synonym %q, from the {%q: %q} mapping, results in an empty string when normalized", synonym, synonyms, canonical)
 				return nil, err
 			}
 
 			// The same key should not point to multiple different synonyms
 			existing, found := lookup[key]
-			if found && existing != m.Canonical {
-				err := fmt.Errorf("the synonym %q (normalized to %q) from the {%q: %q} mapping, would overwrite an earlier mapping to %q", synonym, key, m.Synonyms, m.Canonical, existing)
-				return nil, err
+			if found && existing != canonical {
+				err := fmt.Errorf("the synonym %q (normalized to %q) from the {%q: %q} mapping, would overwrite an earlier mapping to %q", synonym, key, synonyms, canonical, existing)
+				fmt.Println(err)
+				//				return nil, err
 			}
 
-			lookup[key] = m.Canonical
+			lookup[key] = canonical
 		}
 	}
 
