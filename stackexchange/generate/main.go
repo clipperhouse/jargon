@@ -1,5 +1,4 @@
-// Package stackexchange implements a jargon.TokenFilter of tags and synonyms for use with jargon lemmatizers
-package stackexchange
+package main
 
 import (
 	"bytes"
@@ -11,27 +10,35 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"text/template"
 	"time"
 )
 
-var exists = struct{}{}
+func main() {
+	err := writeDictionary()
+
+	if err != nil {
+		panic(err)
+	}
+}
 
 // Hyphenated trailing versions, like python-2.7. Things like html5 are considered a unique name, not a version per se.
 var trailingVersion = regexp.MustCompile(`-[\d.]+$`)
+
+// Hard-coded exceptions that cause bad mappings
+var ignore = map[string]bool{
+	"drop-down": true,
+	"datatable": true,
+}
 
 // run this in generator_test.go
 func writeDictionary() error {
 	pageSize := 100
 
 	// Used in the template below
-	data := struct {
-		Tags     map[string]string
-		Synonyms map[string]string
-	}{
-		Tags:     make(map[string]string),
-		Synonyms: make(map[string]string),
-	}
+	mappings := make(map[string]string)
+	seen := make(map[string]bool)
 
 	for site, count := range sites {
 		pages := count / pageSize
@@ -41,35 +48,63 @@ func writeDictionary() error {
 				return err
 			}
 
-			// Avoid duplicates; since we are querying multiple sites, duplication is common.
-			for _, item := range wrapper.Items {
-				if item.Moderator {
+			// Synonyms first
+			for _, tag := range wrapper.Items {
+				if tag.Moderator {
 					// We don't want those
 					continue
 				}
 
-				// Trailing versions (like ruby-on-rails-4) are not interesting for our purposes
-				canonical := trailingVersion.ReplaceAllString(item.Name, "")
-
-				key := normalize(canonical)
-				// Only append tags if they haven't been added already
-				if _, found := data.Tags[key]; !found {
-					data.Tags[key] = canonical
+				if len(tag.Synonyms) == 0 {
+					continue
 				}
 
-				// Only add synonyms if they haven't been added already
-				for _, s := range item.Synonyms {
-					synonym := trailingVersion.ReplaceAllString(s, "")
+				canonical := tag.Name // tag name
 
-					if synonym == canonical {
-						continue // skip it
+				var filtered []string
+				for _, synonym := range tag.Synonyms {
+					if ignore[synonym] {
+						continue
 					}
 
-					key := normalize(synonym)
-					if _, found := data.Synonyms[key]; !found {
-						data.Synonyms[key] = canonical
-					}
+					// Split up the grams to allow calculation max gram length by the Synonyms constructor
+					synonym = strings.ReplaceAll(synonym, "-", " ")
+
+					filtered = append(filtered, synonym)
 				}
+
+				for _, synonym := range filtered {
+					seen[synonym] = true
+				}
+
+				// Comma-separated string, a format Synonyms can handle
+				synonyms := strings.Join(filtered, ", ")
+				mappings[synonyms] = canonical
+			}
+
+			// Avoid duplicates; since we are querying multiple sites, duplication is common.
+			for _, tag := range wrapper.Items {
+				if tag.Moderator {
+					// We don't want those
+					continue
+				}
+
+				canonical := tag.Name // tag name
+
+				// Split up the grams to allow calculation max gram length by the Synonyms constructor
+				synonym := strings.ReplaceAll(tag.Name, "-", " ")
+
+				if ignore[synonym] {
+					continue
+				}
+
+				if seen[synonym] {
+					// Ignore ones we've seen
+					continue
+				}
+
+				// We want to identify tags as canonical even if they don't map to something different
+				mappings[synonym] = canonical
 			}
 
 			if !wrapper.HasMore {
@@ -96,12 +131,20 @@ func writeDictionary() error {
 
 	var source bytes.Buffer
 
-	tmplErr := tmpl.Execute(&source, data)
+	tmplErr := tmpl.Execute(&source, mappings)
 	if tmplErr != nil {
 		return tmplErr
 	}
 
-	formatted, fmtErr := format.Source(source.Bytes())
+	// Break up some lines for readability
+	split := strings.ReplaceAll(source.String(), `", "`, `",
+"`)
+	split = strings.ReplaceAll(split, `{"`, `{
+"`)
+	split = strings.ReplaceAll(split, `"}`, `",
+}`)
+
+	formatted, fmtErr := format.Source([]byte(split))
 	if fmtErr != nil {
 		return fmtErr
 	}
@@ -117,39 +160,6 @@ func writeDictionary() error {
 		return writeErr
 	}
 
-	writeErr = writeTypeScript("tags.ts", tmplTypeScript, data.Tags)
-	if writeErr != nil {
-		return writeErr
-	}
-
-	writeErr = writeTypeScript("synonyms.ts", tmplTypeScript, data.Synonyms)
-	if writeErr != nil {
-		return writeErr
-	}
-
-	return nil
-}
-
-func writeTypeScript(filename string, tmpl *template.Template, data interface{}) error {
-
-	var source bytes.Buffer
-
-	tmplErr := tmpl.Execute(&source, data)
-	if tmplErr != nil {
-		return tmplErr
-	}
-
-	f, createErr := os.Create(filename)
-	if createErr != nil {
-		return createErr
-	}
-	defer f.Close()
-
-	_, writeErr := f.Write(source.Bytes())
-	if writeErr != nil {
-		return writeErr
-	}
-
 	return nil
 }
 
@@ -158,27 +168,15 @@ package stackexchange
 
 // This file is generated. Best not to modify it, as it will likely be overwritten.
 
-var tags = {{ printf "%#v" .Tags }}
-
-var synonyms = {{ printf "%#v" .Synonyms }}
-`))
-
-var tmplTypeScript = template.Must(template.New("").Parse(`
-// This file is generated. Best not to modify it, as it will likely be overwritten.
-
-export default new Map<string, string>([
-{{- range $key, $value := . }}
-	["{{ $key }}", "{{ $value }}"],
-{{- end }}
-]);
+var mappings = {{ printf "%#v" . }}
 `))
 
 // sites to query, with the number of tags to get, based on eyeballing how many of the top x are 'interesting'
 var sites = map[string]int{
 	"stackoverflow": 2000,
-	"serverfault":   600,
-	"gamedev":       300,
-	"datascience":   200,
+	// "serverfault":   600,
+	// "gamedev":       300,
+	// "datascience":   200,
 }
 var tagsURL = "http://api.stackexchange.com/2.2/tags?page=%d&pagesize=%d&order=desc&sort=popular&site=%s&filter=!4-J-du8hXSkh2Is1a&key=%s"
 var stackExchangeAPIKey = "*AbAX7kb)BKJTlmKgb*Tkw(("

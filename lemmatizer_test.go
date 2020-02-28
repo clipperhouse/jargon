@@ -13,7 +13,7 @@ import (
 	"github.com/clipperhouse/jargon/ascii"
 	"github.com/clipperhouse/jargon/contractions"
 	"github.com/clipperhouse/jargon/numbers"
-	stackexchange "github.com/clipperhouse/jargon/stackexchange2"
+	"github.com/clipperhouse/jargon/stackexchange"
 	"github.com/clipperhouse/jargon/stemmer"
 	"github.com/clipperhouse/jargon/stopwords"
 )
