@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 
 	"github.com/blevesearch/segment"
+	"golang.org/x/net/html"
 )
 
 // Tokenize returns an 'iterator' of Tokens from a io.Reader. Call .Next() until it returns nil:
@@ -287,4 +289,64 @@ var middles = runeSet{
 var trailings = runeSet{
 	'+': true,
 	'#': true,
+}
+
+// TokenizeHTML tokenizes HTML. Text nodes are tokenized using jargon.Tokenize; everything else (tags, comments) are left verbatim.
+// It returns a Tokens, intended to be iterated over by calling Next(), until nil.
+// It returns all tokens (including white space), so text can be reconstructed with fidelity. Ignoring (say) whitespace is a decision for the caller.
+func TokenizeHTML(r io.Reader) *Tokens {
+	t := &htokenizer{
+		html: html.NewTokenizer(r),
+		text: dummy, // dummy to avoid nil
+	}
+	return &Tokens{
+		Next: t.next,
+	}
+}
+
+var dummy = &Tokens{Next: func() (*Token, error) { return nil, nil }}
+
+type htokenizer struct {
+	html *html.Tokenizer
+	text *Tokens
+}
+
+// next is the implementation of the Tokens interface. To iterate, call until it returns nil
+func (t *htokenizer) next() (*Token, error) {
+	// Are we "inside" a text node?
+	text, err := t.text.Next()
+	if err != nil {
+		return nil, err
+	}
+	if text != nil {
+		return text, nil
+	}
+
+	for {
+		tt := t.html.Next()
+
+		if tt == html.ErrorToken {
+			err := t.html.Err()
+			if err == io.EOF {
+				// No problem
+				return nil, nil
+			}
+			return nil, err
+		}
+
+		switch tok := t.html.Token(); {
+		case tok.Type == html.TextToken:
+			r := strings.NewReader(tok.Data)
+			t.text = TokenizeLegacy(r)
+			return t.text.Next()
+		default:
+			// Everything else is punct for our purposes
+			token := &Token{
+				value: tok.String(),
+				punct: true,
+				space: false,
+			}
+			return token, nil
+		}
+	}
 }

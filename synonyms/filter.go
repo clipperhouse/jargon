@@ -1,3 +1,4 @@
+// Package synonyms enables mapping synonyms to canonical terms
 package synonyms
 
 import (
@@ -61,7 +62,7 @@ func NewFilter(mappings map[string]string, ignoreFuncs ...IgnoreFunc) (*Filter, 
 			// The same key should not point to multiple different synonyms
 			existing, found := lookup[key]
 			if found && existing != canonical {
-				err := fmt.Errorf("the synonym %q (normalized to %q) from the {%q: %q} mapping, would overwrite an earlier mapping to %q", synonym, key, synonyms, canonical, existing)
+				err := fmt.Errorf("the synonym %q (normalized to %q) from the {%q: %q} mapping, would overwrite an earlier mapping to %q. choose one or the other", synonym, key, synonyms, canonical, existing)
 				return nil, err
 			}
 

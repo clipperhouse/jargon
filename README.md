@@ -51,27 +51,28 @@ See [GoDoc](https://godoc.org/github.com/clipperhouse/jargon).
 
 Canonical terms (lemmas) are looked up in token filters. Three are available:
 
-- [Stack Overflow technology tags](https://github.com/clipperhouse/jargon/stackoverflow)
-  - `Ruby on Rails → ruby-on-rails`
-  - `ObjC → objective-c`
-- [Contractions](https://github.com/clipperhouse/jargon/contractions)
-  - `Couldn‘t → Could not`
-- [Simple numbers](https://github.com/clipperhouse/jargon/numbers)
-  - `Thirty-five hundred → 3500`
+[Stack Overflow technology tags](https://github.com/clipperhouse/jargon/stackoverflow)
+- `Ruby on Rails → ruby-on-rails`
+- `ObjC → objective-c`
+
+[Contractions](https://github.com/clipperhouse/jargon/contractions)
+- `Couldn‘t → Could not`
+
+[Simple numbers](https://github.com/clipperhouse/jargon/numbers)
+- `Thirty-five hundred → 3500`
 
 To implement your own, see the [jargon.TokenFilter interface](https://godoc.org/github.com/clipperhouse/jargon/#TokenFilter)
 
 ## Tokenizer
 
-Jargon includes its own tokenizer, with an emphasis on handling technology terms correctly:
+Jargon includes a tokenizer based on Unicode text segmentation, with modifications to handle :
 
-- C++, ASP.net, and other non-alphanumeric terms are recognized as single tokens
+- C++, .Net and similar are recognized as single tokens
 - #hashtags and @handles
-- Simple URLs and email address are handled _pretty well_, though can be notoriously hard to get right
 
 The tokenizer preserves all tokens verbatim, including whitespace and punctuation, so the original text can be reconstructed with fidelity (“round tripped”).
 
-(It turns out that the above rules work well in structured text such as CSV and JSON.)
+The above rules work well in structured text such as CSV and JSON. There is also a TokenizeHTML method which sees HTML tags as single tokens, and tokenizes text nodes.
 
 ## Background
 
