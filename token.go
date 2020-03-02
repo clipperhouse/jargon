@@ -13,11 +13,11 @@ type Tokens struct {
 }
 
 // ToSlice converts the Tokens iterator into a slice (array). Calling ToSlice will exhaust the iterator. For big files, putting everything into an array may cause memory pressure.
-func (tokens *Tokens) ToSlice() ([]*Token, error) {
+func (incoming *Tokens) ToSlice() ([]*Token, error) {
 	var result []*Token
 
 	for {
-		t, err := tokens.Next()
+		t, err := incoming.Next()
 		if err != nil {
 			return result, err
 		}
@@ -30,11 +30,11 @@ func (tokens *Tokens) ToSlice() ([]*Token, error) {
 	return result, nil
 }
 
-func (tokens *Tokens) String() (string, error) {
+func (incoming *Tokens) String() (string, error) {
 	var b strings.Builder
 
 	for {
-		t, err := tokens.Next()
+		t, err := incoming.Next()
 		if err != nil {
 			return b.String(), err
 		}
@@ -78,6 +78,17 @@ func (incoming *Tokens) Words() *Tokens {
 	w := &where{
 		incoming:  incoming,
 		predicate: isWord,
+	}
+	return &Tokens{
+		Next: w.next,
+	}
+}
+
+// Lemmas returns only tokens which have been 'lemmatized', or in some way modified by a token filter
+func (incoming *Tokens) Lemmas() *Tokens {
+	w := &where{
+		incoming:  incoming,
+		predicate: (*Token).IsLemma,
 	}
 	return &Tokens{
 		Next: w.next,
@@ -128,7 +139,7 @@ func (t *Token) IsSpace() bool {
 }
 
 // IsLemma indicates that the token is a lemma, i.e., a canonical term that replaced original token(s).
-func (t Token) IsLemma() bool {
+func (t *Token) IsLemma() bool {
 	return t.lemma
 }
 
