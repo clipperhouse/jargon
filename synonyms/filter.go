@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/clipperhouse/jargon"
+	"github.com/clipperhouse/jargon/trie"
 )
 
 // IgnoreFunc is a function type specifying 'what to ignore' when looking up synonyms.
@@ -31,6 +32,7 @@ func Ignore(runes ...rune) IgnoreFunc {
 type Filter struct {
 	ignoreFuncs   []IgnoreFunc
 	lookup        map[string]string
+	Trie          trie.Trie
 	maxGramLength int
 }
 
@@ -38,6 +40,7 @@ type Filter struct {
 func NewFilter(mappings map[string]string, ignoreFuncs ...IgnoreFunc) (*Filter, error) {
 	lookup := make(map[string]string)
 	var maxGramLength int = 1
+	tri := trie.Trie{}
 
 	for synonyms, canonical := range mappings {
 		for _, synonym := range strings.Split(synonyms, ",") {
@@ -53,6 +56,10 @@ func NewFilter(mappings map[string]string, ignoreFuncs ...IgnoreFunc) (*Filter, 
 			}
 
 			key := strings.TrimSpace(synonym)
+
+			ss := strings.Split(key, " ")
+			tri.Add(ss, canonical)
+
 			key = normalize(ignoreFuncs, key)
 			if key == "" {
 				err := fmt.Errorf("the synonym %q, from the {%q: %q} mapping, results in an empty string when normalized", synonym, synonyms, canonical)
@@ -73,6 +80,7 @@ func NewFilter(mappings map[string]string, ignoreFuncs ...IgnoreFunc) (*Filter, 
 	return &Filter{
 		ignoreFuncs:   ignoreFuncs,
 		lookup:        lookup,
+		Trie:          tri,
 		maxGramLength: maxGramLength,
 	}, nil
 }
@@ -91,14 +99,22 @@ func normalize(ignoreFuncs []IgnoreFunc, ss ...string) string {
 }
 
 func (f *Filter) Lookup(ss ...string) (string, bool) {
-	key := normalize(f.ignoreFuncs, ss...)
-	if key == "" {
+
+	node := f.Trie.SearchValue(ss...)
+	if node == nil {
 		return "", false
 	}
 
-	canonical, found := f.lookup[key]
+	return node.Value, true
 
-	return canonical, found
+	// key := normalize(f.ignoreFuncs, ss...)
+	// if key == "" {
+	// 	return "", false
+	// }
+
+	// canonical, found := f.lookup[key]
+
+	// return canonical, found
 }
 
 func (f *Filter) MaxGramLength() int {

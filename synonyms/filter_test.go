@@ -1,6 +1,7 @@
 package synonyms_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/clipperhouse/jargon/synonyms"
@@ -9,7 +10,6 @@ import (
 func TestBasics(t *testing.T) {
 	expecteds := []test{
 		{"engineer", true, "developer"},
-		{" engineer", false, ""},
 		{"synonym", true, "synonym"},
 		{"the same", true, "synonym"},
 		{"thesame", false, ""},
@@ -21,6 +21,7 @@ func TestBasics(t *testing.T) {
 	}
 
 	filter, err := synonyms.NewFilter(mappings)
+	t.Logf("%#v", filter.Trie.Children["the"].Children["same"])
 	if err != nil {
 		t.Error(err)
 	}
@@ -82,7 +83,7 @@ type test struct {
 
 func testSynonyms(t *testing.T, filter *synonyms.Filter, expecteds []test) {
 	for _, expected := range expecteds {
-		canonical, found := filter.Lookup(expected.input)
+		canonical, found := filter.Lookup(strings.Fields(expected.input)...)
 		if expected.found != found {
 			t.Errorf("given input %q, expected found to be %t", expected.input, expected.found)
 		}
