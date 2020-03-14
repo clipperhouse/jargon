@@ -8,7 +8,7 @@ type Trie struct {
 func (trie *Trie) Add(ss []string, value string) bool {
 	node := trie
 	for _, s := range ss {
-		child, _ := node.Children[s]
+		child := node.Children[s]
 		if child == nil {
 			if node.Children == nil {
 				node.Children = map[string]*Trie{}
