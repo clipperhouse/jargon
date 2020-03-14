@@ -29,13 +29,13 @@ func Tokenize(r io.Reader) *Tokens {
 type tokenizer struct {
 	segmenter *segment.Segmenter
 	buffer    []seg
-	outgoing  *queue
+	outgoing  *TokenQueue
 }
 
 func newTokenizer(r io.Reader) *tokenizer {
 	return &tokenizer{
 		segmenter: segment.NewSegmenter(r),
-		outgoing:  &queue{},
+		outgoing:  &TokenQueue{},
 	}
 }
 
@@ -60,8 +60,8 @@ func (t *tokenizer) segment() seg {
 // next returns the next token. Call until it returns nil.
 func (t *tokenizer) next() (*Token, error) {
 	// First, look for something to send back
-	if t.outgoing.len() > 0 {
-		return t.outgoing.pop(), nil
+	if t.outgoing.Len() > 0 {
+		return t.outgoing.Pop(), nil
 	}
 
 	// Else, pull new segment(s)
@@ -101,7 +101,7 @@ func (t *tokenizer) next() (*Token, error) {
 			t.emit()
 
 			// We know everything in outgoing is a complete token
-			return t.outgoing.pop(), nil
+			return t.outgoing.Pop(), nil
 		}
 
 		// At this point, it's punct
@@ -214,7 +214,7 @@ func (t *tokenizer) next() (*Token, error) {
 		t.accept(current)
 		t.emit()
 
-		return t.outgoing.pop(), nil
+		return t.outgoing.Pop(), nil
 	}
 
 	if err := t.segmenter.Err(); err != nil {
@@ -226,8 +226,8 @@ func (t *tokenizer) next() (*Token, error) {
 		t.emit()
 	}
 
-	if t.outgoing.len() > 0 {
-		return t.outgoing.pop(), nil
+	if t.outgoing.Len() > 0 {
+		return t.outgoing.Pop(), nil
 	}
 
 	return nil, nil
@@ -239,7 +239,7 @@ func (t *tokenizer) accept(s seg) {
 
 func (t *tokenizer) emit() {
 	if len(t.buffer) > 0 {
-		t.outgoing.push(t.token())
+		t.outgoing.Push(t.token())
 	}
 }
 

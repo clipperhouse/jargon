@@ -15,7 +15,7 @@ var (
 
 // TestBufferLen is exported only for testing
 func (lem *lemmatizer) TestBufferLen() int {
-	return lem.buffer.len()
+	return lem.buffer.Len()
 }
 
 // TestCount is exported only for testing

@@ -106,9 +106,6 @@ func (incoming *Tokens) Count() (int, error) {
 		if t == nil {
 			break
 		}
-		if t.IsPunct() || t.IsSpace() {
-			continue
-		}
 		count++
 	}
 	return count, nil

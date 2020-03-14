@@ -1,29 +1,37 @@
 package jargon
 
-// queue is a FIFO queue
-type queue struct {
+// TokenQueue is a FIFO queue
+type TokenQueue struct {
 	tokens []*Token
 }
 
-func (q *queue) len() int {
+func (q *TokenQueue) All() []*Token {
+	return q.tokens
+}
+
+func (q *TokenQueue) At(i int) *Token {
+	return q.tokens[i]
+}
+
+func (q *TokenQueue) Len() int {
 	return len(q.tokens)
 }
 
-func (q *queue) peek() *Token {
+func (q *TokenQueue) First() *Token {
 	return q.tokens[0]
 }
 
-func (q *queue) pop() *Token {
-	token := q.peek()
-	q.drop(1)
+func (q *TokenQueue) Pop() *Token {
+	token := q.First()
+	q.Drop(1)
 	return token
 }
 
-func (q *queue) push(token *Token) {
+func (q *TokenQueue) Push(token *Token) {
 	q.tokens = append(q.tokens, token)
 }
 
-func (q *queue) drop(n int) {
+func (q *TokenQueue) Drop(n int) {
 	// Optimization to avoid array resizing
 	// Move the end to the beginning
 	copy(q.tokens, q.tokens[n:])

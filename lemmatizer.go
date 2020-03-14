@@ -42,23 +42,23 @@ func newLemmatizer(incoming *Tokens, filter TokenFilter) *lemmatizer {
 	return &lemmatizer{
 		incoming: incoming,
 		filter:   filter,
-		buffer:   &queue{},
-		outgoing: &queue{},
+		buffer:   &TokenQueue{},
+		outgoing: &TokenQueue{},
 	}
 }
 
 type lemmatizer struct {
 	incoming *Tokens
 	filter   TokenFilter
-	buffer   *queue // for incoming tokens; no guarantee they will be emitted
-	outgoing *queue
+	buffer   *TokenQueue // for incoming tokens; no guarantee they will be emitted
+	outgoing *TokenQueue
 }
 
 // next returns the next token; nil indicates end of data
 func (lem *lemmatizer) next() (*Token, error) {
 	for {
-		if lem.outgoing.len() > 0 {
-			return lem.outgoing.pop(), nil
+		if lem.outgoing.Len() > 0 {
+			return lem.outgoing.Pop(), nil
 		}
 
 		err := lem.fill(1)
@@ -70,10 +70,10 @@ func (lem *lemmatizer) next() (*Token, error) {
 			return nil, err
 		}
 
-		peek := lem.buffer.peek()
+		peek := lem.buffer.First()
 		if peek.IsPunct() || peek.IsSpace() {
-			token := lem.buffer.pop()
-			lem.outgoing.push(token)
+			token := lem.buffer.Pop()
+			lem.outgoing.Push(token)
 			continue
 		}
 
@@ -99,7 +99,7 @@ func (lem *lemmatizer) ngrams() error {
 		if found {
 			// if returned value is empty, interpret as "remove token", e.g. the stopwords filter
 			if canonical == "" {
-				lem.buffer.drop(consumed)
+				lem.buffer.Drop(consumed)
 				continue
 			}
 
@@ -127,7 +127,7 @@ func (lem *lemmatizer) ngrams() error {
 					}
 					token.lemma = true
 					//set it up to be emitted
-					lem.outgoing.push(token)
+					lem.outgoing.Push(token)
 				}
 			} else {
 				token := &Token{
@@ -137,18 +137,18 @@ func (lem *lemmatizer) ngrams() error {
 					lemma: true,
 				}
 				//set it up to be emitted
-				lem.outgoing.push(token)
+				lem.outgoing.Push(token)
 			}
 
 			// discard the incoming tokens that comprised the lemma
-			lem.buffer.drop(consumed)
+			lem.buffer.Drop(consumed)
 			return nil
 		}
 
 		if desired == 1 {
 			// No n-grams, just emit the next token
-			token := lem.buffer.pop()
-			lem.outgoing.push(token)
+			token := lem.buffer.Pop()
+			lem.outgoing.Push(token)
 			return nil
 		}
 	}
@@ -157,7 +157,7 @@ func (lem *lemmatizer) ngrams() error {
 
 // ensure that the buffer contains at least `desired` elements; returns false if channel is exhausted before achieving the count
 func (lem *lemmatizer) fill(desired int) error {
-	for lem.buffer.len() < desired {
+	for lem.buffer.Len() < desired {
 		token, err := lem.incoming.Next()
 		if err != nil {
 			return err
@@ -166,7 +166,7 @@ func (lem *lemmatizer) fill(desired int) error {
 			// EOF
 			return errInsufficient
 		}
-		lem.buffer.push(token)
+		lem.buffer.Push(token)
 	}
 	return nil
 }
