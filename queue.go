@@ -38,3 +38,14 @@ func (q *TokenQueue) Drop(n int) {
 	// Chop off the end
 	q.tokens = q.tokens[:len(q.tokens)-n]
 }
+
+func (src *TokenQueue) PopTo(dst *TokenQueue) {
+	token := src.Pop()
+	dst.Push(token)
+}
+
+func (src *TokenQueue) FlushTo(dst *TokenQueue) {
+	for range src.All() {
+		src.PopTo(dst)
+	}
+}

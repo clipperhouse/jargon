@@ -1,99 +1,89 @@
 package stack
 
 import (
-	"fmt"
-	"strings"
+	"unicode"
 
 	"github.com/clipperhouse/jargon"
 )
 
 type TokenTrie struct {
-	Children map[string]*TokenTrie
-	Value    string
+	root       *Node
+	ignore     map[rune]bool
+	ignoreCase bool
 }
 
-var ignore = map[string]bool{
-	"-": true,
-	" ": true,
-	".": true,
+type Node struct {
+	children     map[rune]*Node
+	hasCanonical bool
+	canonical    string
 }
 
-func normalize(s string) string {
-	for k := range ignore {
-		s = strings.ReplaceAll(s, k, "")
+func newTokenTrie(ignoreCase bool, ignore []rune) *TokenTrie {
+	ignoreset := map[rune]bool{}
+	for _, r := range ignore {
+		ignoreset[r] = true
 	}
-	return s
+	return &TokenTrie{
+		root:       &Node{},
+		ignoreCase: ignoreCase,
+		ignore:     ignoreset,
+	}
 }
 
-func (trie *TokenTrie) Add(tokens []*jargon.Token, value string) bool {
-	node := trie
+func (trie *TokenTrie) Add(tokens []*jargon.Token, canonical string) {
+	node := trie.root
 	for _, token := range tokens {
-
-		key := token.String()
-		if ignore[key] {
-			continue
-		}
-
-		key = normalize(token.String())
-		if key == "" {
-			continue
-		}
-
-		child := node.Children[key]
-		if child == nil {
-			if node.Children == nil {
-				node.Children = map[string]*TokenTrie{}
+		for _, r := range token.String() {
+			if trie.ignoreCase {
+				r = unicode.ToLower(r)
 			}
-			child = &TokenTrie{}
-			node.Children[key] = child
-		}
-		node = child
-	}
-	// does node have an existing value?
-	isNewVal := node.Value == ""
-	node.Value = value
-	return isNewVal
-}
 
-func (trie *TokenTrie) Search(tokens ...*jargon.Token) *TokenTrie {
-	node := trie
-	for _, token := range tokens {
-		node = node.Children[token.String()]
-		if node == nil {
-			return nil
+			if trie.ignore[r] {
+				continue
+			}
+
+			child := node.children[r]
+			if child == nil {
+				if node.children == nil {
+					node.children = map[rune]*Node{}
+				}
+				child = &Node{}
+				node.children[r] = child
+			}
+			node = child
 		}
 	}
-	return node
+
+	node.hasCanonical = true
+	node.canonical = canonical
 }
 
-func (trie *TokenTrie) SearchCanonical(tokens ...*jargon.Token) (*TokenTrie, int) {
-	var result *TokenTrie
-	consumed := 0
+func (trie *TokenTrie) SearchCanonical(tokens ...*jargon.Token) (found bool, canonical string, consumed int) {
+	node := trie.root
 
-	node := trie
+outer:
 	for i, token := range tokens {
-		key := token.String()
-		if ignore[key] {
-			continue
-		}
+		for _, r := range token.String() {
+			if trie.ignoreCase {
+				r = unicode.ToLower(r)
+			}
 
-		key = normalize(key)
-		if key == "" {
-			continue
-		}
+			if trie.ignore[r] {
+				continue
+			}
 
-		node = node.Children[key]
-		fmt.Println(key)
-		fmt.Println(node)
-		if node == nil {
-			break
-		}
+			node = node.children[r]
+			if node == nil {
+				break outer
+			}
 
-		if node.Value != "" {
-			consumed = i + 1
-			result = node
+			if node.hasCanonical {
+				found = true
+				canonical = node.canonical
+				consumed = i + 1
+			}
 		}
 	}
 
-	return result, consumed
+	return found, canonical, consumed
 }

@@ -4,6 +4,7 @@ import (
 	"io"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 )
 
 // Tokens represents an 'iterator' of Token, the result of a call to Tokenize or Lemmatize. Call Next() until it returns nil.
@@ -138,6 +139,21 @@ func (t *Token) IsSpace() bool {
 // IsLemma indicates that the token is a lemma, i.e., a canonical term that replaced original token(s).
 func (t *Token) IsLemma() bool {
 	return t.lemma
+}
+
+func NewToken(s string, isLemma bool) *Token {
+	b := []byte(s)
+	if utf8.RuneCount(b) == 1 {
+		r, _ := utf8.DecodeRune(b)
+		token := newTokenFromRune(r)
+		token.lemma = isLemma
+		return token
+	}
+
+	return &Token{
+		value: s,
+		lemma: isLemma,
+	}
 }
 
 func newTokenFromRune(r rune) *Token {

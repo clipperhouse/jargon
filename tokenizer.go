@@ -1,7 +1,6 @@
 package jargon
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"strings"
@@ -140,46 +139,9 @@ func (t *tokenizer) next() (*Token, error) {
 			}
 		}
 
-		// Expressions like wishy-washy or basic URLs
-		// Must be one of our allowed middle chars, and must *not* be start of a new token
-		mightBeMiddle := len(t.buffer) > 0 && middles[r]
-
-		if mightBeMiddle {
-			// Look ahead
-			if t.segmenter.Segment() {
-				lookahead := t.segment()
-
-				// Must precede a word
-				isMiddle := !lookahead.Is(segment.None)
-				if isMiddle {
-					// Concatenate segments in the buffer
-					t.accept(current)
-					t.accept(lookahead)
-
-					// But we don't know if it's a complete token
-					// Might be something like ruby-on-rails
-					continue
-				}
-
-				// Else, consider it terminating
-				// Gotta handle the lookahead, we've consumed it
-
-				// Current rune must be punct or space
-				t.accept(current)
-				t.emit()
-
-				// Lookahead is space or punct, let the main loop handle it
-				current = lookahead
-				goto handle_current
-			}
-		}
-
 		// Expressions like F# and C++
 		// Must be one of our trailing chars, and must not be start of a new token
 		mightBeTrailing := len(t.buffer) > 0 && trailings[r]
-
-		//		fmt.Printf("current: %q\n", current.Bytes)
-		//		fmt.Printf("mightBeTrailing: %t\n", mightBeTrailing)
 
 		if mightBeTrailing {
 			// Look ahead
@@ -244,24 +206,16 @@ func (t *tokenizer) emit() {
 }
 
 func (t *tokenizer) token() *Token {
-	var b bytes.Buffer
+	b := []byte{}
 
 	for _, seg := range t.buffer {
-		b.Write(seg.Bytes)
+		b = append(b, seg.Bytes...)
 	}
 
 	// Got the bytes, can reset
 	t.buffer = t.buffer[:0]
 
-	// Determine punct / space
-	r, ok := tryRune(b.Bytes())
-	if ok {
-		return newTokenFromRune(r)
-	}
-
-	return &Token{
-		value: b.String(),
-	}
+	return NewToken(string(b), false)
 }
 
 func tryRune(b []byte) (rune, bool) {
@@ -279,11 +233,6 @@ var leadings = runeSet{
 	'.': true,
 	'#': true,
 	'@': true,
-}
-
-var middles = runeSet{
-	'-': true,
-	'/': true,
 }
 
 var trailings = runeSet{
