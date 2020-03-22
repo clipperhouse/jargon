@@ -38,7 +38,15 @@ func write() error {
 		return tmplErr
 	}
 
-	formatted, fmtErr := format.Source(source.Bytes())
+	// Break up some lines for readability
+	split := strings.ReplaceAll(source.String(), `", "`, `",
+"`)
+	split = strings.ReplaceAll(split, `{"`, `{
+"`)
+	split = strings.ReplaceAll(split, `"}`, `",
+}`)
+
+	formatted, fmtErr := format.Source([]byte(split))
 	if fmtErr != nil {
 		return fmtErr
 	}

@@ -1,71 +1,66 @@
-package stopwords
+package stopwords_test
 
 import (
 	"testing"
+
+	"github.com/clipperhouse/jargon"
+	"github.com/clipperhouse/jargon/stopwords"
 )
 
 func TestCaseSensitive(t *testing.T) {
-	stopwords := []string{
-		"This",
-		"and",
-		"the",
+	words := []string{
+		"One",
+		"four",
+		"five",
 	}
-	filter := NewFilter(stopwords, true)
+	filter := stopwords.NewFilter(words, false)
 
 	type test struct {
-		input   string
-		output  string
-		stopped bool
+		input  string
+		output string
 	}
 	tests := []test{
-		{"This", "", true},
-		{"this", "this", false},
-		{"The", "The", false},
-		{"the", "", true},
-		{"Foo", "Foo", false},
-		{"foo", "foo", false},
+		{"One two three four five", " two three  "},
+		{"one two three Four five", "one two three Four "},
 	}
 
 	for _, test := range tests {
-		output, stopped := filter.Lookup(test.input)
+		tokens := jargon.TokenizeString(test.input)
+		output, err := filter.Filter(tokens).String()
+		if err != nil {
+			t.Error(err)
+		}
 		if output != test.output {
 			t.Errorf("output should have been %q, got %q", test.output, output)
-		}
-		if stopped != test.stopped {
-			t.Errorf("stopped should have been %t, got %t", test.stopped, stopped)
 		}
 	}
 }
 
 func TestCaseInsensitive(t *testing.T) {
-	stopwords := []string{
-		"This",
-		"and",
-		"the",
+	words := []string{
+		"One",
+		"four",
+		"five",
 	}
-	filter := NewFilter(stopwords, false)
+	filter := stopwords.NewFilter(words, true)
 
 	type test struct {
-		input   string
-		output  string
-		stopped bool
+		input  string
+		output string
 	}
 	tests := []test{
-		{"This", "", true},
-		{"this", "", true},
-		{"The", "", true},
-		{"the", "", true},
-		{"Foo", "Foo", false},
-		{"foo", "foo", false},
+		{"One two three four five", " two three  "},
+		{"one two three Four five", " two three  "},
 	}
 
 	for _, test := range tests {
-		output, stopped := filter.Lookup(test.input)
+		tokens := jargon.TokenizeString(test.input)
+		output, err := filter.Filter(tokens).String()
+		if err != nil {
+			t.Error(err)
+		}
 		if output != test.output {
 			t.Errorf("output should have been %q, got %q", test.output, output)
-		}
-		if stopped != test.stopped {
-			t.Errorf("stopped should have been %t, got %t", test.stopped, stopped)
 		}
 	}
 }

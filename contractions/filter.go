@@ -1,7 +1,13 @@
 // Package contractions provides a jargon.TokenFilter to expand English contractions, such as "don't" → "does not"
 package contractions
 
-// Expander expands common contractions into distinct words. Examples:
+import (
+	"strings"
+
+	"github.com/clipperhouse/jargon"
+)
+
+// Expand converts single-token contractions to non-contracted version. Examples:
 // don't → does not
 // We’ve → We have
 // SHE'S -> SHE IS
@@ -9,19 +15,73 @@ var Expander = &filter{}
 
 type filter struct{}
 
-// Lookup attempts to convert single-token contractions to non-contracted version. Examples:
+// Filter converts single-token contractions to non-contracted version. Examples:
 // don't → does not
 // We’ve → We have
 // SHE'S -> SHE IS
-func (f *filter) Lookup(s ...string) (string, bool) {
-	if len(s) < 1 {
-		return "", false
+func (f *filter) Filter(incoming *jargon.Tokens) *jargon.Tokens {
+	t := &tokens{
+		incoming: incoming,
+		outgoing: &jargon.TokenQueue{},
 	}
-
-	canonical, ok := variations[s[0]]
-	return canonical, ok
+	return &jargon.Tokens{
+		Next: t.next,
+	}
 }
 
-func (f *filter) MaxGramLength() int {
-	return 1
+type tokens struct {
+	incoming *jargon.Tokens
+	outgoing *jargon.TokenQueue
+}
+
+func (t *tokens) next() (*jargon.Token, error) {
+	if t.outgoing.Len() > 0 {
+		return t.outgoing.Pop(), nil
+	}
+
+	token, err := t.incoming.Next()
+	if err != nil {
+		return nil, err
+	}
+	if token == nil {
+		return nil, nil
+	}
+
+	// Try case-sensitive
+	found, err := t.tryExpansion(token, false)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		// Try case-insensitive
+		_, err := t.tryExpansion(token, true)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if t.outgoing.Len() > 0 {
+		return t.outgoing.Pop(), nil
+	}
+
+	return token, nil
+}
+
+func (t *tokens) tryExpansion(token *jargon.Token, ignoreCase bool) (bool, error) {
+	key := token.String()
+	if ignoreCase {
+		key = strings.ToLower(key)
+	}
+
+	expansion, found := variations[key]
+
+	if found {
+		tokens, err := jargon.TokenizeString(expansion).ToSlice()
+		if err != nil {
+			return found, err
+		}
+		t.outgoing.Push(tokens...)
+	}
+
+	return found, nil
 }

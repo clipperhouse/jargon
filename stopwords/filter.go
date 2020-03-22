@@ -2,52 +2,70 @@ package stopwords
 
 import (
 	"strings"
+
+	"github.com/clipperhouse/jargon"
 )
 
 // NewFilter creates a token filter for the supplied stop words
-func NewFilter(stopwords []string, caseSensitive bool) *filter {
+func NewFilter(stopwords []string, ignoreCase bool) *filter {
 	includes := make(map[string]bool)
 	for _, s := range stopwords {
 		var key string
-		if caseSensitive {
-			key = s
-		} else {
+		if ignoreCase {
 			key = strings.ToLower(s)
+		} else {
+			key = s
 		}
 		includes[key] = true
 	}
 
 	return &filter{
-		includes:      includes,
-		caseSensitive: caseSensitive,
+		includes:   includes,
+		ignoreCase: ignoreCase,
 	}
 }
 
 type filter struct {
-	includes      map[string]bool
-	caseSensitive bool
+	incoming   *jargon.Tokens
+	includes   map[string]bool
+	ignoreCase bool
 }
 
-func (f *filter) Lookup(s ...string) (string, bool) {
-	if len(s) < 1 {
-		return "", false
+func (f *filter) Filter(incoming *jargon.Tokens) *jargon.Tokens {
+	t := tokens{
+		filter:   f,
+		incoming: incoming,
 	}
-
-	word := s[0] // max gram length is 1
-
-	var key string
-	if f.caseSensitive {
-		key = word
-	} else {
-		key = strings.ToLower(word)
+	return &jargon.Tokens{
+		Next: t.next,
 	}
-
-	if f.includes[key] {
-		return "", true
-	}
-	return word, false
 }
 
-func (f *filter) MaxGramLength() int {
-	return 1
+type tokens struct {
+	filter   *filter
+	incoming *jargon.Tokens
+}
+
+func (t *tokens) next() (*jargon.Token, error) {
+	for {
+		token, err := t.incoming.Next()
+		if err != nil {
+			return nil, err
+		}
+		if token == nil {
+			return nil, nil
+		}
+
+		key := token.String()
+		if t.filter.ignoreCase {
+			key = strings.ToLower(token.String())
+		}
+
+		if t.filter.includes[key] {
+			// Word is stopped
+			continue
+		}
+
+		return token, nil
+	}
 }

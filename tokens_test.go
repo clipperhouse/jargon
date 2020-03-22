@@ -6,11 +6,11 @@ import (
 )
 
 func ExampleTokens() {
-	// Tokens is an iterator resulting from a call to Lemmatize or Tokenize
+	// Tokens is an iterator resulting from a call to Tokenize or Filter
 
 	text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
 	r := strings.NewReader(text)
-	tokens := TokenizeLegacy(r)
+	tokens := Tokenize(r)
 
 	// Iterate by calling Next() until nil, which indicates that the iterator is exhausted.
 	for {

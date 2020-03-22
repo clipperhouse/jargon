@@ -2,6 +2,7 @@
 package stemmer
 
 import (
+	"github.com/clipperhouse/jargon"
 	"github.com/kljensen/snowball/english"
 	"github.com/kljensen/snowball/french"
 	"github.com/kljensen/snowball/norwegian"
@@ -11,54 +12,76 @@ import (
 )
 
 type filter struct {
-	stemmer func(string, bool) string
+	stem func(string, bool) string
 }
 
 // English is a Snowball stemmer for English, implemented as a jargon.TokenFilter
 var English = &filter{
-	stemmer: english.Stem,
+	stem: english.Stem,
 }
 
 // French is a Snowball stemmer for French, implemented as a jargon.TokenFilter
 var French = &filter{
-	stemmer: french.Stem,
+	stem: french.Stem,
 }
 
 // Norwegian is a Snowball stemmer for Norwegian, implemented as a jargon.TokenFilter
 var Norwegian = &filter{
-	stemmer: norwegian.Stem,
+	stem: norwegian.Stem,
 }
 
 // Russian is a Snowball stemmer for Russian, implemented as a jargon.TokenFilter
 var Russian = &filter{
-	stemmer: russian.Stem,
+	stem: russian.Stem,
 }
 
 // Spanish is a Snowball stemmer for Spanish, implemented as a jargon.TokenFilter
 var Spanish = &filter{
-	stemmer: spanish.Stem,
+	stem: spanish.Stem,
 }
 
 // Swedish is a Snowball stemmer for Swedish, implemented as a jargon.TokenFilter
 var Swedish = &filter{
-	stemmer: swedish.Stem,
+	stem: swedish.Stem,
 }
 
-func (f *filter) Lookup(s ...string) (string, bool) {
-	if len(s) < 1 {
-		return "", false
+func (f *filter) Filter(incoming *jargon.Tokens) *jargon.Tokens {
+	t := &tokens{
+		filter:   f,
+		incoming: incoming,
 	}
-
-	word := s[0]
-	stem := f.stemmer(word, true)
-
-	if stem != word {
-		return stem, true
+	return &jargon.Tokens{
+		Next: t.next,
 	}
-
-	return word, false
 }
 
-func (f *filter) MaxGramLength() int {
-	return 1
+type tokens struct {
+	filter   *filter
+	incoming *jargon.Tokens
+}
+
+func (t *tokens) next() (*jargon.Token, error) {
+	for {
+		token, err := t.incoming.Next()
+		if err != nil {
+			return nil, err
+		}
+		if token == nil {
+			return nil, nil
+		}
+
+		// Only interested in stemming words
+		if token.IsPunct() || token.IsSpace() {
+			return token, nil
+		}
+
+		stemmed := t.filter.stem(token.String(), true)
+
+		if stemmed == token.String() {
+			// Had no effect, send back the original
+			return token, nil
+		}
+
+		return jargon.NewToken(stemmed, true), nil
+	}
 }

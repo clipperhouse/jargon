@@ -27,8 +27,8 @@ func (q *TokenQueue) Pop() *Token {
 	return token
 }
 
-func (q *TokenQueue) Push(token *Token) {
-	q.tokens = append(q.tokens, token)
+func (q *TokenQueue) Push(token ...*Token) {
+	q.tokens = append(q.tokens, token...)
 }
 
 func (q *TokenQueue) Drop(n int) {

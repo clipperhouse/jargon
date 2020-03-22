@@ -1,4 +1,4 @@
-package stack
+package synonyms
 
 import (
 	"unicode"
@@ -6,32 +6,32 @@ import (
 	"github.com/clipperhouse/jargon"
 )
 
-type TokenTrie struct {
-	root       *Node
+type runeTrie struct {
+	root       *node
 	ignore     map[rune]bool
 	ignoreCase bool
 }
 
-type Node struct {
-	children     map[rune]*Node
+type node struct {
+	children     map[rune]*node
 	hasCanonical bool
 	canonical    string
 }
 
-func newTokenTrie(ignoreCase bool, ignore []rune) *TokenTrie {
-	ignoreset := map[rune]bool{}
+func newTrie(ignoreCase bool, ignore []rune) *runeTrie {
+	set := map[rune]bool{}
 	for _, r := range ignore {
-		ignoreset[r] = true
+		set[r] = true
 	}
-	return &TokenTrie{
-		root:       &Node{},
+	return &runeTrie{
+		root:       &node{},
 		ignoreCase: ignoreCase,
-		ignore:     ignoreset,
+		ignore:     set,
 	}
 }
 
-func (trie *TokenTrie) Add(tokens []*jargon.Token, canonical string) {
-	node := trie.root
+func (trie *runeTrie) Add(tokens []*jargon.Token, canonical string) {
+	n := trie.root
 	for _, token := range tokens {
 		for _, r := range token.String() {
 			if trie.ignoreCase {
@@ -42,23 +42,23 @@ func (trie *TokenTrie) Add(tokens []*jargon.Token, canonical string) {
 				continue
 			}
 
-			child := node.children[r]
+			child := n.children[r]
 			if child == nil {
-				if node.children == nil {
-					node.children = map[rune]*Node{}
+				if n.children == nil {
+					n.children = map[rune]*node{}
 				}
-				child = &Node{}
-				node.children[r] = child
+				child = &node{}
+				n.children[r] = child
 			}
-			node = child
+			n = child
 		}
 	}
 
-	node.hasCanonical = true
-	node.canonical = canonical
+	n.hasCanonical = true
+	n.canonical = canonical
 }
 
-func (trie *TokenTrie) SearchCanonical(tokens ...*jargon.Token) (found bool, canonical string, consumed int) {
+func (trie *runeTrie) SearchCanonical(tokens ...*jargon.Token) (found bool, canonical string, consumed int) {
 	node := trie.root
 
 outer:

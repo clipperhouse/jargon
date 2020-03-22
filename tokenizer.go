@@ -25,6 +25,17 @@ func Tokenize(r io.Reader) *Tokens {
 	}
 }
 
+// TokenizeString returns an 'iterator' of Tokens from a io.Reader. Call .Next() until it returns nil:
+//
+// The tokenizer is targeted to English text that contains tech terms, so things like C++ and .Net are handled as single units, as are #hashtags and @handles.
+//
+// It generally relies on Unicode definitions of 'punctuation' and 'symbol', with some exceptions.
+//
+// Tokenize returns all tokens (including white space), so text can be reconstructed with fidelity ("round tripped").
+func TokenizeString(s string) *Tokens {
+	return Tokenize(strings.NewReader(s))
+}
+
 type tokenizer struct {
 	segmenter *segment.Segmenter
 	buffer    []seg
@@ -283,19 +294,18 @@ func (t *htokenizer) next() (*Token, error) {
 			return nil, err
 		}
 
-		switch tok := t.html.Token(); {
-		case tok.Type == html.TextToken:
-			r := strings.NewReader(tok.Data)
-			t.text = TokenizeLegacy(r)
+		htoken := t.html.Token()
+		if htoken.Type == html.TextToken {
+			t.text = TokenizeString(htoken.String())
 			return t.text.Next()
-		default:
-			// Everything else is punct for our purposes
-			token := &Token{
-				value: tok.String(),
-				punct: true,
-				space: false,
-			}
-			return token, nil
 		}
+
+		// Everything else is punct for our purposes
+		token := &Token{
+			value: htoken.String(),
+			punct: true,
+			space: false,
+		}
+		return token, nil
 	}
 }

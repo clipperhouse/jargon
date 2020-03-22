@@ -31,6 +31,14 @@ func (incoming *Tokens) ToSlice() ([]*Token, error) {
 	return result, nil
 }
 
+func (incoming *Tokens) Filter(filters ...Filter) *Tokens {
+	outgoing := incoming
+	for _, f := range filters {
+		outgoing = f.Filter(outgoing)
+	}
+	return outgoing
+}
+
 func (incoming *Tokens) String() (string, error) {
 	var b strings.Builder
 

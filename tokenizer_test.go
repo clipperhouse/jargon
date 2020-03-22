@@ -111,23 +111,22 @@ func TestMiddle(t *testing.T) {
 	}
 
 	// The segment (bleve) tokenizer handles middle dots and underscores
-	// Our tokenizer handles middle hyphens and forward slashes
 
 	expecteds := []test{
 		{"asp.net", true},
 		{"asp", false},
 		{"net", false},
-		{"TCP/IP", true},
-		{"TCP", false},
-		{"/", false},
-		{"IP", false},
+		{"TCP/IP", false},
+		{"TCP", true},
+		{"/", true},
+		{"IP", true},
 		{"first_last", true},
 		{"first", false},
 		{"last", false},
-		{"wishy-washy", true},
-		{"wishy", false},
-		{"-", false},
-		{"washy", false},
+		{"wishy-washy", false},
+		{"wishy", true},
+		{"-", true},
+		{"washy", true},
 	}
 
 	got := map[string]bool{}
@@ -187,13 +186,47 @@ func TestTrailing(t *testing.T) {
 		}
 
 		s := token.String()
-		t.Log(s)
 		got[s] = true
 	}
 
 	for _, expected := range expecteds {
 		if got[expected.value] != expected.found {
 			t.Errorf("expected finding %q to be %t", expected.value, expected.found)
+		}
+	}
+}
+
+func TestTokenizeHTML(t *testing.T) {
+	h := `<html>
+<p foo="bar">
+Hi! Let's talk Ruby on Rails.
+<!-- Ignore ASPNET MVC in comments -->
+</p>
+</html>
+`
+	r := strings.NewReader(h)
+	tokens, err := jargon.TokenizeHTML(r).ToSlice()
+	if err != nil {
+		t.Error(err)
+	}
+
+	got := map[string]bool{}
+	for _, token := range tokens {
+		got[token.String()] = true
+	}
+
+	expected := []string{
+		`<p foo="bar">`, // tags kept whole
+		"\n",            // whitespace preserved
+		"Hi", "!",
+		"Ruby", "on", "Rails", // text node got tokenized
+		"<!-- Ignore ASPNET MVC in comments -->", // comment kept whole
+		"</p>",
+	}
+
+	for _, e := range expected {
+		if !got[e] {
+			t.Errorf("Expected to find token %q, but did not.", e)
 		}
 	}
 }

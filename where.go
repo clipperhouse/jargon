@@ -5,6 +5,7 @@ type where struct {
 	predicate func(*Token) bool
 }
 
+// Where filters a stream of Tokens that match a predicate
 func (incoming *Tokens) Where(predicate func(*Token) bool) *Tokens {
 	w := &where{
 		incoming:  incoming,
@@ -17,16 +18,16 @@ func (incoming *Tokens) Where(predicate func(*Token) bool) *Tokens {
 
 func (w *where) next() (*Token, error) {
 	for {
-		t, err := w.incoming.Next()
+		token, err := w.incoming.Next()
 		if err != nil {
 			return nil, err
 		}
-		if t == nil {
+		if token == nil {
 			break
 		}
 
-		if w.predicate(t) {
-			return t, nil
+		if w.predicate(token) {
+			return token, nil
 		}
 	}
 
