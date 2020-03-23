@@ -54,7 +54,7 @@ func TestSegmenter(t *testing.T) {
 }
 
 func TestLeading(t *testing.T) {
-	text := `Hi. This is a test of .net, and #hashtag and @handle, and React.js.`
+	text := `Hi. This is a test of .net, and #hashtag and @handle, and React.js and .123.`
 
 	r := strings.NewReader(text)
 	tokens := jargon.Tokenize(r)
@@ -76,6 +76,7 @@ func TestLeading(t *testing.T) {
 		{"handle", false},
 		{"React.js", true},
 		{"React.js.", false},
+		{".123", true},
 	}
 
 	got := map[string]bool{}

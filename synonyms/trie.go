@@ -1,6 +1,8 @@
 package synonyms
 
 import (
+	"fmt"
+	"strings"
 	"unicode"
 
 	"github.com/clipperhouse/jargon"
@@ -16,6 +18,24 @@ type node struct {
 	children     map[rune]*node
 	hasCanonical bool
 	canonical    string
+}
+
+func (n *node) String() string {
+	var w strings.Builder
+	w.WriteString("{")
+	if n.children != nil {
+		for k, v := range n.children {
+			w.WriteRune(k)
+			w.WriteString(": ")
+			w.WriteString(v.String())
+		}
+	}
+	w.WriteString(fmt.Sprint(n.hasCanonical))
+	w.WriteString(" ")
+	w.WriteString(n.canonical)
+	w.WriteString("} ")
+
+	return w.String()
 }
 
 func newTrie(ignoreCase bool, ignore []rune) *runeTrie {
@@ -59,6 +79,7 @@ func (trie *runeTrie) Add(tokens []*jargon.Token, canonical string) {
 }
 
 func (trie *runeTrie) SearchCanonical(tokens ...*jargon.Token) (found bool, canonical string, consumed int) {
+	var result *node
 	node := trie.root
 
 outer:
@@ -76,12 +97,14 @@ outer:
 			if node == nil {
 				break outer
 			}
+		}
 
-			if node.hasCanonical {
-				found = true
-				canonical = node.canonical
-				consumed = i + 1
-			}
+		if node.hasCanonical && node != result {
+			// only capture results if it's a different node
+			result = node
+			found = true
+			canonical = node.canonical
+			consumed = i + 1
 		}
 	}
 

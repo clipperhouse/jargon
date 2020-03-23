@@ -66,6 +66,53 @@ func (t *tokenizer) segment() seg {
 		Err:   t.segmenter.Err(),
 	}
 }
+func (t *tokenizer) next2() (*Token, error) {
+	// First, look for something to send back
+	if t.outgoing.Len() > 0 {
+		return t.outgoing.Pop(), nil
+	}
+
+	seg := t.segmenter.Segment()
+	if err := t.segmenter.Err(); err != nil {
+		return nil, err
+	}
+	if !seg {
+		return nil, nil
+	}
+
+	current := t.segmenter.Bytes()
+
+	mightBeLeading := leadingString[string(current)]
+	if mightBeLeading {
+		seg := t.segmenter.Segment()
+		if err := t.segmenter.Err(); err != nil {
+			return nil, err
+		}
+		if !seg {
+			// EOF
+			goto emit
+		}
+
+		lookahead := t.segmenter.Bytes()
+		typ := t.segmenter.Type()
+		isLeading := typ == segment.Letter || typ == segment.Number
+
+		if isLeading {
+			// We have one token, concatenate current + lookahead
+			current = append(current, lookahead...)
+			goto emit
+		}
+
+		// Else, we have two tokens (current, lookahead), queue the lookahead
+		ltoken := NewToken(lookahead, false)
+		t.outgoing.Push(ltoken)
+		goto emit
+	}
+
+emit:
+	token := NewToken(current, false)
+	return token, nil
+}
 
 // next returns the next token. Call until it returns nil.
 func (t *tokenizer) next() (*Token, error) {
@@ -217,6 +264,14 @@ func (t *tokenizer) emit() {
 }
 
 func (t *tokenizer) token() *Token {
+	// Avoid a []byte allocation if possible
+	if len(t.buffer) == 1 {
+		b := t.buffer[0].Bytes
+		// Got the bytes, can reset
+		t.buffer = t.buffer[:0]
+		return NewToken(b, false)
+	}
+
 	b := []byte{}
 
 	for _, seg := range t.buffer {
@@ -226,7 +281,7 @@ func (t *tokenizer) token() *Token {
 	// Got the bytes, can reset
 	t.buffer = t.buffer[:0]
 
-	return NewToken(string(b), false)
+	return NewToken(b, false)
 }
 
 func tryRune(b []byte) (rune, bool) {
@@ -238,6 +293,12 @@ func tryRune(b []byte) (rune, bool) {
 	}
 
 	return utf8.RuneError, false
+}
+
+var leadingString = map[string]bool{
+	".": true,
+	"#": true,
+	"@": true,
 }
 
 var leadings = runeSet{

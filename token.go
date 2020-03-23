@@ -4,7 +4,6 @@ import (
 	"io"
 	"strings"
 	"unicode"
-	"unicode/utf8"
 )
 
 // Tokens represents an 'iterator' of Token, the result of a call to Tokenize or Lemmatize. Call Next() until it returns nil.
@@ -149,17 +148,16 @@ func (t *Token) IsLemma() bool {
 	return t.lemma
 }
 
-func NewToken(s string, isLemma bool) *Token {
-	b := []byte(s)
-	if utf8.RuneCount(b) == 1 {
-		r, _ := utf8.DecodeRune(b)
+func NewToken(b []byte, isLemma bool) *Token {
+	r, found := tryRune(b)
+	if found {
 		token := newTokenFromRune(r)
 		token.lemma = isLemma
 		return token
 	}
 
 	return &Token{
-		value: s,
+		value: string(b),
 		lemma: isLemma,
 	}
 }

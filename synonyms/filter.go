@@ -19,8 +19,7 @@ func NewFilter(mappings map[string]string, ignoreCase bool, ignoreRunes []rune) 
 		for _, synonym := range synonyms {
 
 			synonym = strings.TrimSpace(synonym)
-			r := strings.NewReader(synonym)
-			tokens, err := jargon.Tokenize(r).ToSlice()
+			tokens, err := jargon.TokenizeString(synonym).ToSlice()
 			if err != nil {
 				return nil, err
 			}
@@ -97,7 +96,7 @@ func (f *tokens) next() (*jargon.Token, error) {
 		found, canonical, consumed := f.trie.SearchCanonical(run...)
 		if found {
 			if canonical != "" {
-				token := jargon.NewToken(canonical, true)
+				token := jargon.NewToken([]byte(canonical), true)
 				f.outgoing.Push(token)
 			}
 			f.buffer.Drop(consumed)
