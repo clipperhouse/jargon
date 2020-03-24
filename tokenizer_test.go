@@ -202,6 +202,8 @@ func TestTokenizeHTML(t *testing.T) {
 <p foo="bar">
 Hi! Let's talk Ruby on Rails.
 <!-- Ignore ASPNET MVC in comments -->
+<script src="foo">var Nodejs = Reactjs;</script>
+<style>p { margin-bottom:20px; } </style>
 </p>
 </html>
 `
@@ -217,12 +219,24 @@ Hi! Let's talk Ruby on Rails.
 	}
 
 	expected := []string{
-		`<p foo="bar">`, // tags kept whole
-		"\n",            // whitespace preserved
-		"Hi", "!",
-		"Ruby", "on", "Rails", // text node got tokenized
-		"<!-- Ignore ASPNET MVC in comments -->", // comment kept whole
+		// tags kept whole
+		`<p foo="bar">`,
 		"</p>",
+		// whitespace preserved
+		"\n",
+		// text nodes got tokenized
+		"Hi", "!",
+		"Ruby", "on", "Rails",
+		// comment kept whole
+		"<!-- Ignore ASPNET MVC in comments -->",
+		// contents of script not tokenized
+		`<script src="foo">`,
+		"var Nodejs = Reactjs;",
+		"</script>",
+		// contents of style not tokenized
+		"<style>",
+		"p { margin-bottom:20px; } ",
+		"</style>",
 	}
 
 	for _, e := range expected {

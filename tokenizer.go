@@ -9,6 +9,7 @@ import (
 
 	"github.com/blevesearch/segment"
 	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 // Tokenize returns an 'iterator' of Tokens from a io.Reader. Call .Next() until it returns nil:
@@ -328,8 +329,10 @@ func TokenizeHTML(r io.Reader) *Tokens {
 var dummy = &Tokens{Next: func() (*Token, error) { return nil, nil }}
 
 type htokenizer struct {
-	html *html.Tokenizer
-	text *Tokens
+	html                    *html.Tokenizer
+	text                    *Tokens
+	suspendTextTokenization bool
+	parent                  atom.Atom
 }
 
 // next is the implementation of the Tokens interface. To iterate, call until it returns nil
@@ -356,9 +359,31 @@ func (t *htokenizer) next() (*Token, error) {
 		}
 
 		htoken := t.html.Token()
-		if htoken.Type == html.TextToken {
+
+		switch htoken.Type {
+		case html.StartTagToken:
+			// Record that we are entering script or style blocks; don't tokenize text
+			if htoken.DataAtom == atom.Script || htoken.DataAtom == atom.Style {
+				t.parent = htoken.DataAtom
+			}
+		case html.TextToken:
+			switch t.parent {
+			case atom.Script, atom.Style:
+				// Don't tokenize script and style blocks, just return as one big string
+				token := &Token{
+					value: htoken.String(),
+					punct: false,
+					space: false,
+				}
+				return token, nil
+			}
+
 			t.text = TokenizeString(htoken.String())
 			return t.text.Next()
+		case html.EndTagToken:
+			if htoken.DataAtom == t.parent {
+				htoken.DataAtom = 0
+			}
 		}
 
 		// Everything else is punct for our purposes
