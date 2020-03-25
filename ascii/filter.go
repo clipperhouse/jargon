@@ -56,5 +56,6 @@ func (t *tokens) next() (*jargon.Token, error) {
 	if folded {
 		return jargon.NewToken(fold, true), nil
 	}
+
 	return token, nil
 }

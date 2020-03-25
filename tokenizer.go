@@ -105,13 +105,13 @@ func (t *tokenizer) next2() (*Token, error) {
 		}
 
 		// Else, we have two tokens (current, lookahead), queue the lookahead
-		ltoken := NewToken(lookahead, false)
+		ltoken := NewToken(string(lookahead), false)
 		t.outgoing.Push(ltoken)
 		goto emit
 	}
 
 emit:
-	token := NewToken(current, false)
+	token := NewToken(string(current), false)
 	return token, nil
 }
 
@@ -143,7 +143,7 @@ func (t *tokenizer) next() (*Token, error) {
 
 		// At this point, it must be a rune (right?)
 		// Guard statement, in case that's wrong
-		r, ok := tryRune(current.Bytes)
+		r, ok := tryRuneInBytes(current.Bytes)
 		if !ok {
 			return nil, fmt.Errorf("should be a rune, but it's %q, this is likely a bug in the tokenizer", current)
 		}
@@ -208,7 +208,7 @@ func (t *tokenizer) next() (*Token, error) {
 				lookahead := t.segment()
 
 				// May precede another (identical) trailing, like C++
-				lr, ok := tryRune(lookahead.Bytes)
+				lr, ok := tryRuneInBytes(lookahead.Bytes)
 				if ok && r == lr {
 					// Append them both & emit
 					t.accept(current)
@@ -265,12 +265,12 @@ func (t *tokenizer) emit() {
 }
 
 func (t *tokenizer) token() *Token {
-	// Avoid a []byte allocation if possible
+	// Avoid an allocation if possible
 	if len(t.buffer) == 1 {
 		b := t.buffer[0].Bytes
 		// Got the bytes, can reset
 		t.buffer = t.buffer[:0]
-		return NewToken(b, false)
+		return NewToken(string(b), false)
 	}
 
 	b := []byte{}
@@ -282,14 +282,25 @@ func (t *tokenizer) token() *Token {
 	// Got the bytes, can reset
 	t.buffer = t.buffer[:0]
 
-	return NewToken(b, false)
+	return NewToken(string(b), false)
 }
 
-func tryRune(b []byte) (rune, bool) {
+func tryRuneInBytes(b []byte) (rune, bool) {
 	ok := utf8.RuneCount(b) == 1
 
 	if ok {
 		r, _ := utf8.DecodeRune(b)
+		return r, true
+	}
+
+	return utf8.RuneError, false
+}
+
+func tryRuneInString(s string) (rune, bool) {
+	ok := utf8.RuneCountInString(s) == 1
+
+	if ok {
+		r, _ := utf8.DecodeRuneInString(s)
 		return r, true
 	}
 
@@ -376,10 +387,10 @@ func (t *htokenizer) next() (*Token, error) {
 					space: false,
 				}
 				return token, nil
+			default:
+				t.text = TokenizeString(htoken.String())
+				return t.text.Next()
 			}
-
-			t.text = TokenizeString(htoken.String())
-			return t.text.Next()
 		case html.EndTagToken:
 			if htoken.DataAtom == t.parent {
 				htoken.DataAtom = 0

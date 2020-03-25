@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"io"
 	"unicode"
-	"unicode/utf8"
 )
 
 // TokenizeLegacy returns an 'iterator' of Tokens from a io.Reader. Call .Next() until it returns nil:
@@ -133,23 +132,7 @@ func (t *tokenizerLegacy) token() *Token {
 	// Got the bytes, can reset
 	t.outgoing.Reset()
 
-	// Determine punct and/or space
-	if utf8.RuneCount(b) == 1 {
-		// Punct and space are always one rune in our usage
-		r, _ := utf8.DecodeRune(b)
-
-		known, ok := common[r]
-
-		if ok {
-			return known
-		}
-
-		return newTokenFromRune(r)
-	}
-
-	return &Token{
-		value: string(b),
-	}
+	return NewToken(string(b), false)
 }
 
 func (t *tokenizerLegacy) accept(r rune) {

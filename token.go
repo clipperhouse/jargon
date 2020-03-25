@@ -148,42 +148,31 @@ func (t *Token) IsLemma() bool {
 	return t.lemma
 }
 
-func NewToken(b []byte, isLemma bool) *Token {
-	r, found := tryRune(b)
+func NewToken(s string, isLemma bool) *Token {
+	token, found := common[s]
+
 	if found {
-		token := newTokenFromRune(r)
-		token.lemma = isLemma
 		return token
 	}
 
+	r, ok := tryRuneInString(s)
+
 	return &Token{
-		value: string(b),
+		value: s,
+		punct: ok && isPunct(r),
+		space: ok && unicode.IsSpace(r),
 		lemma: isLemma,
 	}
 }
 
-func newTokenFromRune(r rune) *Token {
-	token, found := common[r]
-
-	if found {
-		return token
-	}
-
-	return &Token{
-		value: string(r),
-		punct: isPunct(r),
-		space: unicode.IsSpace(r),
-	}
-}
-
-var common = make(map[rune]*Token)
+var common = make(map[string]*Token)
 
 func init() {
-	runes := []rune{
-		' ', '\r', '\n', '\t', '.', ',',
+	runes := []string{
+		" ", "\r", "\n", "\t", ".", ",",
 	}
 
 	for _, r := range runes {
-		common[r] = newTokenFromRune(r)
+		common[r] = NewToken(r, false)
 	}
 }

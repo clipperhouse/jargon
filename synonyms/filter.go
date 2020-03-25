@@ -96,7 +96,7 @@ func (f *tokens) next() (*jargon.Token, error) {
 		found, canonical, consumed := f.trie.SearchCanonical(run...)
 		if found {
 			if canonical != "" {
-				token := jargon.NewToken([]byte(canonical), true)
+				token := jargon.NewToken(canonical, true)
 				f.outgoing.Push(token)
 			}
 			f.buffer.Drop(consumed)
