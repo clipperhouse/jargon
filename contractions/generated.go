@@ -3,7 +3,7 @@ package contractions
 // This file is generated. Best not to modify it, as it will likely be overwritten.
 
 // maps do not guarantee order, so this will look random
-var variations = map[string]string{
+var mappings = map[string]string{
 	"AREN'T":    "ARE NOT",
 	"AREN’T":    "ARE NOT",
 	"Aren't":    "Are not",

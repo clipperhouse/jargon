@@ -7,6 +7,8 @@ import (
 	"github.com/clipperhouse/jargon"
 )
 
+//go:generate go run generate/main.go
+
 // Expand converts single-token contractions to non-contracted version. Examples:
 // don't → does not
 // We’ve → We have
@@ -73,7 +75,7 @@ func (t *tokens) tryExpansion(token *jargon.Token, ignoreCase bool) (bool, error
 		key = strings.ToLower(key)
 	}
 
-	expansion, found := variations[key]
+	expansion, found := mappings[key]
 
 	if found {
 		tokens, err := jargon.TokenizeString(expansion).ToSlice()
