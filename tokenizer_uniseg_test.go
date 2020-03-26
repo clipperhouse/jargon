@@ -57,7 +57,7 @@ func TestLeading(t *testing.T) {
 	text := `Hi. This is a test of .net, and #hashtag and @handle, and React.js and .123.`
 
 	r := strings.NewReader(text)
-	tokens := jargon.Tokenize(r)
+	tokens := jargon.TokenizeUniseg(r)
 
 	type test struct {
 		value string
@@ -104,7 +104,7 @@ func TestMiddle(t *testing.T) {
 	text := `Hi. This is a test of asp.net, TCP/IP, first_last and wishy-washy.`
 
 	r := strings.NewReader(text)
-	tokens := jargon.Tokenize(r)
+	tokens := jargon.TokenizeUniseg(r)
 
 	type test struct {
 		value string
@@ -155,7 +155,7 @@ func TestTrailing(t *testing.T) {
 	text := `Hi. This is a test of F# and C++.`
 
 	r := strings.NewReader(text)
-	tokens := jargon.Tokenize(r)
+	tokens := jargon.TokenizeUniseg(r)
 
 	type test struct {
 		value string
@@ -193,55 +193,6 @@ func TestTrailing(t *testing.T) {
 	for _, expected := range expecteds {
 		if got[expected.value] != expected.found {
 			t.Errorf("expected finding %q to be %t", expected.value, expected.found)
-		}
-	}
-}
-
-func TestTokenizeHTML(t *testing.T) {
-	h := `<html>
-<p foo="bar">
-Hi! Let's talk Ruby on Rails.
-<!-- Ignore ASPNET MVC in comments -->
-<script src="foo">var Nodejs = Reactjs;</script>
-<style>p { margin-bottom:20px; } </style>
-</p>
-</html>
-`
-	r := strings.NewReader(h)
-	tokens, err := jargon.TokenizeHTML(r).ToSlice()
-	if err != nil {
-		t.Error(err)
-	}
-
-	got := map[string]bool{}
-	for _, token := range tokens {
-		got[token.String()] = true
-	}
-
-	expected := []string{
-		// tags kept whole
-		`<p foo="bar">`,
-		"</p>",
-		// whitespace preserved
-		"\n",
-		// text nodes got tokenized
-		"Hi", "!",
-		"Ruby", "on", "Rails",
-		// comment kept whole
-		"<!-- Ignore ASPNET MVC in comments -->",
-		// contents of script not tokenized
-		`<script src="foo">`,
-		"var Nodejs = Reactjs;",
-		"</script>",
-		// contents of style not tokenized
-		"<style>",
-		"p { margin-bottom:20px; } ",
-		"</style>",
-	}
-
-	for _, e := range expected {
-		if !got[e] {
-			t.Errorf("Expected to find token %q, but did not.", e)
 		}
 	}
 }

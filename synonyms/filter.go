@@ -11,6 +11,7 @@ type Filter struct {
 	maxWords int
 }
 
+// NewFilter creates a new synonyms Filter
 func NewFilter(mappings map[string]string, ignoreCase bool, ignoreRunes []rune) (*Filter, error) {
 	trie := newTrie(ignoreCase, ignoreRunes)
 	maxWords := 1

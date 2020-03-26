@@ -46,12 +46,12 @@ func ExampleTokens_Filter() {
 	r := strings.NewReader(text)
 
 	tokens := jargon.Tokenize(r)
-	lemmatized := tokens.Filter(stackoverflow.Tags)
+	filtered := tokens.Filter(stackoverflow.Tags)
 
 	// Lemmatize returns a Tokens iterator. Iterate by calling Next() until nil, which
 	// indicates that the iterator is exhausted.
 	for {
-		token, err := lemmatized.Next()
+		token, err := filtered.Next()
 		if err != nil {
 			// Because the source is I/O, errors are possible
 			log.Fatal(err)

@@ -9,7 +9,7 @@ import (
 
 //go:generate go run generate/main.go
 
-// Expand converts single-token contractions to non-contracted version. Examples:
+// Expander converts single-token contractions to non-contracted version. Examples:
 // don't → does not
 // We’ve → We have
 // SHE'S -> SHE IS

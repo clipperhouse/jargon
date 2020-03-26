@@ -8,6 +8,23 @@ import (
 	"github.com/clipperhouse/jargon"
 )
 
+func BenchmarkTokenizeUniseg(b *testing.B) {
+	file, err := ioutil.ReadFile("testdata/wikipedia.txt")
+
+	if err != nil {
+		b.Error(err)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		r := bytes.NewReader(file)
+		_, err := jargon.TokenizeUniseg(r).Count()
+		if err != nil {
+			b.Error(err)
+		}
+	}
+}
+
 func BenchmarkTokenize(b *testing.B) {
 	file, err := ioutil.ReadFile("testdata/wikipedia.txt")
 
@@ -19,23 +36,6 @@ func BenchmarkTokenize(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		r := bytes.NewReader(file)
 		_, err := jargon.Tokenize(r).Count()
-		if err != nil {
-			b.Error(err)
-		}
-	}
-}
-
-func BenchmarkTokenizeLegacy(b *testing.B) {
-	file, err := ioutil.ReadFile("testdata/wikipedia.txt")
-
-	if err != nil {
-		b.Error(err)
-	}
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		r := bytes.NewReader(file)
-		_, err := jargon.TokenizeLegacy(r).Count()
 		if err != nil {
 			b.Error(err)
 		}
