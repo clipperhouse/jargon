@@ -21,6 +21,9 @@ func TestFilter(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
+	//t.Log(syns.Trie.Decl())
+	//t.Logf("%#v", syns.Trie)
 	original := `we are looking for a rockstar 10x developer or engineer for ruby on rails and Nodejs`
 	tokens := jargon.TokenizeString(original)
 

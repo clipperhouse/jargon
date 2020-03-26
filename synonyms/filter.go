@@ -4,16 +4,17 @@ import (
 	"strings"
 
 	"github.com/clipperhouse/jargon"
+	"github.com/clipperhouse/jargon/synonyms/trie"
 )
 
 type Filter struct {
-	trie     *runeTrie
+	Trie     *trie.RuneTrie
 	maxWords int
 }
 
 // NewFilter creates a new synonyms Filter
 func NewFilter(mappings map[string]string, ignoreCase bool, ignoreRunes []rune) (*Filter, error) {
-	trie := newTrie(ignoreCase, ignoreRunes)
+	trie := trie.New(ignoreCase, ignoreRunes)
 	maxWords := 1
 	for k, v := range mappings {
 		synonyms := strings.Split(k, ",")
@@ -40,19 +41,19 @@ func NewFilter(mappings map[string]string, ignoreCase bool, ignoreRunes []rune) 
 	}
 
 	return &Filter{
-		trie:     trie,
+		Trie:     trie,
 		maxWords: maxWords,
 	}, nil
 }
 
 func (syns *Filter) Filter(incoming *jargon.Tokens) *jargon.Tokens {
-	f := newTokens(incoming, syns.trie, syns.maxWords)
+	f := newTokens(incoming, syns.Trie, syns.maxWords)
 	return &jargon.Tokens{
 		Next: f.next,
 	}
 }
 
-func newTokens(incoming *jargon.Tokens, trie *runeTrie, maxWords int) *tokens {
+func newTokens(incoming *jargon.Tokens, trie *trie.RuneTrie, maxWords int) *tokens {
 	return &tokens{
 		incoming: incoming,
 		buffer:   &jargon.TokenQueue{},
@@ -69,7 +70,7 @@ type tokens struct {
 	buffer *jargon.TokenQueue
 	// outgoing queue of filtered tokens
 	outgoing *jargon.TokenQueue
-	trie     *runeTrie
+	trie     *trie.RuneTrie
 	maxWords int
 }
 
