@@ -54,7 +54,7 @@ func jargonHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lemmatized := tokens.Lemmatize(stackoverflow.Tags)
+	lemmatized := tokens.Filter(stackoverflow.Tags)
 
 	var b bytes.Buffer
 

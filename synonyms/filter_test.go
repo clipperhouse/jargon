@@ -3,91 +3,59 @@ package synonyms_test
 import (
 	"testing"
 
+	"github.com/clipperhouse/jargon"
 	"github.com/clipperhouse/jargon/synonyms"
 )
 
-func TestBasics(t *testing.T) {
-	expecteds := []test{
-		{"engineer", true, "developer"},
-		{" engineer", false, ""},
-		{"synonym", true, "synonym"},
-		{"the same", true, "synonym"},
-		{"thesame", false, ""},
-	}
+func TestFilter(t *testing.T) {
 
 	mappings := map[string]string{
-		"developer, engineer, programmer, some word": "developer",
-		"synonym, equivalent, the same":              "synonym",
+		"developer, engineer, programmer": "boffin",
+		"rock star, 10x developer":        "cliché",
+		"Ruby on Rails, rails":            "ruby-on-rails",
+		"nodeJS, iojs":                    "node.js",
 	}
 
-	filter, err := synonyms.NewFilter(mappings)
+	ignore := []rune{'-', ' ', '.', '/'}
+	syns, err := synonyms.NewFilter(mappings, true, ignore)
 	if err != nil {
 		t.Error(err)
 	}
 
-	testSynonyms(t, filter, expecteds)
-}
+	//t.Log(syns.Trie.Decl())
+	//t.Logf("%#v", syns.Trie)
+	original := `we are looking for a rockstar 10x developer or engineer for ruby on rails and Nodejs`
+	tokens := jargon.TokenizeString(original)
 
-func TestSpaceAndCase(t *testing.T) {
-	expecteds := []test{
-		{"ecmascript", true, "javascript"},
-		{"ecma script", true, "javascript"},
-		{"In my humble opinion", true, "imo"},
-		{"imho", true, "imo"},
-	}
+	expected := `we are looking for a cliché cliché or boffin for ruby-on-rails and node.js`
 
-	mappings := map[string]string{
-		"ecma script, java script, js":               "javascript",
-		"in my opinion, in my humble  opinion, IMHO": "imo",
-	}
-
-	filter, err := synonyms.NewFilter(mappings, synonyms.IgnoreSpace, synonyms.IgnoreCase)
+	got, err := syns.Filter(tokens).String()
 	if err != nil {
 		t.Error(err)
 	}
 
-	testSynonyms(t, filter, expecteds)
-}
-
-func TestDuplicate(t *testing.T) {
-	mappings := map[string]string{
-		"foo": "bar",
-		"Foo": "qux",
-	}
-
-	_, err := synonyms.NewFilter(mappings, synonyms.IgnoreCase)
-	t.Log(err)
-	if err == nil {
-		t.Error("expected to get error for the same key mapping to multiple different synonyms")
+	if expected != got {
+		t.Errorf("given %q, expected %q, got %q", original, expected, got)
 	}
 }
 
-func TestBlankKey(t *testing.T) {
-	mappings := map[string]string{
-		"foo": "bar",
-	}
+func BenchmarkFilter(b *testing.B) {
+	// file, err := ioutil.ReadFile("../testdata/wikipedia.txt")
 
-	_, err := synonyms.NewFilter(mappings, synonyms.Ignore('f', 'o'))
-	t.Log(err)
-	if err == nil {
-		t.Error("expected to get error for blank key")
-	}
-}
+	// if err != nil {
+	// 	b.Error(err)
+	// }
 
-type test struct {
-	input     string
-	found     bool
-	canonical string
-}
+	// ignore := []rune{'-', ' ', '.', '/'}
+	// syns, err := synonyms.NewFilter(mappings, true, ignore)
+	// if err != nil {
+	// 	b.Error(err)
+	// }
 
-func testSynonyms(t *testing.T, filter *synonyms.Filter, expecteds []test) {
-	for _, expected := range expecteds {
-		canonical, found := filter.Lookup(expected.input)
-		if expected.found != found {
-			t.Errorf("given input %q, expected found to be %t", expected.input, expected.found)
-		}
-		if expected.canonical != canonical {
-			t.Errorf("given input %q, expected canonical %q, got %q", expected.input, expected.canonical, canonical)
-		}
-	}
+	// b.ResetTimer()
+	// for i := 0; i < b.N; i++ {
+	// 	r := bytes.NewReader(file)
+	// 	tokens := jargon.Tokenize(r)
+	// 	syns.Filter(tokens).Count() // consume them
+	// }
 }

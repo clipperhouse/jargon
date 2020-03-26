@@ -13,7 +13,7 @@ var Tags *synonyms.Filter
 
 func init() {
 	ignore := []rune{' ', '-', '.', '/'}
-	filter, err := synonyms.NewFilter(mappings, synonyms.IgnoreCase, synonyms.Ignore(ignore...))
+	filter, err := synonyms.NewFilter(mappings, true, ignore)
 	if err != nil {
 		panic(err)
 	}

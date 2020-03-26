@@ -2153,5 +2153,11 @@ func fold(s string) (string, bool) {
 			}
 		}
 	}
-	return string(b.String()), folded
+
+	if folded {
+		// Only allocate is something happened
+		return b.String(), true
+	}
+
+	return s, false
 }
