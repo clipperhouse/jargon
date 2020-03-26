@@ -13,8 +13,6 @@ import (
 	"strings"
 	"text/template"
 	"time"
-
-	"github.com/clipperhouse/jargon/synonyms"
 )
 
 func main() {
@@ -131,20 +129,22 @@ func writeDictionary() error {
 		}
 	}
 
-	ignore := []rune{' ', '-', '.', '/'}
-	tags, err := synonyms.NewFilter(mappings, true, ignore)
-	if err != nil {
-		panic(err)
-	}
-
 	var source bytes.Buffer
 
-	tmplErr := tmpl.Execute(&source, tags.Decl())
+	tmplErr := tmpl.Execute(&source, mappings)
 	if tmplErr != nil {
 		return tmplErr
 	}
 
-	formatted, fmtErr := format.Source(source.Bytes())
+	// Break up some lines for readability
+	split := strings.ReplaceAll(source.String(), `", "`, `",
+"`)
+	split = strings.ReplaceAll(split, `{"`, `{
+"`)
+	split = strings.ReplaceAll(split, `"}`, `",
+}`)
+
+	formatted, fmtErr := format.Source([]byte(split))
 	if fmtErr != nil {
 		return fmtErr
 	}
@@ -166,14 +166,9 @@ func writeDictionary() error {
 var tmpl = template.Must(template.New("").Parse(`
 package stackoverflow
 
-import (
-	"github.com/clipperhouse/jargon/synonyms"
-	"github.com/clipperhouse/jargon/synonyms/trie"
-)
-
 // This file is generated. Best not to modify it, as it will likely be overwritten.
 
-var tags = {{ printf "%s" . }}
+var mappings = {{ printf "%#v" . }}
 `))
 
 // sites to query, with the number of tags to get, based on eyeballing how many of the top x are 'interesting'
