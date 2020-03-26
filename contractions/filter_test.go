@@ -1,24 +1,21 @@
-package contractions
+package contractions_test
 
 import (
-	"strings"
 	"testing"
+
+	"github.com/clipperhouse/jargon"
+	"github.com/clipperhouse/jargon/contractions"
 )
 
-func TestSome(t *testing.T) {
+func TestContractions(t *testing.T) {
 	given := "i'll SHE’D they're Can’t should've GOTTA Wanna"
 	expected := "i will SHE WOULD they are Can not should have GOT TO Want to"
 
-	var lookups []string
-
-	for _, word := range strings.Split(given, " ") {
-		canonical, ok := Expander.Lookup(word)
-		if ok {
-			lookups = append(lookups, canonical)
-		}
+	tokens := jargon.TokenizeString(given)
+	got, err := contractions.Expander.Filter(tokens).String()
+	if err != nil {
+		t.Error(err)
 	}
-
-	got := strings.Join(lookups, " ")
 
 	if got != expected {
 		t.Errorf("given %q, expected %q, got %q", given, expected, got)

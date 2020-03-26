@@ -1,4 +1,4 @@
-package contractions
+package main
 
 import (
 	"bytes"
@@ -9,8 +9,15 @@ import (
 	"text/template"
 )
 
-func write() error {
-	data := make(map[string]string)
+func main() {
+	err := write()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func getMappings() (map[string]string, error) {
+	mappings := make(map[string]string)
 
 	cases := []func(string) string{
 		strings.ToLower,
@@ -22,23 +29,40 @@ func write() error {
 		for _, apostrophed := range apostrophes(contraction) {
 			for _, f := range cases {
 				key := f(apostrophed)
-				existing, exists := data[key]
+				existing, exists := mappings[key]
 				if exists {
-					return fmt.Errorf("attempting to re-add key %q (previous value was %q)", key, existing)
+					return mappings, fmt.Errorf("attempting to re-add key %q (previous value was %q)", key, existing)
 				}
-				data[key] = f(expansion)
+				mappings[key] = f(expansion)
 			}
 		}
 	}
 
+	return mappings, nil
+}
+
+func write() error {
+	mappings, err := getMappings()
+	if err != nil {
+		return err
+	}
+
 	var source bytes.Buffer
 
-	tmplErr := tmpl.Execute(&source, data)
+	tmplErr := tmpl.Execute(&source, mappings)
 	if tmplErr != nil {
 		return tmplErr
 	}
 
-	formatted, fmtErr := format.Source(source.Bytes())
+	// Break up some lines for readability
+	split := strings.ReplaceAll(source.String(), `", "`, `",
+"`)
+	split = strings.ReplaceAll(split, `{"`, `{
+"`)
+	split = strings.ReplaceAll(split, `"}`, `",
+}`)
+
+	formatted, fmtErr := format.Source([]byte(split))
 	if fmtErr != nil {
 		return fmtErr
 	}
@@ -80,7 +104,7 @@ package contractions
 // This file is generated. Best not to modify it, as it will likely be overwritten.
 
 // maps do not guarantee order, so this will look random
-var variations = {{ printf "%#v" . }}
+var mappings = {{ printf "%#v" . }}
 `))
 
 var contractions = map[string]string{

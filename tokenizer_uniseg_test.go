@@ -54,10 +54,10 @@ func TestSegmenter(t *testing.T) {
 }
 
 func TestLeading(t *testing.T) {
-	text := `Hi. This is a test of .net, and #hashtag and @handle, and React.js.`
+	text := `Hi. This is a test of .net, and #hashtag and @handle, and React.js and .123.`
 
 	r := strings.NewReader(text)
-	tokens := jargon.Tokenize(r)
+	tokens := jargon.TokenizeUniseg(r)
 
 	type test struct {
 		value string
@@ -76,6 +76,7 @@ func TestLeading(t *testing.T) {
 		{"handle", false},
 		{"React.js", true},
 		{"React.js.", false},
+		{".123", true},
 	}
 
 	got := map[string]bool{}
@@ -103,7 +104,7 @@ func TestMiddle(t *testing.T) {
 	text := `Hi. This is a test of asp.net, TCP/IP, first_last and wishy-washy.`
 
 	r := strings.NewReader(text)
-	tokens := jargon.Tokenize(r)
+	tokens := jargon.TokenizeUniseg(r)
 
 	type test struct {
 		value string
@@ -111,23 +112,22 @@ func TestMiddle(t *testing.T) {
 	}
 
 	// The segment (bleve) tokenizer handles middle dots and underscores
-	// Our tokenizer handles middle hyphens and forward slashes
 
 	expecteds := []test{
 		{"asp.net", true},
 		{"asp", false},
 		{"net", false},
-		{"TCP/IP", true},
-		{"TCP", false},
-		{"/", false},
-		{"IP", false},
+		{"TCP/IP", false},
+		{"TCP", true},
+		{"/", true},
+		{"IP", true},
 		{"first_last", true},
 		{"first", false},
 		{"last", false},
-		{"wishy-washy", true},
-		{"wishy", false},
-		{"-", false},
-		{"washy", false},
+		{"wishy-washy", false},
+		{"wishy", true},
+		{"-", true},
+		{"washy", true},
 	}
 
 	got := map[string]bool{}
@@ -155,7 +155,7 @@ func TestTrailing(t *testing.T) {
 	text := `Hi. This is a test of F# and C++.`
 
 	r := strings.NewReader(text)
-	tokens := jargon.Tokenize(r)
+	tokens := jargon.TokenizeUniseg(r)
 
 	type test struct {
 		value string
@@ -187,7 +187,6 @@ func TestTrailing(t *testing.T) {
 		}
 
 		s := token.String()
-		t.Log(s)
 		got[s] = true
 	}
 

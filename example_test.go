@@ -38,7 +38,7 @@ func ExampleTokenize() {
 	// Usually, Tokenize serves as input to Lemmatize
 }
 
-func ExampleTokens_Lemmatize() {
+func ExampleTokens_Filter() {
 	// Lemmatize take tokens and attempts to find their canonical version
 
 	// Lemmatize takes a Tokens iterator, and one or more token filters
@@ -46,12 +46,12 @@ func ExampleTokens_Lemmatize() {
 	r := strings.NewReader(text)
 
 	tokens := jargon.Tokenize(r)
-	lemmatized := tokens.Lemmatize(stackoverflow.Tags)
+	filtered := tokens.Filter(stackoverflow.Tags)
 
 	// Lemmatize returns a Tokens iterator. Iterate by calling Next() until nil, which
 	// indicates that the iterator is exhausted.
 	for {
-		token, err := lemmatized.Next()
+		token, err := filtered.Next()
 		if err != nil {
 			// Because the source is I/O, errors are possible
 			log.Fatal(err)
