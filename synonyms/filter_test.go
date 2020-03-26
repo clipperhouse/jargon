@@ -17,19 +17,19 @@ func TestFilter(t *testing.T) {
 	}
 
 	ignore := []rune{'-', ' ', '.', '/'}
-	syns, err := synonyms.NewFilter(mappings, true, ignore)
+	filter, err := synonyms.NewFilter(mappings, true, ignore)
 	if err != nil {
 		t.Error(err)
 	}
 
-	//t.Log(syns.Trie.Decl())
+	// t.Log(filter.Decl())
 	//t.Logf("%#v", syns.Trie)
 	original := `we are looking for a rockstar 10x developer or engineer for ruby on rails and Nodejs`
 	tokens := jargon.TokenizeString(original)
 
 	expected := `we are looking for a cliché cliché or boffin for ruby-on-rails and node.js`
 
-	got, err := syns.Filter(tokens).String()
+	got, err := filter.Filter(tokens).String()
 	if err != nil {
 		t.Error(err)
 	}

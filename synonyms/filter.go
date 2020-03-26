@@ -1,6 +1,9 @@
 package synonyms
 
 import (
+	"bytes"
+	"fmt"
+	"go/format"
 	"strings"
 
 	"github.com/clipperhouse/jargon"
@@ -9,7 +12,7 @@ import (
 
 type Filter struct {
 	Trie     *trie.RuneTrie
-	maxWords int
+	MaxWords int
 }
 
 // NewFilter creates a new synonyms Filter
@@ -42,12 +45,12 @@ func NewFilter(mappings map[string]string, ignoreCase bool, ignoreRunes []rune) 
 
 	return &Filter{
 		Trie:     trie,
-		maxWords: maxWords,
+		MaxWords: maxWords,
 	}, nil
 }
 
 func (syns *Filter) Filter(incoming *jargon.Tokens) *jargon.Tokens {
-	f := newTokens(incoming, syns.Trie, syns.maxWords)
+	f := newTokens(incoming, syns.Trie, syns.MaxWords)
 	return &jargon.Tokens{
 		Next: f.next,
 	}
@@ -194,4 +197,25 @@ func (f *tokens) wordrun() []*jargon.Token {
 	}
 
 	return run
+}
+
+func (n *Filter) Decl() string {
+	var b bytes.Buffer
+
+	fmt.Fprintf(&b, "&synonyms.Filter{\n")
+	if n.Trie != nil {
+		fmt.Fprintf(&b, "Trie: %s,\n", n.Trie.Decl())
+	}
+	if n.MaxWords > 0 {
+		// default value does not need to be declared
+		fmt.Fprintf(&b, "MaxWords: %d,\n", n.MaxWords)
+	}
+	fmt.Fprintf(&b, "}")
+
+	formatted, err := format.Source(b.Bytes())
+	if err != nil {
+		panic(err)
+	}
+
+	return string(formatted)
 }
