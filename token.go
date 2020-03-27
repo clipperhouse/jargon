@@ -55,6 +55,23 @@ var common = make(map[string]*Token)
 func init() {
 	runes := []string{
 		" ", "\r", "\n", "\t", ".", ",",
+		"A", "a",
+		"An", "an",
+		"The", "the",
+		"And", "and",
+		"Or", "or",
+		"Not", "not",
+		"Of", "of",
+		"In", "in",
+		"On", "on",
+		"To", "to",
+		"Be", "be",
+		"Is", "is",
+		"Are", "are",
+		"Has", "has",
+		"Have", "have",
+		"It", "it",
+		"Do", "do",
 	}
 
 	for _, r := range runes {
