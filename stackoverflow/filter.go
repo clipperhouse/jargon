@@ -12,10 +12,18 @@ import (
 var Tags *synonyms.Filter
 
 func init() {
-	ignore := []rune{' ', '-', '.', '/'}
-	filter, err := synonyms.NewFilter(mappings, true, ignore)
+	filter, err := create()
 	if err != nil {
 		panic(err)
 	}
 	Tags = filter
+}
+
+func create() (*synonyms.Filter, error) {
+	ignore := []rune{' ', '-', '.', '/'}
+	filter, err := synonyms.NewFilter(mappings, true, ignore)
+	if err != nil {
+		return nil, err
+	}
+	return filter, nil
 }
