@@ -53,7 +53,7 @@ func NewToken(s string, isLemma bool) *Token {
 var common = make(map[string]*Token)
 
 func init() {
-	runes := []string{
+	ss := []string{
 		" ", "\r", "\n", "\t", ".", ",",
 		"A", "a",
 		"An", "an",
@@ -74,7 +74,7 @@ func init() {
 		"Do", "do",
 	}
 
-	for _, r := range runes {
-		common[r] = NewToken(r, false)
+	for _, s := range ss {
+		common[s] = NewToken(s, false)
 	}
 }
