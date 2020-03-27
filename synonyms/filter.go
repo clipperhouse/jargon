@@ -3,7 +3,6 @@ package synonyms
 import (
 	"bytes"
 	"fmt"
-	"strings"
 
 	"github.com/clipperhouse/jargon"
 	"github.com/clipperhouse/jargon/synonyms/trie"
@@ -19,34 +18,55 @@ type Filter struct {
 func NewFilter(mappings map[string]string, ignoreCase bool, ignoreRunes []rune) (*Filter, error) {
 	trie := trie.New(ignoreCase, ignoreRunes)
 	maxWords := 1
-	for k, v := range mappings {
-		synonyms := strings.Split(k, ",")
-		for _, synonym := range synonyms {
-
-			synonym = strings.TrimSpace(synonym)
-			tokens, err := jargon.TokenizeString(synonym).ToSlice()
-			if err != nil {
-				return nil, err
-			}
-
-			words := 0
-			for _, token := range tokens {
-				if !token.IsSpace() && !token.IsPunct() {
-					words++
-				}
-			}
-			if words > maxWords {
-				maxWords = words
-			}
-
-			trie.Add(tokens, v)
+	for synonyms, canonical := range mappings {
+		tokens, err := jargon.TokenizeString(synonyms).ToSlice()
+		if err != nil {
+			return nil, err
 		}
+
+		start := 0
+		skipSpaces := true
+		for i, token := range tokens {
+			// Leading spaces, and spaces following commas, should be ignored
+			if skipSpaces && token.IsSpace() {
+				start++
+				continue
+			}
+			skipSpaces = false
+
+			if token.String() == "," {
+				slice := tokens[start:i]
+				trie.Add(slice, canonical)
+				updateMaxWords(slice, &maxWords)
+
+				start = i + 1 // ignore the comma
+				skipSpaces = true
+				continue
+			}
+		}
+
+		// Remaining after the last comma
+		slice := tokens[start:]
+		trie.Add(slice, canonical)
+		updateMaxWords(slice, &maxWords)
 	}
 
 	return &Filter{
 		Trie:     trie,
 		MaxWords: maxWords,
 	}, nil
+}
+
+func updateMaxWords(tokens []*jargon.Token, maxWords *int) {
+	words := 0
+	for _, token := range tokens {
+		if !token.IsSpace() && !token.IsPunct() {
+			words++
+		}
+	}
+	if words > *maxWords {
+		*maxWords = words
+	}
 }
 
 // Filter replaces tokens with their canonical terms, based on Stack Overflow tags & synonyms

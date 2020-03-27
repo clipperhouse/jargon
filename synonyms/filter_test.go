@@ -10,10 +10,10 @@ import (
 func TestFilter(t *testing.T) {
 
 	mappings := map[string]string{
-		"developer, engineer, programmer": "boffin",
-		"rock star, 10x developer":        "cliché",
-		"Ruby on Rails, rails":            "ruby-on-rails",
-		"nodeJS, iojs":                    "node.js",
+		"developer, engineer, programmer,": "boffin",
+		"rock star, 10x developer":         "cliché",
+		"Ruby on Rails, rails":             "ruby-on-rails",
+		"nodeJS, iojs":                     "node.js",
 	}
 
 	ignore := []rune{'-', ' ', '.', '/'}
