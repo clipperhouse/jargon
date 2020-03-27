@@ -34,7 +34,7 @@ func (t *Token) IsLemma() bool {
 }
 
 func NewToken(s string, isLemma bool) *Token {
-	token, found := common[s]
+	token, found := common[s][isLemma]
 
 	if found {
 		return token
@@ -50,7 +50,7 @@ func NewToken(s string, isLemma bool) *Token {
 	}
 }
 
-var common = make(map[string]*Token)
+var common = make(map[string]map[bool]*Token)
 
 func init() {
 	ss := []string{
@@ -75,6 +75,9 @@ func init() {
 	}
 
 	for _, s := range ss {
-		common[s] = NewToken(s, false)
+		common[s] = map[bool]*Token{
+			true:  NewToken(s, true),
+			false: NewToken(s, false),
+		}
 	}
 }
