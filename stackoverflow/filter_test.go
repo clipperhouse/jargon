@@ -1,10 +1,9 @@
-package stackoverflow_test
+package stackoverflow
 
 import (
 	"testing"
 
 	"github.com/clipperhouse/jargon"
-	"github.com/clipperhouse/jargon/stackoverflow"
 )
 
 func TestFilter(t *testing.T) {
@@ -25,12 +24,23 @@ func TestFilter(t *testing.T) {
 
 	for _, expected := range expecteds {
 		tokens := jargon.TokenizeString(expected.input)
-		canonical, err := stackoverflow.Tags.Filter(tokens).String()
+		canonical, err := Tags.Filter(tokens).String()
 		if err != nil {
 			t.Error(err)
 		}
 		if canonical != expected.canonical {
 			t.Errorf("expected to find canonical %q, got %q", expected.canonical, canonical)
+		}
+	}
+}
+
+func BenchmarkTags(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tokens := jargon.TokenizeString("something about Ruby on Rails, and such.")
+		_, err := Tags.Filter(tokens).String()
+		if err != nil {
+			b.Error(err)
 		}
 	}
 }

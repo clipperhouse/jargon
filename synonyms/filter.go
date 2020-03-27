@@ -3,13 +3,13 @@ package synonyms
 import (
 	"bytes"
 	"fmt"
-	"go/format"
 	"strings"
 
 	"github.com/clipperhouse/jargon"
 	"github.com/clipperhouse/jargon/synonyms/trie"
 )
 
+// Filter is the data structure of a synonyms filter. Use NewFilter to create.
 type Filter struct {
 	Trie     *trie.RuneTrie
 	MaxWords int
@@ -49,10 +49,11 @@ func NewFilter(mappings map[string]string, ignoreCase bool, ignoreRunes []rune) 
 	}, nil
 }
 
-func (syns *Filter) Filter(incoming *jargon.Tokens) *jargon.Tokens {
-	f := newTokens(incoming, syns.Trie, syns.MaxWords)
+// Filter replaces tokens with their canonical terms, based on Stack Overflow tags & synonyms
+func (f *Filter) Filter(incoming *jargon.Tokens) *jargon.Tokens {
+	t := newTokens(incoming, f.Trie, f.MaxWords)
 	return &jargon.Tokens{
-		Next: f.next,
+		Next: t.next,
 	}
 }
 
@@ -78,60 +79,60 @@ type tokens struct {
 }
 
 // next returns the next token; nil indicates end of data
-func (f *tokens) next() (*jargon.Token, error) {
+func (t *tokens) next() (*jargon.Token, error) {
 	// Clear out any outgoing
-	if f.outgoing.Len() > 0 {
-		return f.outgoing.Pop(), nil
+	if t.outgoing.Len() > 0 {
+		return t.outgoing.Pop(), nil
 	}
 
 	// Consume all the words
 	for {
-		err := f.fill()
+		err := t.fill()
 		if err != nil {
 			return nil, err
 		}
 
-		run := f.wordrun()
+		run := t.wordrun()
 		if len(run) == 0 {
 			// No more words
 			break
 		}
 
 		// Try to lemmatize
-		found, canonical, consumed := f.trie.SearchCanonical(run...)
+		found, canonical, consumed := t.trie.SearchCanonical(run...)
 		if found {
 			if canonical != "" {
 				token := jargon.NewToken(canonical, true)
-				f.outgoing.Push(token)
+				t.outgoing.Push(token)
 			}
-			f.buffer.Drop(consumed)
+			t.buffer.Drop(consumed)
 			continue
 		}
 
-		f.buffer.PopTo(f.outgoing)
+		t.buffer.PopTo(t.outgoing)
 	}
 
 	// Queue up the rest of the buffer to go out
-	f.buffer.FlushTo(f.outgoing)
+	t.buffer.FlushTo(t.outgoing)
 
-	if f.outgoing.Len() > 0 {
-		return f.outgoing.Pop(), nil
+	if t.outgoing.Len() > 0 {
+		return t.outgoing.Pop(), nil
 	}
 
 	return nil, nil
 }
 
 // fill the buffer until EOF, punctuation, or enough word tokens
-func (f *tokens) fill() error {
+func (t *tokens) fill() error {
 	words := 0
-	for _, token := range f.buffer.All() {
+	for _, token := range t.buffer.All() {
 		if !token.IsPunct() && !token.IsSpace() {
 			words++
 		}
 	}
 
-	for words < f.maxWords {
-		token, err := f.incoming.Next()
+	for words < t.maxWords {
+		token, err := t.incoming.Next()
 		if err != nil {
 			return err
 		}
@@ -140,7 +141,7 @@ func (f *tokens) fill() error {
 			break
 		}
 
-		f.buffer.Push(token)
+		t.buffer.Push(token)
 
 		if token.IsPunct() {
 			break
@@ -158,16 +159,16 @@ func (f *tokens) fill() error {
 }
 
 // wordrun pulls the longest series of tokens comprised of words
-func (f *tokens) wordrun() []*jargon.Token {
+func (t *tokens) wordrun() []*jargon.Token {
 	spaces := 0
-	for _, token := range f.buffer.All() {
+	for _, token := range t.buffer.All() {
 		if !token.IsSpace() {
 			break
 		}
-		f.outgoing.Push(token)
+		t.outgoing.Push(token)
 		spaces++
 	}
-	f.buffer.Drop(spaces)
+	t.buffer.Drop(spaces)
 
 	var (
 		run      []*jargon.Token
@@ -175,7 +176,7 @@ func (f *tokens) wordrun() []*jargon.Token {
 		consumed int
 	)
 
-	for _, token := range f.buffer.All() {
+	for _, token := range t.buffer.All() {
 		if token.IsPunct() {
 			// fall through and send back word run we've gotten so far (if any)
 			// don't consume this punct, leave it in the buffer
@@ -191,7 +192,7 @@ func (f *tokens) wordrun() []*jargon.Token {
 			words++
 		}
 
-		if words >= f.maxWords {
+		if words >= t.maxWords {
 			break
 		}
 	}
@@ -199,23 +200,30 @@ func (f *tokens) wordrun() []*jargon.Token {
 	return run
 }
 
-func (n *Filter) Decl() string {
+// String returns a Go source declaration of the Filter
+func (f *Filter) String() string {
+	return f.Decl()
+}
+
+// Decl returns a Go source declaration of the Filter
+func (f *Filter) Decl() string {
 	var b bytes.Buffer
 
 	fmt.Fprintf(&b, "&synonyms.Filter{\n")
-	if n.Trie != nil {
-		fmt.Fprintf(&b, "Trie: %s,\n", n.Trie.Decl())
+	if f.Trie != nil {
+		fmt.Fprintf(&b, "Trie: %s,\n", f.Trie.Decl())
 	}
-	if n.MaxWords > 0 {
+	if f.MaxWords > 0 {
 		// default value does not need to be declared
-		fmt.Fprintf(&b, "MaxWords: %d,\n", n.MaxWords)
+		fmt.Fprintf(&b, "MaxWords: %d,\n", f.MaxWords)
 	}
 	fmt.Fprintf(&b, "}")
 
-	formatted, err := format.Source(b.Bytes())
-	if err != nil {
-		panic(err)
-	}
+	result := b.Bytes()
+	// result, err := format.Source(result)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	return string(formatted)
+	return string(result)
 }

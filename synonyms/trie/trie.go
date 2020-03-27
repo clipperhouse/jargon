@@ -3,7 +3,6 @@ package trie
 import (
 	"bytes"
 	"fmt"
-	"go/format"
 	"unicode"
 
 	"github.com/clipperhouse/jargon"
@@ -33,12 +32,13 @@ func (n *RuneTrie) Decl() string {
 	fmt.Fprintf(&b, "Root: %s,\n", n.Root.Decl())
 	fmt.Fprintf(&b, "}")
 
-	formatted, err := format.Source(b.Bytes())
-	if err != nil {
-		panic(err)
-	}
+	result := b.Bytes()
+	// result, err := format.Source(result)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	return string(formatted)
+	return string(result)
 }
 
 type Node struct {
@@ -130,24 +130,25 @@ func (n *Node) Decl() string {
 	}
 	if n.Canonical != "" {
 		// default value does not need to be declared
-		fmt.Fprintf(&b, "\tCanonical: %q,\n", n.Canonical)
+		fmt.Fprintf(&b, "Canonical: %q,\n", n.Canonical)
 	}
 	if n.Children != nil {
 		// default value does not need to be declared
-		fmt.Fprintf(&b, "\tChildren: map[rune]*trie.Node{\n")
+		fmt.Fprintf(&b, "Children: map[rune]*trie.Node{\n")
 		for k, v := range n.Children {
-			fmt.Fprintf(&b, "\t'%s': %s,\n", string(k), v.Decl())
+			fmt.Fprintf(&b, "'%s': %s,\n", string(k), v.Decl())
 		}
 		fmt.Fprintf(&b, "},\n")
 	}
 	fmt.Fprintf(&b, "}")
 
-	formatted, err := format.Source(b.Bytes())
-	if err != nil {
-		panic(err)
-	}
+	result := b.Bytes()
+	// result, err := format.Source(result)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	return string(formatted)
+	return string(result)
 }
 
 func (n *Node) String() string {
