@@ -32,7 +32,7 @@ type tokenizer struct {
 
 func newTokenizer(r io.Reader) *tokenizer {
 	return &tokenizer{
-		incoming: bufio.NewReaderSize(r, 4*4096),
+		incoming: bufio.NewReaderSize(r, 64*1024),
 	}
 }
 
@@ -61,7 +61,7 @@ func (t *tokenizer) next() (*Token, error) {
 				return nil, err
 			}
 
-			isLeadingPunct := leadingPunct[r] && !followedByTerminator
+			isLeadingPunct := isLeadingPunct(r) && !followedByTerminator
 			if isLeadingPunct {
 				// Treat it as start of a word
 				return t.readWord()
@@ -87,7 +87,7 @@ func (t *tokenizer) readWord() (*Token, error) {
 				return t.token(), nil
 			}
 			return nil, err
-		case midPunct[r]:
+		case isMidPunct(r):
 			// Look ahead to see if it's followed by space or more punctuation
 			followedByTerminator, err := t.peekTerminator()
 			if err != nil {
