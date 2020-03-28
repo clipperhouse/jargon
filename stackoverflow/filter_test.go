@@ -38,7 +38,7 @@ func BenchmarkTags(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		tokens := jargon.TokenizeString("something about Ruby on Rails, and such.")
-		_, err := Tags.Filter(tokens).String()
+		_, err := Tags.Filter(tokens).Count()
 		if err != nil {
 			b.Error(err)
 		}
@@ -50,7 +50,7 @@ func BenchmarkCreate(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, err := create()
 		if err != nil {
-			panic(err)
+			b.Error(err)
 		}
 	}
 }
