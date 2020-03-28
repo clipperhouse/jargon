@@ -8,135 +8,141 @@ import (
 	"github.com/clipperhouse/jargon"
 )
 
+// RuneTrie is a structure for searching strings (tokens)
 type RuneTrie struct {
-	Root       *Node
-	Ignore     map[rune]bool
-	IgnoreCase bool
+	root       *node
+	ignore     map[rune]bool
+	ignoreCase bool
 }
 
-func (n *RuneTrie) Decl() string {
-	var b bytes.Buffer
-
-	fmt.Fprintf(&b, "&trie.RuneTrie{\n")
-	if n.Ignore != nil {
-		fmt.Fprintf(&b, "Ignore: map[rune]bool{\n")
-		for k, v := range n.Ignore {
-			fmt.Fprintf(&b, "'%s': %t,\n", string(k), v)
-		}
-		fmt.Fprintf(&b, "},\n")
-	}
-	if n.IgnoreCase {
-		// default value does not need to be declared
-		fmt.Fprintf(&b, "IgnoreCase: %t,\n", n.IgnoreCase)
-	}
-	fmt.Fprintf(&b, "Root: %s,\n", n.Root.Decl())
-	fmt.Fprintf(&b, "}")
-
-	result := b.Bytes()
-	// result, err := format.Source(result)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	return string(result)
-}
-
-type Node struct {
-	Children     map[rune]*Node
-	HasCanonical bool
-	Canonical    string
-}
-
+// New creates a new RuneTrie
 func New(ignoreCase bool, ignore []rune) *RuneTrie {
 	set := map[rune]bool{}
 	for _, r := range ignore {
 		set[r] = true
 	}
 	return &RuneTrie{
-		Root:       &Node{},
-		IgnoreCase: ignoreCase,
-		Ignore:     set,
+		root:       &node{},
+		ignoreCase: ignoreCase,
+		ignore:     set,
 	}
 }
 
-func (trie *RuneTrie) Add(tokens []*jargon.Token, Canonical string) {
-	n := trie.Root
+// String returns a representation of the trie as a Go source declaration. It can be large, use sparingly.
+func (t *RuneTrie) String() string {
+	var b bytes.Buffer
+
+	fmt.Fprintf(&b, "&trie.RuneTrie{\n")
+	if t.ignore != nil {
+		fmt.Fprintf(&b, "Ignore: map[rune]bool{\n")
+		for k, v := range t.ignore {
+			fmt.Fprintf(&b, "'%s': %t,\n", string(k), v)
+		}
+		fmt.Fprintf(&b, "},\n")
+	}
+	if t.ignoreCase {
+		// default value does not need to be declared
+		fmt.Fprintf(&b, "IgnoreCase: %t,\n", t.ignoreCase)
+	}
+	fmt.Fprintf(&b, "Root: %s,\n", t.root.String())
+	fmt.Fprintf(&b, "}")
+
+	result := b.Bytes()
+	// result, err := format.Source(result)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	return string(result)
+}
+
+type node struct {
+	children     map[rune]*node
+	hasCanonical bool
+	canonical    string
+}
+
+// Add adds tokens and their canonicals to the trie
+func (t *RuneTrie) Add(tokens []*jargon.Token, Canonical string) {
+	n := t.root
 	for _, token := range tokens {
 		for _, r := range token.String() {
-			if trie.IgnoreCase {
+			if t.ignoreCase {
 				r = unicode.ToLower(r)
 			}
 
-			if trie.Ignore[r] {
+			if t.ignore[r] {
 				continue
 			}
 
-			child := n.Children[r]
+			child := n.children[r]
 			if child == nil {
-				if n.Children == nil {
-					n.Children = map[rune]*Node{}
+				if n.children == nil {
+					n.children = map[rune]*node{}
 				}
-				child = &Node{}
-				n.Children[r] = child
+				child = &node{}
+				n.children[r] = child
 			}
 			n = child
 		}
 	}
 
-	n.HasCanonical = true
-	n.Canonical = Canonical
+	n.hasCanonical = true
+	n.canonical = Canonical
 }
 
-func (trie *RuneTrie) SearchCanonical(tokens ...*jargon.Token) (found bool, Canonical string, consumed int) {
-	var result *Node
-	Node := trie.Root
+// SearchCanonical walks the trie to find a canonical matching the tokens, preferring longer (greedy) matches, i.e. 'ruby on rails' vs 'ruby'
+func (t *RuneTrie) SearchCanonical(tokens ...*jargon.Token) (found bool, canonical string, consumed int) {
+	var result *node
+	Node := t.root
 
 outer:
 	for i, token := range tokens {
 		for _, r := range token.String() {
-			if trie.IgnoreCase {
+			if t.ignoreCase {
 				r = unicode.ToLower(r)
 			}
 
-			if trie.Ignore[r] {
+			if t.ignore[r] {
 				continue
 			}
 
-			Node = Node.Children[r]
+			Node = Node.children[r]
 			if Node == nil {
 				break outer
 			}
 		}
 
-		if Node.HasCanonical && Node != result {
+		if Node.hasCanonical && Node != result {
 			// only capture results if it's a different Node
 			result = Node
 			found = true
-			Canonical = Node.Canonical
+			canonical = Node.canonical
 			consumed = i + 1
 		}
 	}
 
-	return found, Canonical, consumed
+	return found, canonical, consumed
 }
 
-func (n *Node) Decl() string {
+// String returns a representation of a node as a Go source declaration. It can be very large.
+func (n *node) String() string {
 	var b bytes.Buffer
 
 	fmt.Fprintf(&b, "&trie.Node{\n")
-	if n.HasCanonical {
+	if n.hasCanonical {
 		// default value does not need to be declared
-		fmt.Fprintf(&b, "\tHasCanonical: %t,\n", n.HasCanonical)
+		fmt.Fprintf(&b, "\tHasCanonical: %t,\n", n.hasCanonical)
 	}
-	if n.Canonical != "" {
+	if n.canonical != "" {
 		// default value does not need to be declared
-		fmt.Fprintf(&b, "Canonical: %q,\n", n.Canonical)
+		fmt.Fprintf(&b, "Canonical: %q,\n", n.canonical)
 	}
-	if n.Children != nil {
+	if n.children != nil {
 		// default value does not need to be declared
 		fmt.Fprintf(&b, "Children: map[rune]*trie.Node{\n")
-		for k, v := range n.Children {
-			fmt.Fprintf(&b, "'%s': %s,\n", string(k), v.Decl())
+		for r, child := range n.children {
+			fmt.Fprintf(&b, "'%s': %s,\n", string(r), child.String())
 		}
 		fmt.Fprintf(&b, "},\n")
 	}
@@ -149,8 +155,4 @@ func (n *Node) Decl() string {
 	// }
 
 	return string(result)
-}
-
-func (n *Node) String() string {
-	return n.Decl()
 }

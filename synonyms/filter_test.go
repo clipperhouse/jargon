@@ -8,7 +8,6 @@ import (
 )
 
 func TestFilter(t *testing.T) {
-
 	mappings := map[string]string{
 		"developer, engineer, programmer,": "boffin",
 		"rock star, 10x developer":         "cliché",

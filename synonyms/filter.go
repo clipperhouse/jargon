@@ -10,8 +10,8 @@ import (
 
 // Filter is the data structure of a synonyms filter. Use NewFilter to create.
 type Filter struct {
-	Trie     *trie.RuneTrie
-	MaxWords int
+	trie     *trie.RuneTrie
+	maxWords int
 }
 
 // NewFilter creates a new synonyms Filter
@@ -52,8 +52,8 @@ func NewFilter(mappings map[string]string, ignoreCase bool, ignoreRunes []rune) 
 	}
 
 	return &Filter{
-		Trie:     trie,
-		MaxWords: maxWords,
+		trie:     trie,
+		maxWords: maxWords,
 	}, nil
 }
 
@@ -71,18 +71,14 @@ func updateMaxWords(tokens []*jargon.Token, maxWords *int) {
 
 // Filter replaces tokens with their canonical terms, based on Stack Overflow tags & synonyms
 func (f *Filter) Filter(incoming *jargon.Tokens) *jargon.Tokens {
-	t := newTokens(incoming, f)
-	return &jargon.Tokens{
-		Next: t.next,
-	}
-}
-
-func newTokens(incoming *jargon.Tokens, filter *Filter) *tokens {
-	return &tokens{
+	t := &tokens{
 		incoming: incoming,
 		buffer:   &jargon.TokenQueue{},
 		outgoing: &jargon.TokenQueue{},
-		filter:   filter,
+		filter:   f,
+	}
+	return &jargon.Tokens{
+		Next: t.next,
 	}
 }
 
@@ -117,7 +113,7 @@ func (t *tokens) next() (*jargon.Token, error) {
 		}
 
 		// Try to lemmatize
-		found, canonical, consumed := t.filter.Trie.SearchCanonical(run...)
+		found, canonical, consumed := t.filter.trie.SearchCanonical(run...)
 		if found {
 			if canonical != "" {
 				token := jargon.NewToken(canonical, true)
@@ -149,7 +145,7 @@ func (t *tokens) fill() error {
 		}
 	}
 
-	for words < t.filter.MaxWords {
+	for words < t.filter.maxWords {
 		token, err := t.incoming.Next()
 		if err != nil {
 			return err
@@ -210,7 +206,7 @@ func (t *tokens) wordrun() []*jargon.Token {
 			words++
 		}
 
-		if words >= t.filter.MaxWords {
+		if words >= t.filter.maxWords {
 			break
 		}
 	}
@@ -228,12 +224,12 @@ func (f *Filter) Decl() string {
 	var b bytes.Buffer
 
 	fmt.Fprintf(&b, "&synonyms.Filter{\n")
-	if f.Trie != nil {
-		fmt.Fprintf(&b, "Trie: %s,\n", f.Trie.Decl())
+	if f.trie != nil {
+		fmt.Fprintf(&b, "Trie: %s,\n", f.trie.String())
 	}
-	if f.MaxWords > 0 {
+	if f.maxWords > 0 {
 		// default value does not need to be declared
-		fmt.Fprintf(&b, "MaxWords: %d,\n", f.MaxWords)
+		fmt.Fprintf(&b, "MaxWords: %d,\n", f.maxWords)
 	}
 	fmt.Fprintf(&b, "}")
 
