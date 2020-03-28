@@ -111,7 +111,7 @@ func (t *unisegTokenizer) next() (*Token, error) {
 
 		// Expressions like .Net, #hashtags and @handles
 		// Must be one of our leading chars, and must be start of a new token
-		mightBeLeading := len(t.buffer) == 0 && leadings[r]
+		mightBeLeading := len(t.buffer) == 0 && isLeadingRune(r)
 
 		if mightBeLeading {
 			// Look ahead
@@ -145,7 +145,7 @@ func (t *unisegTokenizer) next() (*Token, error) {
 
 		// Expressions like F# and C++
 		// Must be one of our trailing chars, and must not be start of a new token
-		mightBeTrailing := len(t.buffer) > 0 && trailings[r]
+		mightBeTrailing := len(t.buffer) > 0 && isTrailing(r)
 
 		if mightBeTrailing {
 			// Look ahead
@@ -252,21 +252,36 @@ func tryRuneInString(s string) (rune, bool) {
 	return utf8.RuneError, false
 }
 
-var leadingString = map[string]bool{
-	".": true,
-	"#": true,
-	"@": true,
+func isLeadingString(s string) bool {
+	switch s {
+	case
+		".",
+		"#",
+		"@":
+		return true
+	}
+	return false
 }
 
-var leadings = runeSet{
-	'.': true,
-	'#': true,
-	'@': true,
+func isLeadingRune(r rune) bool {
+	switch r {
+	case
+		'.',
+		'#',
+		'@':
+		return true
+	}
+	return false
 }
 
-var trailings = runeSet{
-	'+': true,
-	'#': true,
+func isTrailing(r rune) bool {
+	switch r {
+	case
+		'+',
+		'#':
+		return true
+	}
+	return false
 }
 
 // sketch of something simpler?
@@ -286,7 +301,7 @@ func (t *unisegTokenizer) next2() (*Token, error) {
 
 	current := t.segmenter.Bytes()
 
-	mightBeLeading := leadingString[string(current)]
+	mightBeLeading := isLeadingString(string(current))
 	if mightBeLeading {
 		seg := t.segmenter.Segment()
 		if err := t.segmenter.Err(); err != nil {
