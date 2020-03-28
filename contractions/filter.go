@@ -37,7 +37,7 @@ type tokens struct {
 }
 
 func (t *tokens) next() (*jargon.Token, error) {
-	if t.outgoing.Len() > 0 {
+	if t.outgoing.Any() {
 		return t.outgoing.Pop(), nil
 	}
 
@@ -62,7 +62,7 @@ func (t *tokens) next() (*jargon.Token, error) {
 		}
 	}
 
-	if t.outgoing.Len() > 0 {
+	if t.outgoing.Any() {
 		return t.outgoing.Pop(), nil
 	}
 

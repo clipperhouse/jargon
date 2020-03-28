@@ -63,7 +63,7 @@ func (t *unisegTokenizer) segment() seg {
 // next returns the next token. Call until it returns nil.
 func (t *unisegTokenizer) next() (*Token, error) {
 	// First, look for something to send back
-	if t.outgoing.Len() > 0 {
+	if t.outgoing.Any() {
 		return t.outgoing.Pop(), nil
 	}
 
@@ -192,7 +192,7 @@ func (t *unisegTokenizer) next() (*Token, error) {
 		t.emit()
 	}
 
-	if t.outgoing.Len() > 0 {
+	if t.outgoing.Any() {
 		return t.outgoing.Pop(), nil
 	}
 
@@ -272,7 +272,7 @@ var trailings = runeSet{
 // sketch of something simpler?
 func (t *unisegTokenizer) next2() (*Token, error) {
 	// First, look for something to send back
-	if t.outgoing.Len() > 0 {
+	if t.outgoing.Any() {
 		return t.outgoing.Pop(), nil
 	}
 

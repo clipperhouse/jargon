@@ -101,7 +101,7 @@ type tokens struct {
 // next returns the next token; nil indicates end of data
 func (t *tokens) next() (*jargon.Token, error) {
 	// Clear out any outgoing
-	if t.outgoing.Len() > 0 {
+	if t.outgoing.Any() {
 		return t.outgoing.Pop(), nil
 	}
 
@@ -135,7 +135,7 @@ func (t *tokens) next() (*jargon.Token, error) {
 	// Queue up the rest of the buffer to go out
 	t.buffer.FlushTo(t.outgoing)
 
-	if t.outgoing.Len() > 0 {
+	if t.outgoing.Any() {
 		return t.outgoing.Pop(), nil
 	}
 
