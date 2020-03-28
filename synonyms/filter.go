@@ -71,19 +71,18 @@ func updateMaxWords(tokens []*jargon.Token, maxWords *int) {
 
 // Filter replaces tokens with their canonical terms, based on Stack Overflow tags & synonyms
 func (f *Filter) Filter(incoming *jargon.Tokens) *jargon.Tokens {
-	t := newTokens(incoming, f.Trie, f.MaxWords)
+	t := newTokens(incoming, f)
 	return &jargon.Tokens{
 		Next: t.next,
 	}
 }
 
-func newTokens(incoming *jargon.Tokens, trie *trie.RuneTrie, maxWords int) *tokens {
+func newTokens(incoming *jargon.Tokens, filter *Filter) *tokens {
 	return &tokens{
 		incoming: incoming,
 		buffer:   &jargon.TokenQueue{},
 		outgoing: &jargon.TokenQueue{},
-		trie:     trie,
-		maxWords: maxWords,
+		filter:   filter,
 	}
 }
 
@@ -94,8 +93,7 @@ type tokens struct {
 	buffer *jargon.TokenQueue
 	// outgoing queue of filtered tokens
 	outgoing *jargon.TokenQueue
-	trie     *trie.RuneTrie
-	maxWords int
+	filter   *Filter
 }
 
 // next returns the next token; nil indicates end of data
@@ -119,7 +117,7 @@ func (t *tokens) next() (*jargon.Token, error) {
 		}
 
 		// Try to lemmatize
-		found, canonical, consumed := t.trie.SearchCanonical(run...)
+		found, canonical, consumed := t.filter.Trie.SearchCanonical(run...)
 		if found {
 			if canonical != "" {
 				token := jargon.NewToken(canonical, true)
@@ -145,13 +143,13 @@ func (t *tokens) next() (*jargon.Token, error) {
 // fill the buffer until EOF, punctuation, or enough word tokens
 func (t *tokens) fill() error {
 	words := 0
-	for _, token := range t.buffer.All() {
+	for _, token := range t.buffer.Tokens {
 		if !token.IsPunct() && !token.IsSpace() {
 			words++
 		}
 	}
 
-	for words < t.maxWords {
+	for words < t.filter.MaxWords {
 		token, err := t.incoming.Next()
 		if err != nil {
 			return err
@@ -181,7 +179,7 @@ func (t *tokens) fill() error {
 // wordrun pulls the longest series of tokens comprised of words
 func (t *tokens) wordrun() []*jargon.Token {
 	spaces := 0
-	for _, token := range t.buffer.All() {
+	for _, token := range t.buffer.Tokens {
 		if !token.IsSpace() {
 			break
 		}
@@ -191,12 +189,12 @@ func (t *tokens) wordrun() []*jargon.Token {
 	t.buffer.Drop(spaces)
 
 	var (
-		run      []*jargon.Token
+		end      int
 		words    int
 		consumed int
 	)
 
-	for _, token := range t.buffer.All() {
+	for i, token := range t.buffer.Tokens {
 		if token.IsPunct() {
 			// fall through and send back word run we've gotten so far (if any)
 			// don't consume this punct, leave it in the buffer
@@ -204,7 +202,7 @@ func (t *tokens) wordrun() []*jargon.Token {
 		}
 
 		// It's a word or space
-		run = append(run, token)
+		end = i + 1
 		consumed++
 
 		if !token.IsSpace() {
@@ -212,12 +210,12 @@ func (t *tokens) wordrun() []*jargon.Token {
 			words++
 		}
 
-		if words >= t.maxWords {
+		if words >= t.filter.MaxWords {
 			break
 		}
 	}
 
-	return run
+	return t.buffer.Tokens[:end]
 }
 
 // String returns a Go source declaration of the Filter

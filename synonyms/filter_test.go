@@ -40,22 +40,28 @@ func TestFilter(t *testing.T) {
 }
 
 func BenchmarkFilter(b *testing.B) {
-	// file, err := ioutil.ReadFile("../testdata/wikipedia.txt")
 
-	// if err != nil {
-	// 	b.Error(err)
-	// }
+	mappings := map[string]string{
+		"developer, engineer, programmer,": "boffin",
+		"rock star, 10x developer":         "cliché",
+		"Ruby on Rails, rails":             "ruby-on-rails",
+		"nodeJS, iojs":                     "node.js",
+	}
 
-	// ignore := []rune{'-', ' ', '.', '/'}
-	// syns, err := synonyms.NewFilter(mappings, true, ignore)
-	// if err != nil {
-	// 	b.Error(err)
-	// }
+	ignore := []rune{'-', ' ', '.', '/'}
+	filter, err := synonyms.NewFilter(mappings, true, ignore)
+	if err != nil {
+		b.Error(err)
+	}
 
-	// b.ResetTimer()
-	// for i := 0; i < b.N; i++ {
-	// 	r := bytes.NewReader(file)
-	// 	tokens := jargon.Tokenize(r)
-	// 	syns.Filter(tokens).Count() // consume them
-	// }
+	original := `we are looking for a rockstar 10x developer or engineer for ruby on rails and Nodejs`
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tokens := jargon.TokenizeString(original)
+		_, err := filter.Filter(tokens).Count()
+		if err != nil {
+			b.Error(err)
+		}
+	}
 }
