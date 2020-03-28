@@ -1,6 +1,8 @@
 package jargon
 
 import (
+	"bytes"
+	"io/ioutil"
 	"testing"
 )
 
@@ -23,4 +25,56 @@ func TestPunct(t *testing.T) {
 	// 		t.Errorf("%q is included in midPunct, but it's not defined as unicode.IsPunct, and therefore is redundant", r)
 	// 	}
 	// }
+}
+
+func BenchmarkPunctSwitch(b *testing.B) {
+	file, err := ioutil.ReadFile("testdata/wikipedia.txt")
+
+	if err != nil {
+		b.Error(err)
+	}
+
+	dummy := false
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		br := bytes.NewReader(file)
+		r, _, err := br.ReadRune()
+		if err != nil {
+			b.Error(err)
+		}
+
+		dummy = spaceIsPunct(r)
+		dummy = punctIsSymbol(r)
+		dummy = isLeadingPunct(r)
+		dummy = isMidPunct(r)
+	}
+
+	b.Log(dummy)
+}
+
+func BenchmarkPunctMap(b *testing.B) {
+	file, err := ioutil.ReadFile("testdata/wikipedia.txt")
+
+	if err != nil {
+		b.Error(err)
+	}
+
+	dummy := false
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		br := bytes.NewReader(file)
+		r, _, err := br.ReadRune()
+		if err != nil {
+			b.Error(err)
+		}
+
+		dummy = spaceAsPunct[r]
+		dummy = punctAsSymbol[r]
+		dummy = leadingPunct[r]
+		dummy = midPunct[r]
+	}
+
+	b.Log(dummy)
 }

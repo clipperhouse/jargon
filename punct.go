@@ -5,7 +5,23 @@ import "unicode"
 type runeSet map[rune]bool
 
 func isPunct(r rune) bool {
-	return (unicode.IsPunct(r) || spaceAsPunct[r]) && !punctAsSymbol[r]
+	return (unicode.IsPunct(r) || spaceIsPunct(r)) && !punctIsSymbol(r)
+}
+
+func punctIsSymbol(r rune) bool {
+	switch r {
+	case '-',
+		'+',
+		'#',
+		'@',
+		'*',
+		'%',
+		'/',
+		'\\',
+		':':
+		return true
+	}
+	return false
 }
 
 var punctAsSymbol = runeSet{
@@ -22,16 +38,47 @@ var punctAsSymbol = runeSet{
 	':':  true,
 }
 
+func spaceIsPunct(r rune) bool {
+	switch r {
+	case '\n', '\r', '\t':
+		return true
+	}
+	return false
+}
+
 var spaceAsPunct = runeSet{
 	'\n': true,
 	'\r': true,
 	'\t': true,
 }
 
+func isLeadingPunct(r rune) bool {
+	switch r {
+	case
+		'.',
+		'-':
+		return true
+	}
+	return false
+}
+
 var leadingPunct = runeSet{
 	// Punctuation that can lead a word, like .Net
 	'.': true,
 	'-': true,
+}
+
+func isMidPunct(r rune) bool {
+	switch r {
+	case '.',
+		'\'',
+		'’',
+		':',
+		'?',
+		'&':
+		return true
+	}
+	return false
 }
 
 var midPunct = runeSet{
