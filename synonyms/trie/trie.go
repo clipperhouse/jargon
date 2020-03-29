@@ -63,7 +63,7 @@ type node struct {
 }
 
 // Add adds tokens and their canonicals to the trie
-func (t *RuneTrie) Add(tokens []*jargon.Token, Canonical string) {
+func (t *RuneTrie) Add(tokens []*jargon.Token, canonical string) {
 	n := t.root
 	for _, token := range tokens {
 		for _, r := range token.String() {
@@ -88,7 +88,7 @@ func (t *RuneTrie) Add(tokens []*jargon.Token, Canonical string) {
 	}
 
 	n.hasCanonical = true
-	n.canonical = Canonical
+	n.canonical = canonical
 }
 
 // SearchCanonical walks the trie to find a canonical matching the tokens, preferring longer (greedy) matches, i.e. 'ruby on rails' vs 'ruby'
