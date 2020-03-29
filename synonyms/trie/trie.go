@@ -94,7 +94,7 @@ func (t *RuneTrie) Add(tokens []*jargon.Token, Canonical string) {
 // SearchCanonical walks the trie to find a canonical matching the tokens, preferring longer (greedy) matches, i.e. 'ruby on rails' vs 'ruby'
 func (t *RuneTrie) SearchCanonical(tokens ...*jargon.Token) (found bool, canonical string, consumed int) {
 	var result *node
-	Node := t.root
+	n := t.root
 
 outer:
 	for i, token := range tokens {
@@ -107,17 +107,17 @@ outer:
 				continue
 			}
 
-			Node = Node.children[r]
-			if Node == nil {
+			n = n.children[r]
+			if n == nil {
 				break outer
 			}
 		}
 
-		if Node.hasCanonical && Node != result {
-			// only capture results if it's a different Node
-			result = Node
+		if n.hasCanonical && n != result {
+			// only capture results if it's a different node
+			result = n
 			found = true
-			canonical = Node.canonical
+			canonical = n.canonical
 			consumed = i + 1
 		}
 	}
