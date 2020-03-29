@@ -4,60 +4,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/blevesearch/segment"
 	"github.com/clipperhouse/jargon"
 )
 
 // TODO: test ordering
 
-func TestSegmenter(t *testing.T) {
-	text := `Hi. This is, a very basic test of the segmenter—with node.js and first_last.
-`
-
-	r := strings.NewReader(text)
-	segmenter := segment.NewSegmenter(r)
-
-	got := map[string]bool{}
-
-	for segmenter.Segment() {
-		s := string(segmenter.Bytes())
-		got[s] = true
-	}
-
-	type test struct {
-		value string
-		found bool
-	}
-
-	expecteds := []test{
-		{"Hi", true},
-		{".", true},
-		{"Hi.", false},
-		{"is", true},
-		{",", true},
-		{"—", true},
-		{"node.js", true},
-		{"node", false},
-		{"js", false},
-		{"first_last", true},
-		{"first", false},
-		{"_", false},
-		{"last", false},
-		{"\n", true},
-	}
-
-	for _, expected := range expecteds {
-		if got[expected.value] != expected.found {
-			t.Errorf("expected finding %q to be %t", expected.value, expected.found)
-		}
-	}
-}
-
-func TestLeadingUniseg(t *testing.T) {
+func TestLeading(t *testing.T) {
 	text := `Hi. This is a test of .net, and #hashtag and @handle, and React.js and .123.`
 
 	r := strings.NewReader(text)
-	tokens := jargon.TokenizeUniseg(r)
+	tokens := jargon.Tokenize(r)
 
 	type test struct {
 		value string
@@ -100,27 +56,32 @@ func TestLeadingUniseg(t *testing.T) {
 	}
 }
 
-func TestMiddleUniseg(t *testing.T) {
-	text := `Hi. This is a test of asp.net, TCP/IP, first_last and wishy-washy.`
+func TestMiddle(t *testing.T) {
+	text := `Hi. This is a test of asp.net, TCP/IP, and O'Brien's and possessives’ first_last and wishy-washy and email@domain.com.`
 
 	r := strings.NewReader(text)
-	tokens := jargon.TokenizeUniseg(r)
+	tokens := jargon.Tokenize(r)
 
 	type test struct {
 		value string
 		found bool
 	}
 
-	// The segment (bleve) tokenizer handles middle dots and underscores
-
 	expecteds := []test{
 		{"asp.net", true},
 		{"asp", false},
 		{"net", false},
-		{"TCP/IP", false},
-		{"TCP", true},
-		{"/", true},
-		{"IP", true},
+		{"TCP/IP", true},
+		{"TCP", false},
+		{"/", false},
+		{"IP", false},
+		{"O'Brien's", true},
+		{"O", false},
+		{"Brien", false},
+		{"'s", false},
+		{"possessives", true},
+		{"’", true},
+		{"possessives’", false},
 		{"first_last", true},
 		{"first", false},
 		{"last", false},
@@ -128,6 +89,11 @@ func TestMiddleUniseg(t *testing.T) {
 		{"wishy", true},
 		{"-", true},
 		{"washy", true},
+		{"email", true},
+		{"email@", false},
+		{"@", true},
+		{"domain.com", true},
+		{"@domain.com", false},
 	}
 
 	got := map[string]bool{}
@@ -151,11 +117,11 @@ func TestMiddleUniseg(t *testing.T) {
 	}
 }
 
-func TestTrailingUniseg(t *testing.T) {
+func TestTrailing(t *testing.T) {
 	text := `Hi. This is a test of F# and C++.`
 
 	r := strings.NewReader(text)
-	tokens := jargon.TokenizeUniseg(r)
+	tokens := jargon.Tokenize(r)
 
 	type test struct {
 		value string

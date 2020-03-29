@@ -3,24 +3,7 @@ package jargon
 import "unicode"
 
 func isPunct(r rune) bool {
-	return (unicode.IsPunct(r) || spaceIsPunct(r)) && !punctIsSymbol(r)
-}
-
-func punctIsSymbol(r rune) bool {
-	switch r {
-	case
-		'-',
-		'+',
-		'#',
-		'@',
-		'*',
-		'%',
-		'/',
-		'\\',
-		':':
-		return true
-	}
-	return false
+	return unicode.IsPunct(r) || spaceIsPunct(r)
 }
 
 func spaceIsPunct(r rune) bool {
@@ -29,20 +12,6 @@ func spaceIsPunct(r rune) bool {
 		'\n',
 		'\r',
 		'\t':
-		return true
-	}
-	return false
-}
-
-func isMidPunct(r rune) bool {
-	switch r {
-	case
-		'.',
-		'\'',
-		'’',
-		':',
-		'?',
-		'&':
 		return true
 	}
 	return false

@@ -40,7 +40,9 @@ func (t *tokenizer) mightBeLeading(r rune) bool {
 	switch r {
 	case
 		'.',
-		'-':
+		'_',
+		'#',
+		'@':
 		return true
 	}
 	return false
@@ -48,11 +50,57 @@ func (t *tokenizer) mightBeLeading(r rune) bool {
 
 func (t *tokenizer) isLeadingPunct(r rune) (bool, error) {
 	if t.mightBeLeading(r) {
-		followedByTerminator, err := t.peekTerminator()
+		followedByTerminator, err := t.lookaheadIsTerminator()
 		if err != nil {
 			return false, err
 		}
 		return !followedByTerminator, nil
+	}
+	return false, nil
+}
+
+func (t *tokenizer) mightBeMidPunct(r rune) bool {
+	switch r {
+	case
+		'.',
+		'_',
+		'\'',
+		'’',
+		'/':
+		return true
+	}
+	return false
+}
+
+func (t *tokenizer) isMidPunct(r rune) (bool, error) {
+	if t.mightBeMidPunct(r) {
+		terminated, err := t.lookaheadIsTerminator()
+		if err != nil {
+			return false, err
+		}
+		return !terminated, nil
+	}
+	return false, nil
+}
+
+func (t *tokenizer) mightBeTrailingPunct(r rune) bool {
+	switch r {
+	case
+		'+',
+		'#',
+		'_':
+		return true
+	}
+	return false
+}
+
+func (t *tokenizer) isTrailingPunct(r rune) (bool, error) {
+	if t.mightBeTrailingPunct(r) {
+		terminated, err := t.lookaheadIsTerminator()
+		if err != nil {
+			return false, err
+		}
+		return terminated, nil
 	}
 	return false, nil
 }
@@ -83,22 +131,22 @@ func (t *tokenizer) next() (*Token, error) {
 			if leading {
 				// Treat it as start of a word
 				t.accept(r)
-				return t.readWord()
+				return t.word()
 			}
 
 			// Regular punct, emit it (no need to buffer)
 			token := NewToken(string(r), false)
 			return token, nil
 		default:
-			// It's a letter
+			// It's alphanumeric
 			t.accept(r)
-			return t.readWord()
+			return t.word()
 		}
 	}
 }
 
 // Important that this function only gets entered from the Next() loop, which determines 'word start'
-func (t *tokenizer) readWord() (*Token, error) {
+func (t *tokenizer) word() (*Token, error) {
 	for {
 		r, _, err := t.incoming.ReadRune()
 		switch {
@@ -108,29 +156,38 @@ func (t *tokenizer) readWord() (*Token, error) {
 				return t.token(), nil
 			}
 			return nil, err
-		case isMidPunct(r):
-			// Look ahead to see if it's followed by space or more punctuation
-			followedByTerminator, err := t.peekTerminator()
+		case isPunct(r):
+			mid, err := t.isMidPunct(r)
 			if err != nil {
 				return nil, err
 			}
-
-			if followedByTerminator {
-				// It's just regular punct, treat it as such
-
-				// Get the current word token without the punct
-				token := t.token()
-
-				// Accept the punct for later
+			if mid {
+				// It's mid-word punct, treat it like a letter
 				t.accept(r)
-
-				// Emit the word token
-				return token, nil
+				continue
 			}
 
-			// Else, it's mid-word punct, treat it like a letter
+			trailing, err := t.isTrailingPunct(r)
+			if err != nil {
+				return nil, err
+			}
+			if trailing {
+				// It's trailing punct, treat it like a letter
+				t.accept(r)
+				continue
+			}
+
+			// It's just regular punct
+
+			// Get the current word token without the punct
+			token := t.token()
+
+			// Accept the punct for later
 			t.accept(r)
-		case isPunct(r) || unicode.IsSpace(r):
+
+			// Emit the word token
+			return token, nil
+		case unicode.IsSpace(r):
 			// Get the current word token without the punct
 			token := t.token()
 
@@ -140,7 +197,7 @@ func (t *tokenizer) readWord() (*Token, error) {
 			// Emit the word token
 			return token, nil
 		default:
-			// Otherwise it's a letter, keep going
+			// Otherwise it's alphanumeric, keep going
 			t.accept(r)
 		}
 	}
@@ -160,7 +217,7 @@ func (t *tokenizer) accept(r rune) {
 }
 
 // PeekTerminator looks to the next rune and determines if it breaks a word
-func (t *tokenizer) peekTerminator() (bool, error) {
+func (t *tokenizer) lookaheadIsTerminator() (bool, error) {
 	r, _, err := t.incoming.ReadRune()
 
 	if err != nil {
