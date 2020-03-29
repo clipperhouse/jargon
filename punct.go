@@ -34,16 +34,6 @@ func spaceIsPunct(r rune) bool {
 	return false
 }
 
-func isLeadingPunct(r rune) bool {
-	switch r {
-	case
-		'.',
-		'-':
-		return true
-	}
-	return false
-}
-
 func isMidPunct(r rune) bool {
 	switch r {
 	case

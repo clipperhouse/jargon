@@ -27,7 +27,7 @@ func TokenizeString(s string) *Tokens {
 
 type tokenizer struct {
 	incoming *bufio.Reader
-	outgoing bytes.Buffer
+	buffer   bytes.Buffer
 }
 
 func newTokenizer(r io.Reader) *tokenizer {
@@ -36,9 +36,30 @@ func newTokenizer(r io.Reader) *tokenizer {
 	}
 }
 
+func (t *tokenizer) mightBeLeading(r rune) bool {
+	switch r {
+	case
+		'.',
+		'-':
+		return true
+	}
+	return false
+}
+
+func (t *tokenizer) isLeadingPunct(r rune) (bool, error) {
+	if t.mightBeLeading(r) {
+		followedByTerminator, err := t.peekTerminator()
+		if err != nil {
+			return false, err
+		}
+		return !followedByTerminator, nil
+	}
+	return false, nil
+}
+
 // next returns the next token. Call until it returns nil.
 func (t *tokenizer) next() (*Token, error) {
-	if t.outgoing.Len() > 0 {
+	if t.buffer.Len() > 0 {
 		// Punct or space accepted in previous call to readWord
 		return t.token(), nil
 	}
@@ -51,23 +72,23 @@ func (t *tokenizer) next() (*Token, error) {
 			}
 			return nil, err
 		case unicode.IsSpace(r):
-			t.accept(r)
-			return t.token(), nil
+			// no need to buffer it
+			token := NewToken(string(r), false)
+			return token, nil
 		case isPunct(r):
-			t.accept(r)
-
-			followedByTerminator, err := t.peekTerminator()
+			leading, err := t.isLeadingPunct(r)
 			if err != nil {
 				return nil, err
 			}
-
-			isLeadingPunct := isLeadingPunct(r) && !followedByTerminator
-			if isLeadingPunct {
+			if leading {
 				// Treat it as start of a word
+				t.accept(r)
 				return t.readWord()
 			}
-			// Regular punct, emit it
-			return t.token(), nil
+
+			// Regular punct, emit it (no need to buffer)
+			token := NewToken(string(r), false)
+			return token, nil
 		default:
 			// It's a letter
 			t.accept(r)
@@ -126,16 +147,16 @@ func (t *tokenizer) readWord() (*Token, error) {
 }
 
 func (t *tokenizer) token() *Token {
-	b := t.outgoing.Bytes()
+	b := t.buffer.Bytes()
 
 	// Got the bytes, can reset
-	t.outgoing.Reset()
+	t.buffer.Reset()
 
 	return NewToken(string(b), false)
 }
 
 func (t *tokenizer) accept(r rune) {
-	t.outgoing.WriteRune(r)
+	t.buffer.WriteRune(r)
 }
 
 // PeekTerminator looks to the next rune and determines if it breaks a word
