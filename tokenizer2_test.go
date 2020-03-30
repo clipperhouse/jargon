@@ -11,8 +11,60 @@ import (
 // TODO: test ordering
 
 func TestTokenize2(t *testing.T) {
-	text := `Hi. Let's see node.js, 123.456, 1,000. ウィキペディア 象形. It includes first_last, and 123.`
+	text := `Hi. Let's test node.js, first_last, 123.456, 789, 1,000, a16z, 3G and $200.13. Then ウィキペディア and 象形.`
 	tokens := jargon.TokenizeString2(text)
+
+	type test struct {
+		value string
+		found bool
+	}
+
+	expecteds := []test{
+		{"Hi", true},
+		{".", true},
+		{"Hi.", false},
+
+		{"Let's", true},
+		{"Let", false},
+		{"'", false},
+		{"s", false},
+
+		{"node.js", true},
+		{"node", false},
+		{"js", false},
+
+		{"first_last", true},
+		{"first", false},
+		{"_", false},
+		{"last", false},
+
+		{"123.456", true},
+		{"123,", false},
+		{"456", false},
+		{"123.456,", false},
+
+		{"789", true},
+		{"789,", false},
+
+		{"1,000", true},
+		{"1,000,", false},
+
+		{"a16z", true},
+
+		{"3G", true},
+
+		{"$", true},
+		{"200.13", true},
+
+		{"ウィキペディア", true},
+		{"ウ", false},
+
+		{"象", true},
+		{"形", true},
+		{"象形", false},
+	}
+
+	got := map[string]bool{}
 
 	for {
 		token, err := tokens.Next()
@@ -23,7 +75,13 @@ func TestTokenize2(t *testing.T) {
 			break
 		}
 
-		t.Log(token)
+		got[token.String()] = true
+	}
+
+	for _, expected := range expecteds {
+		if got[expected.value] != expected.found {
+			t.Errorf("expected %q to be %t", expected.value, expected.found)
+		}
 	}
 }
 
