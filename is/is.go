@@ -153,3 +153,12 @@ func Numeric(r rune) bool {
 func Katakana(r rune) bool {
 	return unicode.Is(unicode.Katakana, r)
 }
+
+func Leading(r rune) bool {
+	switch {
+	case r == '.':
+		return true
+	default:
+		return false
+	}
+}

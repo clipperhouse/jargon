@@ -56,6 +56,19 @@ func (t *tokenizer2) next() (*Token, error) {
 			// An optimization to avoid hitting `is` methods
 			token := NewToken(string(r), false)
 			return token, nil
+		case is.Leading(r):
+			lookahead, eof, err := t.peekRune()
+			if err != nil {
+				return nil, err
+			}
+			if !eof && (is.ALetter(lookahead) || is.Numeric(lookahead)) {
+				// It's leading
+				t.accept(r)
+				continue
+			}
+			// It's not leading
+			token := NewToken(string(r), false)
+			return token, nil
 		case is.AHLetter(r):
 			t.accept(r)
 			return t.alphanumeric()

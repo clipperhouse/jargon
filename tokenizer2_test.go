@@ -13,8 +13,8 @@ import (
 func TestTokenize2(t *testing.T) {
 	text := `Hi. 
 	node.js, first_last, my.name@domain.com
-	123.456, 789, 1,000, a16z, 3G and $200.13.
-	wishy-washy and C++ and F#
+	123.456, 789, .234, 1,000, a16z, 3G and $200.13.
+	wishy-washy and C++ and F# and .net
 	Let’s Let's possessive' possessive’
 	Then ウィキペディア and 象形.`
 	tokens := jargon.TokenizeString2(text)
@@ -49,6 +49,15 @@ func TestTokenize2(t *testing.T) {
 		{"456", false},
 		{"123.456,", false},
 
+		{"789", true},
+		{"789,", false},
+
+		{".234", true},
+		{"234", false},
+
+		{"1,000", true},
+		{"1,000,", false},
+
 		{"wishy-washy", false},
 		{"wishy", true},
 		{"-", true},
@@ -62,6 +71,9 @@ func TestTokenize2(t *testing.T) {
 		{"F", true},
 		{"#", true},
 
+		{".net", true},
+		{"net", false},
+
 		{"Let's", true},
 		{"Let’s", true},
 		{"Let", false},
@@ -72,12 +84,6 @@ func TestTokenize2(t *testing.T) {
 		{"’", true},
 		{"possessive'", false},
 		{"possessive’", false},
-
-		{"789", true},
-		{"789,", false},
-
-		{"1,000", true},
-		{"1,000,", false},
 
 		{"a16z", true},
 
