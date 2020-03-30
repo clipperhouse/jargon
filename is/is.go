@@ -150,8 +150,24 @@ func Numeric(r rune) bool {
 	}
 }
 
+// https://unicode.org/reports/tr29/#Katakana
 func Katakana(r rune) bool {
-	return unicode.Is(unicode.Katakana, r)
+	switch r {
+	case
+		0x3031,
+		0x3032,
+		0x3033,
+		0x3034,
+		0x3035,
+		0x309B,
+		0x309C,
+		0x30A0,
+		0x30FC,
+		0xFF70:
+		return true
+	default:
+		return unicode.Is(unicode.Katakana, r)
+	}
 }
 
 func Hebrew(r rune) bool {
