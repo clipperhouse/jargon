@@ -2,6 +2,7 @@ package jargon
 
 import (
 	"unicode"
+	"unicode/utf8"
 )
 
 // Token represents a piece of text with metadata.
@@ -48,6 +49,17 @@ func NewToken(s string, isLemma bool) *Token {
 		space: ok && unicode.IsSpace(r),
 		lemma: isLemma,
 	}
+}
+
+func tryRuneInString(s string) (rune, bool) {
+	ok := utf8.RuneCountInString(s) == 1
+
+	if ok {
+		r, _ := utf8.DecodeRuneInString(s)
+		return r, true
+	}
+
+	return utf8.RuneError, false
 }
 
 var common = make(map[string]map[bool]*Token)

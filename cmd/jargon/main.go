@@ -75,8 +75,7 @@ func check(err error) {
 }
 
 var tokenizeMap = map[string](func(io.Reader) *jargon.Tokens){
-	"-html":   jargon.TokenizeHTML,
-	"-uniseg": jargon.TokenizeUniseg,
+	"-html": jargon.TokenizeHTML,
 }
 
 var filterMap = map[string]jargon.Filter{
