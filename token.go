@@ -34,6 +34,7 @@ func (t *Token) IsLemma() bool {
 	return t.lemma
 }
 
+// NewToken creates a new token, and calculates whether the token is space or punct.
 func NewToken(s string, isLemma bool) *Token {
 	token, found := common[s][isLemma]
 
