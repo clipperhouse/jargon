@@ -12,9 +12,10 @@ import (
 
 func TestTokenize2(t *testing.T) {
 	text := `Hi. 
-	Let's test node.js, first_last, 
+	node.js, first_last, 
 	123.456, 789, 1,000, a16z, 3G and $200.13.
 	wishy-washy and C++ and F#
+	Let’s Let's possessive' possessive’
 	Then ウィキペディア and 象形.`
 	tokens := jargon.TokenizeString2(text)
 
@@ -27,11 +28,6 @@ func TestTokenize2(t *testing.T) {
 		{"Hi", true},
 		{".", true},
 		{"Hi.", false},
-
-		{"Let's", true},
-		{"Let", false},
-		{"'", false},
-		{"s", false},
 
 		{"node.js", true},
 		{"node", false},
@@ -59,6 +55,17 @@ func TestTokenize2(t *testing.T) {
 		{"F#", false},
 		{"F", true},
 		{"#", true},
+
+		{"Let's", true},
+		{"Let’s", true},
+		{"Let", false},
+		{"s", false},
+
+		{"possessive", true},
+		{"'", true},
+		{"’", true},
+		{"possessive'", false},
+		{"possessive’", false},
 
 		{"789", true},
 		{"789,", false},
