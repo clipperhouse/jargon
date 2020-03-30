@@ -4,6 +4,10 @@ import "unicode"
 
 // https://unicode.org/reports/tr29/#ALetter
 func ALetter(r rune) bool {
+	if r == '_' {
+		return true
+	}
+
 	if unicode.IsLetter(r) {
 		if unicode.Is(unicode.Hebrew, r) {
 			return false
