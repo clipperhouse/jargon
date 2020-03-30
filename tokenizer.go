@@ -5,12 +5,15 @@ import (
 	"bytes"
 	"io"
 	"strings"
-	"unicode"
+
+	"github.com/clipperhouse/jargon/is"
 )
 
 // Tokenize returns an 'iterator' of Tokens from a io.Reader. Call .Next() until it returns nil.
 //
-// Tokenize returns all tokens (including white space), so text can be reconstructed with fidelity ("round tripped").
+// Its uses several specs from Unicode Text Segmentation https://unicode.org/reports/tr29/. It's not a full implementation, but a decent approximation for many mainstream cases.
+//
+// Tokenize returns all tokens (including white space), so text can be reconstructed with fidelity.
 func Tokenize(r io.Reader) *Tokens {
 	t := newTokenizer(r)
 	return &Tokens{
@@ -28,177 +31,155 @@ func TokenizeString(s string) *Tokens {
 type tokenizer struct {
 	incoming *bufio.Reader
 	buffer   bytes.Buffer
+	outgoing *TokenQueue
 }
 
 func newTokenizer(r io.Reader) *tokenizer {
 	return &tokenizer{
 		incoming: bufio.NewReader(r),
+		outgoing: &TokenQueue{},
 	}
-}
-
-func (t *tokenizer) mightBeLeading(r rune) bool {
-	switch r {
-	case
-		'.',
-		'_',
-		'#',
-		'@':
-		return true
-	}
-	return false
-}
-
-func (t *tokenizer) isLeadingPunct(r rune) (bool, error) {
-	if t.mightBeLeading(r) {
-		followedByTerminator, err := t.lookaheadIsTerminator()
-		if err != nil {
-			return false, err
-		}
-		return !followedByTerminator, nil
-	}
-	return false, nil
-}
-
-func (t *tokenizer) mightBeMidPunct(r rune) bool {
-	switch r {
-	case
-		'.',
-		'_',
-		'\'',
-		'’',
-		'/':
-		return true
-	}
-	return false
-}
-
-func (t *tokenizer) isMidPunct(r rune) (bool, error) {
-	if t.mightBeMidPunct(r) {
-		terminated, err := t.lookaheadIsTerminator()
-		if err != nil {
-			return false, err
-		}
-		return !terminated, nil
-	}
-	return false, nil
-}
-
-func (t *tokenizer) mightBeTrailingPunct(r rune) bool {
-	switch r {
-	case
-		'+',
-		'#',
-		'_':
-		return true
-	}
-	return false
-}
-
-func (t *tokenizer) isTrailingPunct(r rune) (bool, error) {
-	if t.mightBeTrailingPunct(r) {
-		terminated, err := t.lookaheadIsTerminator()
-		if err != nil {
-			return false, err
-		}
-		return terminated, nil
-	}
-	return false, nil
 }
 
 // next returns the next token. Call until it returns nil.
 func (t *tokenizer) next() (*Token, error) {
-	if t.buffer.Len() > 0 {
-		// Punct or space accepted in previous call to readWord
-		return t.token(), nil
+	if t.outgoing.Any() {
+		return t.outgoing.Pop(), nil
 	}
+
 	for {
-		switch r, _, err := t.incoming.ReadRune(); {
+		r, eof, err := t.readRune()
+		switch {
 		case err != nil:
-			if err == io.EOF {
-				// No problem, we're done
-				return nil, nil
-			}
 			return nil, err
-		case unicode.IsSpace(r):
-			// no need to buffer it
+		case eof:
+			return nil, nil
+		case r == ' ', r == '\r', r == '\n', r == '\t':
+			// An optimization to avoid hitting `is` methods
 			token := NewToken(string(r), false)
 			return token, nil
-		case isPunct(r):
-			leading, err := t.isLeadingPunct(r)
+		case is.Leading(r):
+			lookahead, eof, err := t.peekRune()
 			if err != nil {
 				return nil, err
 			}
-			if leading {
-				// Treat it as start of a word
+			if !eof && (is.ALetter(lookahead) || is.Numeric(lookahead)) {
+				// It's leading
 				t.accept(r)
-				return t.word()
+				continue
 			}
-
-			// Regular punct, emit it (no need to buffer)
+			// It's not leading
 			token := NewToken(string(r), false)
 			return token, nil
-		default:
-			// It's alphanumeric
+		case is.AHLetter(r):
 			t.accept(r)
-			return t.word()
+			return t.alphanumeric()
+		case is.Numeric(r):
+			t.accept(r)
+			return t.numeric()
+		case is.Katakana(r):
+			t.accept(r)
+			return t.katakana()
+		default:
+			// Everything else is its own token: punct, space, symbols, ideographs, controls, etc
+			token := NewToken(string(r), false)
+			return token, nil
 		}
 	}
 }
 
-// Important that this function only gets entered from the Next() loop, which determines 'word start'
-func (t *tokenizer) word() (*Token, error) {
+func (t *tokenizer) alphanumeric() (*Token, error) {
 	for {
-		r, _, err := t.incoming.ReadRune()
+		r, eof, err := t.readRune()
 		switch {
 		case err != nil:
-			if err == io.EOF {
-				// No problem
+			return nil, err
+		case eof:
+			return t.token(), nil
+		case is.AHLetter(r):
+			t.accept(r)
+		case is.Numeric(r):
+			t.accept(r)
+		case is.MidLetter(r) || is.MidNumLetQ(r):
+			// https://unicode.org/reports/tr29/#WB6 & WB7
+			lookahead, eof, err := t.peekRune()
+			if err != nil {
+				return nil, err
+			}
+
+			if eof || !is.AHLetter(lookahead) {
+				// r is trailing, not mid-word, and so a separate token; queue it for later
+				trailing := NewToken(string(r), false)
+				t.outgoing.Push(trailing)
+
 				return t.token(), nil
 			}
-			return nil, err
-		case isPunct(r):
-			mid, err := t.isMidPunct(r)
-			if err != nil {
-				return nil, err
-			}
-			if mid {
-				// It's mid-word punct, treat it like a letter
-				t.accept(r)
-				continue
-			}
 
-			trailing, err := t.isTrailingPunct(r)
-			if err != nil {
-				return nil, err
-			}
-			if trailing {
-				// It's trailing punct, treat it like a letter
-				t.accept(r)
-				continue
-			}
-
-			// It's just regular punct
-
-			// Get the current word token without the punct
-			token := t.token()
-
-			// Accept the punct for later
+			// Otherwise, accept and continue
 			t.accept(r)
-
-			// Emit the word token
-			return token, nil
-		case unicode.IsSpace(r):
-			// Get the current word token without the punct
-			token := t.token()
-
-			// Accept the punct for later
-			t.accept(r)
-
-			// Emit the word token
-			return token, nil
 		default:
-			// Otherwise it's alphanumeric, keep going
+			// Everything else is breaking
+
+			// Current (breaking) rune is a token, queue it up for later
+			breaking := NewToken(string(r), false)
+			t.outgoing.Push(breaking)
+
+			// Emit the buffered word
+			return t.token(), nil
+		}
+	}
+}
+
+// https://unicode.org/reports/tr29/#WB11
+func (t *tokenizer) numeric() (*Token, error) {
+	for {
+		r, eof, err := t.readRune()
+		switch {
+		case err != nil:
+			return nil, err
+		case eof:
+			return t.token(), nil
+		case is.Numeric(r):
 			t.accept(r)
+		case is.MidNum(r) || is.MidNumLetQ(r):
+			lookahead, eof, err := t.peekRune()
+			if err != nil {
+				return nil, err
+			}
+
+			if eof || !is.Numeric(lookahead) {
+				// r is trailing, not mid, and so a separate token; queue it for later
+				trailing := NewToken(string(r), false)
+				t.outgoing.Push(trailing)
+
+				return t.token(), nil
+			}
+
+			// Otherwise, accept and continue
+			t.accept(r)
+		case is.AHLetter(r):
+			t.accept(r)
+			// Punt to general alpha
+			return t.alphanumeric()
+		default:
+			return t.token(), nil
+		}
+	}
+}
+
+// https://unicode.org/reports/tr29/#WB13
+func (t *tokenizer) katakana() (*Token, error) {
+	for {
+		r, eof, err := t.readRune()
+		switch {
+		case err != nil:
+			return nil, err
+		case eof:
+			return t.token(), nil
+		case is.Katakana(r):
+			t.accept(r)
+		default:
+			return t.token(), nil
 		}
 	}
 }
@@ -216,21 +197,36 @@ func (t *tokenizer) accept(r rune) {
 	t.buffer.WriteRune(r)
 }
 
-// PeekTerminator looks to the next rune and determines if it breaks a word
-func (t *tokenizer) lookaheadIsTerminator() (bool, error) {
-	r, _, err := t.incoming.ReadRune()
+// readRune gets the next rune, advancing the reader
+func (t *tokenizer) readRune() (r rune, eof bool, err error) {
+	r, _, err = t.incoming.ReadRune()
 
 	if err != nil {
 		if err == io.EOF {
-			return true, nil
+			return r, true, nil
 		}
-		return false, err
+		return r, false, err
+	}
+
+	return r, false, nil
+}
+
+// peekRune peeks the next rune, without advancing the reader
+func (t *tokenizer) peekRune() (r rune, eof bool, err error) {
+	r, _, err = t.incoming.ReadRune()
+
+	if err != nil {
+		if err == io.EOF {
+			return r, true, nil
+		}
+		return r, false, err
 	}
 
 	// Unread ASAP!
-	if err := t.incoming.UnreadRune(); err != nil {
-		return false, err
+	err = t.incoming.UnreadRune()
+	if err != nil {
+		return r, false, err
 	}
 
-	return isPunct(r) || unicode.IsSpace(r), nil
+	return r, false, nil
 }

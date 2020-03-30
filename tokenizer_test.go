@@ -1,7 +1,6 @@
 package jargon_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/clipperhouse/jargon"
@@ -9,11 +8,14 @@ import (
 
 // TODO: test ordering
 
-func TestLeading(t *testing.T) {
-	text := `Hi. This is a test of .net, and #hashtag and @handle, and React.js and .123.`
-
-	r := strings.NewReader(text)
-	tokens := jargon.Tokenize(r)
+func TestTokenize(t *testing.T) {
+	text := `Hi. 
+	node.js, first_last, my.name@domain.com
+	123.456, 789, .234, 1,000, a16z, 3G and $200.13.
+	wishy-washy and C++ and F# and .net
+	Let’s Let's possessive' possessive’
+	Then ウィキペディア and 象形.`
+	tokens := jargon.TokenizeString(text)
 
 	type test struct {
 		value string
@@ -24,76 +26,76 @@ func TestLeading(t *testing.T) {
 		{"Hi", true},
 		{".", true},
 		{"Hi.", false},
-		{".net", true},
-		{"net", false},
-		{"#hashtag", true},
-		{"hashtag", false},
-		{"@handle", true},
-		{"handle", false},
-		{"React.js", true},
-		{"React.js.", false},
-		{".123", true},
-	}
 
-	got := map[string]bool{}
+		{"node.js", true},
+		{"node", false},
+		{"js", false},
 
-	for {
-		token, err := tokens.Next()
-		if err != nil {
-			t.Error(err)
-		}
-		if token == nil {
-			break
-		}
-
-		got[token.String()] = true
-	}
-
-	for _, expected := range expecteds {
-		if got[expected.value] != expected.found {
-			t.Errorf("expected finding %q to be %t", expected.value, expected.found)
-		}
-	}
-}
-
-func TestMiddle(t *testing.T) {
-	text := `Hi. This is a test of asp.net, TCP/IP, and O'Brien's and possessives’ first_last and wishy-washy and email@domain.com.`
-
-	r := strings.NewReader(text)
-	tokens := jargon.Tokenize(r)
-
-	type test struct {
-		value string
-		found bool
-	}
-
-	expecteds := []test{
-		{"asp.net", true},
-		{"asp", false},
-		{"net", false},
-		{"TCP/IP", true},
-		{"TCP", false},
-		{"/", false},
-		{"IP", false},
-		{"O'Brien's", true},
-		{"O", false},
-		{"Brien", false},
-		{"'s", false},
-		{"possessives", true},
-		{"’", true},
-		{"possessives’", false},
 		{"first_last", true},
 		{"first", false},
+		{"_", false},
 		{"last", false},
+
+		{"my.name", true},
+		{"my.name@", false},
+		{"@", true},
+		{"domain.com", true},
+		{"@domain.com", false},
+
+		{"123.456", true},
+		{"123,", false},
+		{"456", false},
+		{"123.456,", false},
+
+		{"789", true},
+		{"789,", false},
+
+		{".234", true},
+		{"234", false},
+
+		{"1,000", true},
+		{"1,000,", false},
+
 		{"wishy-washy", false},
 		{"wishy", true},
 		{"-", true},
 		{"washy", true},
-		{"email", true},
-		{"email@", false},
-		{"@", true},
-		{"domain.com", true},
-		{"@domain.com", false},
+
+		{"C++", false},
+		{"C", true},
+		{"+", true},
+
+		{"F#", false},
+		{"F", true},
+		{"#", true},
+
+		{".net", true},
+		{"net", false},
+
+		{"Let's", true},
+		{"Let’s", true},
+		{"Let", false},
+		{"s", false},
+
+		{"possessive", true},
+		{"'", true},
+		{"’", true},
+		{"possessive'", false},
+		{"possessive’", false},
+
+		{"a16z", true},
+
+		{"3G", true},
+
+		{"$", true},
+		{"200.13", true},
+
+		{"ウィキペディア", true},
+		{"ウ", false},
+
+		{"象", true},
+		{"形", true},
+		{"象形", false},
 	}
 
 	got := map[string]bool{}
@@ -112,53 +114,7 @@ func TestMiddle(t *testing.T) {
 
 	for _, expected := range expecteds {
 		if got[expected.value] != expected.found {
-			t.Errorf("expected finding %q to be %t", expected.value, expected.found)
-		}
-	}
-}
-
-func TestTrailing(t *testing.T) {
-	text := `Hi. This is a test of F# and C++.`
-
-	r := strings.NewReader(text)
-	tokens := jargon.Tokenize(r)
-
-	type test struct {
-		value string
-		found bool
-	}
-
-	expecteds := []test{
-		{"Hi", true},
-		{".", true},
-		{"Hi.", false},
-		{"F#", true},
-		{"F", false},
-		{"#", false},
-		{"C++", true},
-		{"C", false},
-		{"+", false},
-		{"++", false},
-	}
-
-	got := map[string]bool{}
-
-	for {
-		token, err := tokens.Next()
-		if err != nil {
-			t.Error(err)
-		}
-		if token == nil {
-			break
-		}
-
-		s := token.String()
-		got[s] = true
-	}
-
-	for _, expected := range expecteds {
-		if got[expected.value] != expected.found {
-			t.Errorf("expected finding %q to be %t", expected.value, expected.found)
+			t.Errorf("expected %q to be %t", expected.value, expected.found)
 		}
 	}
 }
