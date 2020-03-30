@@ -3,6 +3,7 @@ package jargon
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"strings"
 
@@ -71,6 +72,9 @@ func (t *tokenizer) next() (*Token, error) {
 			// It's not leading
 			token := NewToken(string(r), false)
 			return token, nil
+		case is.Hebrew(r):
+			t.accept(r)
+			return t.hebrew()
 		case is.AHLetter(r):
 			t.accept(r)
 			return t.alphanumeric()
@@ -96,6 +100,9 @@ func (t *tokenizer) alphanumeric() (*Token, error) {
 			return nil, err
 		case eof:
 			return t.token(), nil
+		case is.Hebrew(r):
+			t.accept(r)
+			return t.hebrew()
 		case is.AHLetter(r):
 			t.accept(r)
 		case is.Numeric(r):
@@ -178,6 +185,41 @@ func (t *tokenizer) katakana() (*Token, error) {
 			return t.token(), nil
 		case is.Katakana(r):
 			t.accept(r)
+		default:
+			return t.token(), nil
+		}
+	}
+}
+
+// https://unicode.org/reports/tr29/#WB7a
+func (t *tokenizer) hebrew() (*Token, error) {
+	for {
+		r, eof, err := t.readRune()
+		fmt.Println(string(r))
+		switch {
+		case err != nil:
+			return nil, err
+		case eof:
+			return t.token(), nil
+		case r == '\'':
+			t.accept(r)
+		case r == '"':
+			lookahead, eof, err := t.peekRune()
+			if err != nil {
+				return nil, err
+			}
+
+			if eof || !is.Hebrew(lookahead) {
+				// Terminate the token
+				return t.token(), nil
+			}
+
+			t.accept(r)
+		case is.Hebrew(r):
+			t.accept(r)
+		case is.AHLetter(r):
+			t.accept(r)
+			return t.alphanumeric()
 		default:
 			return t.token(), nil
 		}

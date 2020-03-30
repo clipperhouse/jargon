@@ -154,6 +154,10 @@ func Katakana(r rune) bool {
 	return unicode.Is(unicode.Katakana, r)
 }
 
+func Hebrew(r rune) bool {
+	return unicode.Is(unicode.Hebrew, r)
+}
+
 func Leading(r rune) bool {
 	switch {
 	case r == '.':

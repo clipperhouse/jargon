@@ -14,6 +14,9 @@ func TestTokenize(t *testing.T) {
 	123.456, 789, .234, 1,000, a16z, 3G and $200.13.
 	wishy-washy and C++ and F# and .net
 	Let’s Let's possessive' possessive’
+	ש״ח
+	א"ב
+	ב'
 	Then ウィキペディア and 象形.`
 	tokens := jargon.TokenizeString(text)
 
@@ -89,6 +92,10 @@ func TestTokenize(t *testing.T) {
 
 		{"$", true},
 		{"200.13", true},
+
+		{"ש״ח", true},
+		{`א"ב`, true},
+		{"ב'", true},
 
 		{"ウィキペディア", true},
 		{"ウ", false},
