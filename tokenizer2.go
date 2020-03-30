@@ -42,19 +42,16 @@ func newTokenizer2(r io.Reader) *tokenizer2 {
 // next returns the next token. Call until it returns nil.
 func (t *tokenizer2) next() (*Token, error) {
 	if t.outgoing.Any() {
-		// Punct or space accepted in previous call to readWord
 		return t.outgoing.Pop(), nil
 	}
 
 	for {
-		r, _, err := t.incoming.ReadRune()
+		r, eof, err := t.readRune()
 		switch {
 		case err != nil:
-			if err == io.EOF {
-				// No problem, we're done
-				return nil, nil
-			}
 			return nil, err
+		case eof:
+			return nil, nil
 		case is.AHLetter(r):
 			t.accept(r)
 			return t.alphanumeric()
@@ -74,14 +71,12 @@ func (t *tokenizer2) next() (*Token, error) {
 
 func (t *tokenizer2) alphanumeric() (*Token, error) {
 	for {
-		r, _, err := t.incoming.ReadRune()
+		r, eof, err := t.readRune()
 		switch {
 		case err != nil:
-			if err == io.EOF {
-				// No problem
-				return t.token(), nil
-			}
 			return nil, err
+		case eof:
+			return t.token(), nil
 		case is.AHLetter(r):
 			t.accept(r)
 		case is.Numeric(r):
@@ -119,14 +114,12 @@ func (t *tokenizer2) alphanumeric() (*Token, error) {
 // https://unicode.org/reports/tr29/#WB11
 func (t *tokenizer2) numeric() (*Token, error) {
 	for {
-		r, _, err := t.incoming.ReadRune()
+		r, eof, err := t.readRune()
 		switch {
 		case err != nil:
-			if err == io.EOF {
-				// No problem
-				return t.token(), nil
-			}
 			return nil, err
+		case eof:
+			return t.token(), nil
 		case is.Numeric(r):
 			t.accept(r)
 		case is.MidNum(r) || is.MidNumLetQ(r):
@@ -158,14 +151,12 @@ func (t *tokenizer2) numeric() (*Token, error) {
 // https://unicode.org/reports/tr29/#WB13
 func (t *tokenizer2) katakana() (*Token, error) {
 	for {
-		r, _, err := t.incoming.ReadRune()
+		r, eof, err := t.readRune()
 		switch {
 		case err != nil:
-			if err == io.EOF {
-				// No problem
-				return t.token(), nil
-			}
 			return nil, err
+		case eof:
+			return t.token(), nil
 		case is.Katakana(r):
 			t.accept(r)
 		default:
@@ -185,6 +176,20 @@ func (t *tokenizer2) token() *Token {
 
 func (t *tokenizer2) accept(r rune) {
 	t.buffer.WriteRune(r)
+}
+
+// lookahead peeks the next rune
+func (t *tokenizer2) readRune() (r rune, eof bool, err error) {
+	r, _, err = t.incoming.ReadRune()
+
+	if err != nil {
+		if err == io.EOF {
+			return r, true, nil
+		}
+		return r, false, err
+	}
+
+	return r, false, nil
 }
 
 // lookahead peeks the next rune
