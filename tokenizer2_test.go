@@ -1,6 +1,8 @@
 package jargon_test
 
 import (
+	"bytes"
+	"io/ioutil"
 	"testing"
 
 	"github.com/clipperhouse/jargon"
@@ -23,4 +25,24 @@ func TestTokenize2(t *testing.T) {
 
 		t.Log(token)
 	}
+}
+
+func BenchmarkTokenize2(b *testing.B) {
+	file, err := ioutil.ReadFile("testdata/wikipedia.txt")
+
+	if err != nil {
+		b.Error(err)
+	}
+
+	b.ResetTimer()
+	var count int
+	for i := 0; i < b.N; i++ {
+		r := bytes.NewReader(file)
+		c, err := jargon.Tokenize2(r).Count()
+		if err != nil {
+			b.Error(err)
+		}
+		count = c
+	}
+	b.Logf("%d tokens\n", count)
 }

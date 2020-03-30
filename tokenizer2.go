@@ -52,6 +52,10 @@ func (t *tokenizer2) next() (*Token, error) {
 			return nil, err
 		case eof:
 			return nil, nil
+		case r == ' ', r == '\r', r == '\n', r == '\t':
+			// An optimization to avoid hitting `is` methods
+			token := NewToken(string(r), false)
+			return token, nil
 		case is.AHLetter(r):
 			t.accept(r)
 			return t.alphanumeric()

@@ -33,13 +33,16 @@ func BenchmarkTokenize(b *testing.B) {
 	}
 
 	b.ResetTimer()
+	var count int
 	for i := 0; i < b.N; i++ {
 		r := bytes.NewReader(file)
-		_, err := jargon.Tokenize(r).Count()
+		c, err := jargon.Tokenize(r).Count()
 		if err != nil {
 			b.Error(err)
 		}
+		count = c
 	}
+	b.Logf("%d tokens\n", count)
 }
 
 func BenchmarkTokenizeHTML(b *testing.B) {
