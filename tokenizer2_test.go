@@ -11,7 +11,11 @@ import (
 // TODO: test ordering
 
 func TestTokenize2(t *testing.T) {
-	text := `Hi. Let's test node.js, first_last, 123.456, 789, 1,000, a16z, 3G and $200.13. Then ウィキペディア and 象形.`
+	text := `Hi. 
+	Let's test node.js, first_last, 
+	123.456, 789, 1,000, a16z, 3G and $200.13.
+	wishy-washy and C++ and F#
+	Then ウィキペディア and 象形.`
 	tokens := jargon.TokenizeString2(text)
 
 	type test struct {
@@ -42,6 +46,19 @@ func TestTokenize2(t *testing.T) {
 		{"123,", false},
 		{"456", false},
 		{"123.456,", false},
+
+		{"wishy-washy", false},
+		{"wishy", true},
+		{"-", true},
+		{"washy", true},
+
+		{"C++", false},
+		{"C", true},
+		{"+", true},
+
+		{"F#", false},
+		{"F", true},
+		{"#", true},
 
 		{"789", true},
 		{"789,", false},
