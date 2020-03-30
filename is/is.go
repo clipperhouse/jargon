@@ -144,3 +144,7 @@ func Numeric(r rune) bool {
 		return unicode.IsNumber(r)
 	}
 }
+
+func Katakana(r rune) bool {
+	return unicode.Is(unicode.Katakana, r)
+}

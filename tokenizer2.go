@@ -47,7 +47,8 @@ func (t *tokenizer2) next() (*Token, error) {
 	}
 
 	for {
-		switch r, _, err := t.incoming.ReadRune(); {
+		r, _, err := t.incoming.ReadRune()
+		switch {
 		case err != nil:
 			if err == io.EOF {
 				// No problem, we're done
@@ -60,6 +61,9 @@ func (t *tokenizer2) next() (*Token, error) {
 		case is.Numeric(r):
 			t.accept(r)
 			return t.numeric()
+		case is.Katakana(r):
+			t.accept(r)
+			return t.katakana()
 		default:
 			// Everything else is its own token: punct, space, symbols, ideographs, controls, etc
 			token := NewToken(string(r), false)
@@ -112,6 +116,7 @@ func (t *tokenizer2) alphanumeric() (*Token, error) {
 	}
 }
 
+// https://unicode.org/reports/tr29/#WB11
 func (t *tokenizer2) numeric() (*Token, error) {
 	for {
 		r, _, err := t.incoming.ReadRune()
@@ -144,6 +149,25 @@ func (t *tokenizer2) numeric() (*Token, error) {
 			t.accept(r)
 			// Punt to general alpha
 			return t.alphanumeric()
+		default:
+			return t.token(), nil
+		}
+	}
+}
+
+// https://unicode.org/reports/tr29/#WB13
+func (t *tokenizer2) katakana() (*Token, error) {
+	for {
+		r, _, err := t.incoming.ReadRune()
+		switch {
+		case err != nil:
+			if err == io.EOF {
+				// No problem
+				return t.token(), nil
+			}
+			return nil, err
+		case is.Katakana(r):
+			t.accept(r)
 		default:
 			return t.token(), nil
 		}
