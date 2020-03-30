@@ -12,7 +12,7 @@ import (
 
 func TestTokenize2(t *testing.T) {
 	text := `Hi. 
-	node.js, first_last, 
+	node.js, first_last, my.name@domain.com
 	123.456, 789, 1,000, a16z, 3G and $200.13.
 	wishy-washy and C++ and F#
 	Let’s Let's possessive' possessive’
@@ -37,6 +37,12 @@ func TestTokenize2(t *testing.T) {
 		{"first", false},
 		{"_", false},
 		{"last", false},
+
+		{"my.name", true},
+		{"my.name@", false},
+		{"@", true},
+		{"domain.com", true},
+		{"@domain.com", false},
 
 		{"123.456", true},
 		{"123,", false},
