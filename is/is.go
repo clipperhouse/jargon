@@ -2,15 +2,16 @@ package is
 
 import "unicode"
 
+// https://unicode.org/reports/tr29/#ALetter
 func ALetter(r rune) bool {
 	if unicode.IsLetter(r) {
-		if unicode.Is(unicode.Ideographic, r) {
+		if unicode.Is(unicode.Hebrew, r) {
 			return false
 		}
 		if unicode.Is(unicode.Katakana, r) {
 			return false
 		}
-		if unicode.Is(unicode.Hebrew, r) {
+		if unicode.Is(unicode.Ideographic, r) {
 			return false
 		}
 		return true
