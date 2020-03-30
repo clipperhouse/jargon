@@ -87,7 +87,7 @@ func (t *tokenizer2) alphanumeric() (*Token, error) {
 			t.accept(r)
 		case is.MidLetter(r) || is.MidNumLetQ(r):
 			// https://unicode.org/reports/tr29/#WB6 & WB7
-			lookahead, eof, err := t.lookahead()
+			lookahead, eof, err := t.peekRune()
 			if err != nil {
 				return nil, err
 			}
@@ -127,7 +127,7 @@ func (t *tokenizer2) numeric() (*Token, error) {
 		case is.Numeric(r):
 			t.accept(r)
 		case is.MidNum(r) || is.MidNumLetQ(r):
-			lookahead, eof, err := t.lookahead()
+			lookahead, eof, err := t.peekRune()
 			if err != nil {
 				return nil, err
 			}
@@ -182,7 +182,7 @@ func (t *tokenizer2) accept(r rune) {
 	t.buffer.WriteRune(r)
 }
 
-// lookahead peeks the next rune
+// readRune gets the next rune, advancing the reader
 func (t *tokenizer2) readRune() (r rune, eof bool, err error) {
 	r, _, err = t.incoming.ReadRune()
 
@@ -196,8 +196,8 @@ func (t *tokenizer2) readRune() (r rune, eof bool, err error) {
 	return r, false, nil
 }
 
-// lookahead peeks the next rune
-func (t *tokenizer2) lookahead() (r rune, eof bool, err error) {
+// peekRune peeks the next rune, without advancing the reader
+func (t *tokenizer2) peekRune() (r rune, eof bool, err error) {
 	r, _, err = t.incoming.ReadRune()
 
 	if err != nil {
