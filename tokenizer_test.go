@@ -1,14 +1,19 @@
-package jargon_test
+package jargon
 
 import (
+	"io"
+	"strings"
 	"testing"
-
-	"github.com/clipperhouse/jargon"
 )
 
 // TODO: test ordering
 
-func TestTokenize(t *testing.T) {
+func tokenize(r io.Reader) *Tokens {
+	t := newTokenizer(r, true) // add guard for testing
+	return newTokens(t.next)
+}
+
+func TestTokenizer(t *testing.T) {
 	text := `Hi. 
 	node.js, first_last, my.name@domain.com
 	123.456, 789, .234, 1,000, a16z, 3G and $200.13.
@@ -18,7 +23,9 @@ func TestTokenize(t *testing.T) {
 	א"ב
 	ב'
 	Then ウィキペディア and 象形.`
-	tokens := jargon.TokenizeString(text)
+	text += "crlf is \r\n"
+
+	tokens := tokenize(strings.NewReader(text))
 
 	type test struct {
 		value string
@@ -103,6 +110,9 @@ func TestTokenize(t *testing.T) {
 		{"象", true},
 		{"形", true},
 		{"象形", false},
+
+		{"\r\n", true},
+		{"\r", false},
 	}
 
 	got := map[string]bool{}

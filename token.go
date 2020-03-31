@@ -43,11 +43,13 @@ func NewToken(s string, isLemma bool) *Token {
 	}
 
 	r, ok := tryRuneInString(s)
+	punct := s == "\r\n" || (ok && isPunct(r)) // CRLF is special case, see tokenizer cr() method
+	space := ok && unicode.IsSpace(r)
 
 	return &Token{
 		value: s,
-		punct: ok && isPunct(r),
-		space: ok && unicode.IsSpace(r),
+		punct: punct,
+		space: space,
 		lemma: isLemma,
 	}
 }

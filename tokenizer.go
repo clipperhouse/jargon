@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/clipperhouse/jargon/is"
 )
@@ -16,10 +17,8 @@ import (
 //
 // Tokenize returns all tokens (including white space), so text can be reconstructed with fidelity.
 func Tokenize(r io.Reader) *Tokens {
-	t := newTokenizer(r)
-	return &Tokens{
-		Next: t.next,
-	}
+	t := newTokenizer(r, false)
+	return newTokens(t.next)
 }
 
 // TokenizeString returns an 'iterator' of Tokens. Call .Next() until it returns nil.
@@ -33,12 +32,16 @@ type tokenizer struct {
 	incoming *bufio.Reader
 	buffer   bytes.Buffer
 	outgoing *TokenQueue
+
+	// guard is a debugging flag to verify assumptions (aka guard statements)
+	guard bool
 }
 
-func newTokenizer(r io.Reader) *tokenizer {
+func newTokenizer(r io.Reader, guard bool) *tokenizer {
 	return &tokenizer{
 		incoming: bufio.NewReader(r),
 		outgoing: &TokenQueue{},
+		guard:    guard,
 	}
 }
 
@@ -55,7 +58,10 @@ func (t *tokenizer) next() (*Token, error) {
 			return nil, err
 		case eof:
 			return nil, nil
-		case r == ' ', r == '\r', r == '\n', r == '\t':
+		case is.Cr(r):
+			t.accept(r)
+			return t.cr()
+		case r == ' ', r == '\n', r == '\t':
 			// An optimization to avoid hitting `is` methods
 			token := NewToken(string(r), false)
 			return token, nil
@@ -93,13 +99,21 @@ func (t *tokenizer) next() (*Token, error) {
 }
 
 func (t *tokenizer) alphanumeric() (*Token, error) {
+	// Assumes an AHLetter is already in the buffer
+	if t.guard {
+		b := t.buffer.Bytes()
+		if len(b) == 0 {
+			return nil, fmt.Errorf(`buffer should be have one or more runes; %q; this is likely a bug in the tokenizer`, string(b))
+		}
+	}
+
 	for {
 		r, eof, err := t.readRune()
 		switch {
 		case err != nil:
 			return nil, err
 		case eof:
-			return t.token(), nil
+			return t.token()
 		case is.Hebrew(r):
 			t.accept(r)
 			return t.hebrew()
@@ -119,7 +133,7 @@ func (t *tokenizer) alphanumeric() (*Token, error) {
 				trailing := NewToken(string(r), false)
 				t.outgoing.Push(trailing)
 
-				return t.token(), nil
+				return t.token()
 			}
 
 			// Otherwise, accept and continue
@@ -132,20 +146,64 @@ func (t *tokenizer) alphanumeric() (*Token, error) {
 			t.outgoing.Push(breaking)
 
 			// Emit the buffered word
-			return t.token(), nil
+			return t.token()
 		}
+	}
+}
+
+func (t *tokenizer) cr() (*Token, error) {
+	// Assumes \r was previously accepted in main loop
+	if t.guard {
+		b := t.buffer.Bytes()
+		if len(b) != 1 || b[0] != '\r' {
+			return nil, fmt.Errorf(`buffer should be '\r'; this is likely a bug in the tokenizer`)
+		}
+	}
+
+	lookahead, eof, err := t.peekRune()
+	switch {
+	case err != nil:
+		return nil, err
+	case eof:
+		return t.token()
+	case lookahead == '\n':
+		// It's CRLF, which we want to be a single token
+		t.accept(lookahead)
+
+		// Act as if we read instead of peeked
+		if _, err := t.incoming.Discard(utf8.RuneLen(lookahead)); err != nil {
+			// Based on successful peek above, error should be impossible?
+			return nil, err
+		}
+
+		return t.token()
+	default:
+		// CR is it's own token, then
+		return t.token()
 	}
 }
 
 // https://unicode.org/reports/tr29/#WB11
 func (t *tokenizer) numeric() (*Token, error) {
+	// Assumes an Number is already in the buffer
+	if t.guard {
+		b := t.buffer.Bytes()
+		if len(b) == 0 {
+			return nil, fmt.Errorf(`buffer should be have one or more runes; this is likely a bug in the tokenizer`)
+		}
+		last, _ := utf8.DecodeLastRune(b)
+		if !is.Numeric(last) {
+			return nil, fmt.Errorf(`last rune should be numeric; this is likely a bug in the tokenizer`)
+		}
+	}
+
 	for {
 		r, eof, err := t.readRune()
 		switch {
 		case err != nil:
 			return nil, err
 		case eof:
-			return t.token(), nil
+			return t.token()
 		case is.Numeric(r):
 			t.accept(r)
 		case is.MidNum(r) || is.MidNumLetQ(r):
@@ -159,7 +217,7 @@ func (t *tokenizer) numeric() (*Token, error) {
 				trailing := NewToken(string(r), false)
 				t.outgoing.Push(trailing)
 
-				return t.token(), nil
+				return t.token()
 			}
 
 			// Otherwise, accept and continue
@@ -169,38 +227,61 @@ func (t *tokenizer) numeric() (*Token, error) {
 			// Punt to general alpha
 			return t.alphanumeric()
 		default:
-			return t.token(), nil
+			return t.token()
 		}
 	}
 }
 
 // https://unicode.org/reports/tr29/#WB13
 func (t *tokenizer) katakana() (*Token, error) {
+	// Assumes a Katakana character is already in the buffer
+	if t.guard {
+		b := t.buffer.Bytes()
+		if len(b) == 0 {
+			return nil, fmt.Errorf(`katakana: buffer should be have one or more runes; this is likely a bug in the tokenizer`)
+		}
+		last, _ := utf8.DecodeLastRune(b)
+		if !is.Katakana(last) {
+			return nil, fmt.Errorf(`last rune should be katakana; this is likely a bug in the tokenizer`)
+		}
+	}
+
 	for {
 		r, eof, err := t.readRune()
 		switch {
 		case err != nil:
 			return nil, err
 		case eof:
-			return t.token(), nil
+			return t.token()
 		case is.Katakana(r):
 			t.accept(r)
 		default:
-			return t.token(), nil
+			return t.token()
 		}
 	}
 }
 
 // https://unicode.org/reports/tr29/#WB7a
 func (t *tokenizer) hebrew() (*Token, error) {
+	// Assumes a Hebrew character is already in the buffer
+	if t.guard {
+		b := t.buffer.Bytes()
+		if len(b) == 0 {
+			return nil, fmt.Errorf(`hebrew: buffer should be have one or more runes; this is likely a bug in the tokenizer`)
+		}
+		last, _ := utf8.DecodeLastRune(b)
+		if !is.Hebrew(last) {
+			return nil, fmt.Errorf(`last rune should be hebrew; this is likely a bug in the tokenizer`)
+		}
+	}
+
 	for {
 		r, eof, err := t.readRune()
-		fmt.Println(string(r))
 		switch {
 		case err != nil:
 			return nil, err
 		case eof:
-			return t.token(), nil
+			return t.token()
 		case r == '\'':
 			t.accept(r)
 		case r == '"':
@@ -211,7 +292,7 @@ func (t *tokenizer) hebrew() (*Token, error) {
 
 			if eof || !is.Hebrew(lookahead) {
 				// Terminate the token
-				return t.token(), nil
+				return t.token()
 			}
 
 			t.accept(r)
@@ -221,18 +302,23 @@ func (t *tokenizer) hebrew() (*Token, error) {
 			t.accept(r)
 			return t.alphanumeric()
 		default:
-			return t.token(), nil
+			return t.token()
 		}
 	}
 }
 
-func (t *tokenizer) token() *Token {
+func (t *tokenizer) token() (*Token, error) {
 	b := t.buffer.Bytes()
+
+	if len(b) == 0 {
+		return nil, fmt.Errorf(`token: buffer should be have one of more runes; this is likely a bug in the tokenizer`)
+	}
 
 	// Got the bytes, can reset
 	t.buffer.Reset()
 
-	return NewToken(string(b), false)
+	token := NewToken(string(b), false)
+	return token, nil
 }
 
 func (t *tokenizer) accept(r rune) {

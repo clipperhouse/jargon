@@ -5,10 +5,16 @@ import (
 	"strings"
 )
 
-// Tokens represents an 'iterator' of Token, the result of a call to Tokenize or Lemmatize. Call Next() until it returns nil.
+// Tokens represents an 'iterator' of Token, the result of a call to Tokenize or Filter. Call Next() until it returns nil.
 type Tokens struct {
 	// Next returns the next Token. If nil, the iterator is exhausted. Because it depends on I/O, callers should check errors.
 	Next func() (*Token, error)
+}
+
+func newTokens(next func() (*Token, error)) *Tokens {
+	return &Tokens{
+		Next: next,
+	}
 }
 
 // ToSlice converts the Tokens iterator into a slice (array). Calling ToSlice will exhaust the iterator. For big files, putting everything into an array may cause memory pressure.

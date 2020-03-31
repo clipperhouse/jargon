@@ -150,6 +150,10 @@ func Numeric(r rune) bool {
 	}
 }
 
+func Cr(r rune) bool {
+	return r == '\r'
+}
+
 // https://unicode.org/reports/tr29/#Katakana
 func Katakana(r rune) bool {
 	switch r {
