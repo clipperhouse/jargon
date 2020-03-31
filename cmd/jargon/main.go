@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/clipperhouse/jargon"
@@ -73,12 +72,17 @@ func main() {
 	}
 
 	// Piped?
-	fi, err := os.Stdin.Stat()
+	in, err := os.Stdin.Stat()
 	check(err)
-	piped := (fi.Mode() & os.ModeCharDevice) == 0 // https://stackoverflow.com/a/43947435/70613
+	pipedin := (in.Mode() & os.ModeCharDevice) == 0 // https://stackoverflow.com/a/43947435/70613
 
-	input := piped || config.Filein != nil
-	if !input {
+	if pipedin && config.Filein != nil {
+		err := fmt.Errorf("choose *either* an input file argument or piped input")
+		check(err)
+	}
+
+	noInput := !pipedin && config.Filein == nil
+	if noInput {
 		if len(config.Filters) > 0 {
 			os.Stderr.WriteString("indicate a file path as the first argument, or pipe in text\n")
 		}
@@ -86,15 +90,12 @@ func main() {
 		return
 	}
 
-	if piped && config.Filein != nil {
-		err := fmt.Errorf("choose *either* an input file argument or piped input")
-		check(err)
-	}
+	pipedout := config.Fileout == nil
 
-	if piped {
+	if pipedin || pipedout {
 		// We're limited by pipe buffer size, typically 64K with back pressure
 		size := 64 * 1024
-		if piped {
+		if pipedin {
 			config.Reader = bufio.NewReaderSize(os.Stdin, size)
 		} else {
 			config.Reader = bufio.NewReaderSize(config.Filein, size)
@@ -119,10 +120,14 @@ func main() {
 		}
 	}
 
-	if config.Fileout != nil {
-		config.Writer = config.Fileout
-	} else {
-		config.Writer = os.Stdout
+	if config.Writer == nil {
+		// Match the input buffer size
+		size := config.Reader.Size()
+		if pipedout {
+			config.Writer = bufio.NewWriterSize(os.Stdout, size)
+		} else {
+			config.Writer = bufio.NewWriterSize(config.Fileout, size)
+		}
 	}
 
 	var tokens *jargon.Tokens
@@ -138,6 +143,9 @@ func main() {
 	if _, err := tokens.WriteTo(config.Writer); err != nil {
 		check(err)
 	}
+	if err := config.Writer.Flush(); err != nil {
+		check(err)
+	}
 }
 
 type config struct {
@@ -146,7 +154,7 @@ type config struct {
 	Filters []jargon.Filter
 	HTML    bool
 	Reader  *bufio.Reader
-	Writer  io.Writer
+	Writer  *bufio.Writer
 }
 
 func check(err error) {
