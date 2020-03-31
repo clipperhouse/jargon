@@ -39,7 +39,7 @@ type tokenizer struct {
 
 func newTokenizer(r io.Reader, guard bool) *tokenizer {
 	return &tokenizer{
-		incoming: bufio.NewReader(r),
+		incoming: bufio.NewReaderSize(r, 64*1024),
 		outgoing: &TokenQueue{},
 		guard:    guard,
 	}
