@@ -15,32 +15,32 @@ type filter struct {
 	stem func(string, bool) string
 }
 
-// English is a Snowball stemmer for English, implemented as a jargon.TokenFilter
+// English is a Snowball stemmer for English, implemented as a jargon.Filter
 var English = &filter{
 	stem: english.Stem,
 }
 
-// French is a Snowball stemmer for French, implemented as a jargon.TokenFilter
+// French is a Snowball stemmer for French, implemented as a jargon.Filter
 var French = &filter{
 	stem: french.Stem,
 }
 
-// Norwegian is a Snowball stemmer for Norwegian, implemented as a jargon.TokenFilter
+// Norwegian is a Snowball stemmer for Norwegian, implemented as a jargon.Filter
 var Norwegian = &filter{
 	stem: norwegian.Stem,
 }
 
-// Russian is a Snowball stemmer for Russian, implemented as a jargon.TokenFilter
+// Russian is a Snowball stemmer for Russian, implemented as a jargon.Filter
 var Russian = &filter{
 	stem: russian.Stem,
 }
 
-// Spanish is a Snowball stemmer for Spanish, implemented as a jargon.TokenFilter
+// Spanish is a Snowball stemmer for Spanish, implemented as a jargon.Filter
 var Spanish = &filter{
 	stem: spanish.Stem,
 }
 
-// Swedish is a Snowball stemmer for Swedish, implemented as a jargon.TokenFilter
+// Swedish is a Snowball stemmer for Swedish, implemented as a jargon.Filter
 var Swedish = &filter{
 	stem: swedish.Stem,
 }
