@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/clipperhouse/jargon"
 	"github.com/clipperhouse/jargon/ascii"
@@ -12,88 +14,126 @@ import (
 	"github.com/clipperhouse/jargon/stemmer"
 )
 
+var filein = flag.String("file", "", "input file path (if none, stdin is used as input)")
+var fileout = flag.String("out", "", "output file path (if none, stdout is used as input)")
+var html = flag.Bool("html", false, "parse input as html (keep tags whole")
+var lang = flag.String("lang", "english", "language of input, relevant when used with -stem. options:\n"+strings.Join(langs, ", "))
+
+// These values aren't actually used, see filters loop below
+var xascii = flag.Bool("ascii", false, "a filter to replace diacritics with ascii equivalents, e.g. café → cafe")
+var xcontractions = flag.Bool("contractions", false, "a filter to expand contractions, e.g. Would've → Would have")
+var xstack = flag.Bool("stack", false, "a filter to recognize tech terms as Stack Overflow tags, e.g. Ruby on Rails → ruby-on-rails")
+var xstem = flag.Bool("stem", false, "a filter to stem words using snowball stemmer, e.g. management|manager → manag")
+
+var filterMap = map[string]jargon.Filter{
+	"-ascii":        ascii.Fold,
+	"-contractions": contractions.Expander,
+	"-stack":        stackoverflow.Tags,
+	"-stem":         stemmer.English,
+}
+
+var langs = []string{"english", "french", "norwegian", "russian", "spanish", "swedish"}
+var stemmerMap = map[string]jargon.Filter{
+	"english":   stemmer.English,
+	"french":    stemmer.French,
+	"norwegian": stemmer.Norwegian,
+	"russian":   stemmer.Russian,
+	"spanish":   stemmer.Spanish,
+	"swedish":   stemmer.Swedish,
+}
+
 func main() {
-	var config = &config{}
+	flag.Parse()
 
-	args := os.Args[1:]
-	for i := 0; i < len(args); i++ {
-		arg := args[i]
-
-		if arg == "-html" {
-			config.HTML = true
-			continue
-		}
-
-		filter, found := filterMap[arg]
-		if found {
-			if arg == "-stem" {
-				// Lookahead for language
-				if len(args) > i+1 {
-					stemlang := args[i+1]
-					stemmer, ok := stemmerMap[stemlang]
-					if ok {
-						filter = stemmer
-						i++
-					}
-				}
-				// Otherwise defaults to English
-			}
-
-			config.Filters = append(config.Filters, filter)
-		}
-
-		switch {
-		case i == 0 && !found:
-			// Interpret first arg as input file path
-			file, err := os.Open(arg)
-			if err != nil {
-				unknown := fmt.Errorf("%s is not a valid flag or file", arg)
-				os.Stderr.WriteString(unknown.Error() + "\n")
-			}
-			check(err)
-			defer file.Close()
-
-			config.Filein = file
-		case i == len(args)-1 && !found:
-			// Interpret last arg as output file path
-			file, err := os.Create(arg)
-			if err != nil {
-				unknown := fmt.Errorf("%s is not a valid flag or file", arg)
-				os.Stderr.WriteString(unknown.Error() + "\n")
-			}
-			check(err)
-			defer file.Close()
-
-			config.Fileout = file
-		case !found:
-			err := fmt.Errorf("unknown flag %q", arg)
-			check(err)
-		}
+	var config = &config{
+		HTML: *html,
 	}
 
-	// Piped?
+	//
+	// Input
+	//
+
+	if *filein != "" {
+		// Try to open it
+		file, err := os.Open(*filein)
+		check(err)
+		defer file.Close()
+
+		config.Filein = file
+	}
+
 	in, err := os.Stdin.Stat()
 	check(err)
 	pipedin := (in.Mode() & os.ModeCharDevice) == 0 // https://stackoverflow.com/a/43947435/70613
 
-	if pipedin && config.Filein != nil {
-		err := fmt.Errorf("choose *either* an input file argument or piped input")
-		check(err)
-	}
-
-	noInput := !pipedin && config.Filein == nil
-	if noInput {
-		if len(config.Filters) > 0 {
-			os.Stderr.WriteString("indicate a file path as the first argument, or pipe in text\n")
-		}
-		os.Stderr.WriteString("Usage:\n")
+	// If no input, display usage
+	input := pipedin || config.Filein != nil
+	if !input {
+		os.Stderr.WriteString(flag.CommandLine.Name() + " takes text from std input and processes it with one or more filters\n\n")
+		os.Stderr.WriteString("Flags:\n")
+		flag.PrintDefaults()
 		return
 	}
 
+	// Choose one input *or* the other
+	if pipedin && config.Filein != nil {
+		err := fmt.Errorf("choose *either* an input -file argument *or* piped input")
+		check(err)
+	}
+
+	//
+	// Filters
+	//
+
+	// Loop through filters; order matters, so can't use flag package
+	args := os.Args[1:]
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+
+		filter, found := filterMap[arg]
+		if found {
+			if filter == stemmer.English {
+				// Look for a language specification
+				if *lang != "" {
+					stem, found := stemmerMap[*lang]
+					if found {
+						filter = stem
+					} else {
+						var langs []string
+						for k := range stemmerMap {
+							langs = append(langs, k)
+						}
+						err := fmt.Errorf("lang %q is not known by %s; options are %s; leave it unspecified to default to english", *lang, flag.CommandLine.Name(), strings.Join(langs, ", "))
+						check(err)
+					}
+				}
+			}
+
+			config.Filters = append(config.Filters, filter)
+		}
+	}
+
+	//
+	// Output
+	//
+
+	if *fileout != "" {
+		// Interpret last arg as output file path
+		file, err := os.Create(*fileout)
+		check(err)
+		defer file.Close()
+
+		config.Fileout = file
+	}
 	pipedout := config.Fileout == nil
 
+	//
+	// Reader
+	//
+
 	if pipedin || pipedout {
-		// We're limited by pipe buffer size, typically 64K with back pressure
+		// We're limited by the OS pipe buffer, typically 64K with back pressure
+		// Using anything larger doesn't buy us anything
 		size := 64 * 1024
 		if pipedin {
 			config.Reader = bufio.NewReaderSize(os.Stdin, size)
@@ -102,7 +142,7 @@ func main() {
 		}
 	}
 
-	if config.Reader == nil {
+	if config.Filein != nil {
 		fi, err := config.Filein.Stat()
 		check(err)
 
@@ -121,7 +161,7 @@ func main() {
 	}
 
 	if config.Writer == nil {
-		// Match the input buffer size
+		// Match the input buffer size; mismatch doesn't buy us anything
 		size := config.Reader.Size()
 		if pipedout {
 			config.Writer = bufio.NewWriterSize(os.Stdout, size)
@@ -163,20 +203,4 @@ func check(err error) {
 		os.Stderr.WriteString("\n")
 		os.Exit(1)
 	}
-}
-
-var filterMap = map[string]jargon.Filter{
-	"-ascii":        ascii.Fold,
-	"-contractions": contractions.Expander,
-	"-stack":        stackoverflow.Tags,
-	"-stem":         stemmer.English,
-}
-
-var stemmerMap = map[string]jargon.Filter{
-	"english":   stemmer.English,
-	"french":    stemmer.French,
-	"norwegian": stemmer.Norwegian,
-	"russian":   stemmer.Russian,
-	"spanish":   stemmer.Spanish,
-	"swedish":   stemmer.Swedish,
 }
