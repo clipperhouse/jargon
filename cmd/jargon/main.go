@@ -45,51 +45,106 @@ var stemmerMap = map[string]jargon.Filter{
 func main() {
 	flag.Parse()
 
-	var config = &config{
+	var c = config{
 		HTML: *html,
 	}
 
 	//
 	// Input
 	//
-
-	if *filein != "" {
-		// Try to open it
-		file, err := os.Open(*filein)
-		check(err)
-		defer file.Close()
-
-		config.Filein = file
-	}
-
-	in, err := os.Stdin.Stat()
-	check(err)
-	pipedin := (in.Mode() & os.ModeCharDevice) == 0 // https://stackoverflow.com/a/43947435/70613
-
-	// If no input, display usage
-	input := pipedin || config.Filein != nil
-	if !input {
+	err := setInput(&c)
+	if err == errNoInput {
+		// Display usage
 		os.Stderr.WriteString(flag.CommandLine.Name() + " takes text from std input and processes it with one or more filters\n\n")
 		os.Stderr.WriteString("Flags:\n")
 		flag.PrintDefaults()
 		return
 	}
-
-	// Choose one input *or* the other
-	if pipedin && config.Filein != nil {
-		err := fmt.Errorf("choose *either* an input -file argument *or* piped input")
-		check(err)
+	check(err)
+	if c.Filein != nil {
+		defer c.Filein.Close()
 	}
 
 	//
 	// Filters
 	//
+	err = setFilters(&c, os.Args[1:])
+	check(err)
 
+	//
+	// Output
+	//
+	err = setOutput(&c)
+	check(err)
+	if c.Fileout != nil {
+		defer c.Fileout.Close()
+	}
+
+	//
+	// Reader
+	//
+	err = setReader(&c)
+	check(err)
+
+	//
+	// Writer
+	//
+	err = setWriter(&c)
+	check(err)
+
+	//
+	// Execute filters
+	//
+	err = execute(&c)
+	check(err)
+}
+
+type config struct {
+	HTML    bool
+	Filters []jargon.Filter
+
+	Filein, Fileout   *os.File
+	Pipedin, Pipedout bool
+
+	Reader *bufio.Reader
+	Writer *bufio.Writer
+}
+
+var errNoInput = fmt.Errorf("no input")
+var errTwoInput = fmt.Errorf("choose *either* an input -file argument *or* piped input")
+
+func setInput(c *config) error {
+	if *filein != "" {
+		// Try to open it
+		file, err := os.Open(*filein)
+		check(err)
+
+		c.Filein = file
+	}
+
+	in, err := os.Stdin.Stat()
+	if err != nil {
+		return err
+	}
+	c.Pipedin = (in.Mode() & os.ModeCharDevice) == 0 // https://stackoverflow.com/a/43947435/70613
+
+	// If no input, display usage
+	input := c.Pipedin || c.Filein != nil
+	if !input {
+		return errNoInput
+	}
+
+	// Choose one input *or* the other
+	if c.Pipedin && c.Filein != nil {
+		return errTwoInput
+	}
+
+	return nil
+}
+
+func setFilters(c *config, args []string) error {
 	// Loop through filters; order matters, so can't use flag package
-	args := os.Args[1:]
-	for i := 0; i < len(args); i++ {
-		arg := args[i]
-
+	for _, arg := range args {
 		filter, found := filterMap[arg]
 		if found {
 			if filter == stemmer.English {
@@ -99,102 +154,111 @@ func main() {
 					if found {
 						filter = stem
 					} else {
-						var langs []string
-						for k := range stemmerMap {
-							langs = append(langs, k)
-						}
 						err := fmt.Errorf("lang %q is not known by %s; options are %s; leave it unspecified to default to english", *lang, flag.CommandLine.Name(), strings.Join(langs, ", "))
-						check(err)
+						return err
 					}
 				}
 			}
 
-			config.Filters = append(config.Filters, filter)
+			c.Filters = append(c.Filters, filter)
 		}
 	}
 
-	//
-	// Output
-	//
+	return nil
+}
 
+func setOutput(c *config) error {
 	if *fileout != "" {
 		// Interpret last arg as output file path
 		file, err := os.Create(*fileout)
-		check(err)
-		defer file.Close()
+		if err != nil {
+			return err
+		}
 
-		config.Fileout = file
+		c.Fileout = file
 	}
-	pipedout := config.Fileout == nil
+	c.Pipedout = (c.Fileout == nil)
 
-	//
-	// Reader
-	//
+	return nil
+}
 
-	if pipedin || pipedout {
+func setReader(c *config) error {
+	if c.Pipedin || c.Pipedout {
 		// We're limited by the OS pipe buffer, typically 64K with back pressure
 		// Using anything larger doesn't buy us anything
 		size := 64 * 1024
-		if pipedin {
-			config.Reader = bufio.NewReaderSize(os.Stdin, size)
+		if c.Pipedin {
+			c.Reader = bufio.NewReaderSize(os.Stdin, size)
 		} else {
-			config.Reader = bufio.NewReaderSize(config.Filein, size)
+			c.Reader = bufio.NewReaderSize(c.Filein, size)
 		}
 	}
 
-	if config.Filein != nil {
-		fi, err := config.Filein.Stat()
-		check(err)
+	if c.Filein != nil {
+		fi, err := c.Filein.Stat()
+		if err != nil {
+			return err
+		}
 
 		size := fi.Size()
 		switch {
 		case size <= 4*1024:
 			// Minimum of 4K
-			config.Reader = bufio.NewReaderSize(config.Filein, 4*1024)
+			c.Reader = bufio.NewReaderSize(c.Filein, 4*1024)
 		case size <= 1024*1024:
 			// Aim for a right-sized buffer (single read, perhaps) up to 1MB
-			config.Reader = bufio.NewReaderSize(config.Filein, int(size))
+			c.Reader = bufio.NewReaderSize(c.Filein, int(size))
 		default:
 			// Otherwise, use 1MB buffer size, better perf over default, but not huge
-			config.Reader = bufio.NewReaderSize(config.Filein, 1024*1024)
+			c.Reader = bufio.NewReaderSize(c.Filein, 1024*1024)
 		}
 	}
 
-	if config.Writer == nil {
-		// Match the input buffer size; mismatch doesn't buy us anything
-		size := config.Reader.Size()
-		if pipedout {
-			config.Writer = bufio.NewWriterSize(os.Stdout, size)
-		} else {
-			config.Writer = bufio.NewWriterSize(config.Fileout, size)
-		}
+	return nil
+}
+
+func setWriter(c *config) error {
+	if c.Reader == nil {
+		return fmt.Errorf("reader is required")
+	}
+
+	// Match the input buffer size; mismatch doesn't buy us anything
+	size := c.Reader.Size()
+	if c.Pipedout {
+		c.Writer = bufio.NewWriterSize(os.Stdout, size)
+	} else {
+		c.Writer = bufio.NewWriterSize(c.Fileout, size)
+	}
+
+	return nil
+}
+
+func execute(c *config) error {
+	if c.Reader == nil {
+		return fmt.Errorf("reader is required")
+	}
+	if c.Writer == nil {
+		return fmt.Errorf("writer is required")
 	}
 
 	var tokens *jargon.Tokens
-	if config.HTML {
-		tokens = jargon.TokenizeHTML(config.Reader)
+	if c.HTML {
+		tokens = jargon.TokenizeHTML(c.Reader)
 	} else {
-		tokens = jargon.Tokenize(config.Reader)
+		tokens = jargon.Tokenize(c.Reader)
 	}
-	for _, f := range config.Filters {
+	for _, f := range c.Filters {
 		tokens = tokens.Filter(f)
 	}
 
-	if _, err := tokens.WriteTo(config.Writer); err != nil {
-		check(err)
+	if _, err := tokens.WriteTo(c.Writer); err != nil {
+		return err
 	}
-	if err := config.Writer.Flush(); err != nil {
-		check(err)
+	if err := c.Writer.Flush(); err != nil {
+		return err
 	}
-}
 
-type config struct {
-	Filein  *os.File
-	Fileout *os.File
-	Filters []jargon.Filter
-	HTML    bool
-	Reader  *bufio.Reader
-	Writer  *bufio.Writer
+	return nil
 }
 
 func check(err error) {
