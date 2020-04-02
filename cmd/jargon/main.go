@@ -12,6 +12,7 @@ import (
 	"github.com/clipperhouse/jargon/contractions"
 	"github.com/clipperhouse/jargon/stackoverflow"
 	"github.com/clipperhouse/jargon/stemmer"
+	"github.com/spf13/afero"
 )
 
 var filein = flag.String("file", "", "input file path (if none, stdin is used as input)")
@@ -46,6 +47,7 @@ func main() {
 	flag.Parse()
 
 	var c = config{
+		Fs:   afero.NewOsFs(),
 		HTML: *html,
 	}
 
@@ -104,10 +106,12 @@ func main() {
 }
 
 type config struct {
+	Fs afero.Fs
+
 	HTML    bool
 	Filters []jargon.Filter
 
-	Filein, Fileout   *os.File
+	Filein, Fileout   afero.File
 	Pipedin, Pipedout bool
 
 	Reader *bufio.Reader
@@ -120,7 +124,7 @@ var errTwoInput = fmt.Errorf("choose *either* an input -file argument *or* piped
 func setInput(c *config, mode os.FileMode, filein string) error {
 	if filein != "" {
 		// Try to open it
-		file, err := os.Open(filein)
+		file, err := c.Fs.Open(filein)
 		check(err)
 
 		c.Filein = file
@@ -169,7 +173,7 @@ func setFilters(c *config, args []string, lang string) error {
 
 func setOutput(c *config, fileout string) error {
 	if fileout != "" {
-		file, err := os.Create(fileout)
+		file, err := c.Fs.Create(fileout)
 		if err != nil {
 			return err
 		}

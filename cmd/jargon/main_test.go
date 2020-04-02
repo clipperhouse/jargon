@@ -10,7 +10,28 @@ import (
 	"github.com/clipperhouse/jargon/contractions"
 	"github.com/clipperhouse/jargon/stackoverflow"
 	"github.com/clipperhouse/jargon/stemmer"
+	"github.com/spf13/afero"
 )
+
+var testfilein = "/tmp/in.txt"
+
+func testConfig() (config, error) {
+	c := config{}
+	fs := afero.NewMemMapFs()
+
+	file, err := fs.Create(testfilein)
+	if err != nil {
+		return c, err
+	}
+
+	_, err = file.WriteString("test input file")
+	if err != nil {
+		return c, err
+	}
+
+	c.Fs = fs
+	return c, nil
+}
 
 func TestInput(t *testing.T) {
 	type test struct {
@@ -24,12 +45,10 @@ func TestInput(t *testing.T) {
 		file    bool
 	}
 
-	filein := "testdata/in.txt"
-
 	tests := []test{
 		{
 			// File, not piped
-			filein: filein,
+			filein: testfilein,
 			mode:   os.ModeCharDevice,
 
 			err:     nil,
@@ -56,7 +75,7 @@ func TestInput(t *testing.T) {
 		},
 		{
 			// Both piped and file
-			filein: filein,
+			filein: testfilein,
 			mode:   os.ModeAppend,
 
 			err:     errTwoInput,
@@ -66,8 +85,12 @@ func TestInput(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		c := config{}
-		err := setInput(&c, test.mode, test.filein)
+		c, err := testConfig()
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = setInput(&c, test.mode, test.filein)
 		if err != test.err {
 			t.Errorf("expected err %v, got %v", test.err, err)
 		}
@@ -121,8 +144,12 @@ func TestFilters(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		c := config{}
-		err := setFilters(&c, test.args, test.lang)
+		c, err := testConfig()
+		if err != nil {
+			t.Error()
+		}
+
+		err = setFilters(&c, test.args, test.lang)
 		if (err != nil) != test.err {
 			t.Errorf("expected err %v, got %v", test.err, err)
 		}
@@ -143,13 +170,12 @@ func TestOutput(t *testing.T) {
 		file     bool
 	}
 
-	fileout := "testdata/out.txt"
-	defer os.Remove(fileout)
+	testfileout := "testdata/out.txt"
 
 	tests := []test{
 		{
 			// File, not piped
-			fileout: fileout,
+			fileout: testfileout,
 
 			err:      nil,
 			pipedout: false,
@@ -166,8 +192,12 @@ func TestOutput(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		c := config{}
-		err := setOutput(&c, test.fileout)
+		c, err := testConfig()
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = setOutput(&c, test.fileout)
 		if err != test.err {
 			t.Errorf("expected err %v, got %v", test.err, err)
 		}
