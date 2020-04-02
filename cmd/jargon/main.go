@@ -78,7 +78,7 @@ func main() {
 	//
 	// Output
 	//
-	err = setOutput(&c)
+	err = setOutput(&c, *fileout)
 	check(err)
 	if c.Fileout != nil {
 		defer c.Fileout.Close()
@@ -167,10 +167,9 @@ func setFilters(c *config, args []string, lang string) error {
 	return nil
 }
 
-func setOutput(c *config) error {
-	if *fileout != "" {
-		// Interpret last arg as output file path
-		file, err := os.Create(*fileout)
+func setOutput(c *config, fileout string) error {
+	if fileout != "" {
+		file, err := os.Create(fileout)
 		if err != nil {
 			return err
 		}

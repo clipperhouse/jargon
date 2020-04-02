@@ -24,10 +24,12 @@ func TestInput(t *testing.T) {
 		file    bool
 	}
 
+	filein := "testdata/in.txt"
+
 	tests := []test{
 		{
 			// File, not piped
-			filein: "main.go",
+			filein: filein,
 			mode:   os.ModeCharDevice,
 
 			err:     nil,
@@ -54,7 +56,7 @@ func TestInput(t *testing.T) {
 		},
 		{
 			// Both piped and file
-			filein: "main.go",
+			filein: filein,
 			mode:   os.ModeAppend,
 
 			err:     errTwoInput,
@@ -74,6 +76,12 @@ func TestInput(t *testing.T) {
 		}
 		if (c.Filein != nil) != test.file {
 			t.Errorf("expected c.Filein to be %t", test.file)
+		}
+		if c.Filein != nil {
+			err := c.Filein.Close()
+			if err != nil {
+				t.Error(err)
+			}
 		}
 	}
 }
@@ -120,6 +128,60 @@ func TestFilters(t *testing.T) {
 		}
 		if !reflect.DeepEqual(c.Filters, test.filters) {
 			t.Errorf("expected filters to match, args: %v, lang: %s", test.args, test.lang)
+		}
+	}
+}
+
+func TestOutput(t *testing.T) {
+	type test struct {
+		// input
+		fileout string
+
+		// expected
+		err      error
+		pipedout bool
+		file     bool
+	}
+
+	fileout := "testdata/out.txt"
+	defer os.Remove(fileout)
+
+	tests := []test{
+		{
+			// File, not piped
+			fileout: fileout,
+
+			err:      nil,
+			pipedout: false,
+			file:     true,
+		},
+		{
+			// Piped, not file
+			fileout: "",
+
+			err:      nil,
+			pipedout: true,
+			file:     false,
+		},
+	}
+
+	for _, test := range tests {
+		c := config{}
+		err := setOutput(&c, test.fileout)
+		if err != test.err {
+			t.Errorf("expected err %v, got %v", test.err, err)
+		}
+		if c.Pipedout != test.pipedout {
+			t.Errorf("expected piped to be %t, got %t", test.pipedout, c.Pipedout)
+		}
+		if (c.Fileout != nil) != test.file {
+			t.Errorf("expected c.Fileout to be %t", test.file)
+		}
+		if c.Fileout != nil {
+			err := c.Fileout.Close()
+			if err != nil {
+				t.Error(err)
+			}
 		}
 	}
 }
