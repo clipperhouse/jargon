@@ -15,37 +15,25 @@ import (
 	"github.com/spf13/afero"
 )
 
-var filein = flag.String("file", "", "input file path (if none, stdin is used as input)")
-var fileout = flag.String("out", "", "output file path (if none, stdout is used as input)")
-var html = flag.Bool("html", false, "parse input as html (keep tags whole")
-var lang = flag.String("lang", "english", "language of input, relevant when used with -stem. options:\n"+strings.Join(langs, ", "))
-
-// These values aren't actually used, see filters loop below
-var xascii = flag.Bool("ascii", false, "a filter to replace diacritics with ascii equivalents, e.g. café → cafe")
-var xcontractions = flag.Bool("contractions", false, "a filter to expand contractions, e.g. Would've → Would have")
-var xstack = flag.Bool("stack", false, "a filter to recognize tech terms as Stack Overflow tags, e.g. Ruby on Rails → ruby-on-rails")
-var xstem = flag.Bool("stem", false, "a filter to stem words using snowball stemmer, e.g. management|manager → manag")
-
-var filterMap = map[string]jargon.Filter{
-	"-ascii":        ascii.Fold,
-	"-contractions": contractions.Expander,
-	"-stack":        stackoverflow.Tags,
-	"-stem":         stemmer.English,
-}
-
-var langs = []string{"english", "french", "norwegian", "russian", "spanish", "swedish"}
-var stemmerMap = map[string]jargon.Filter{
-	"english":   stemmer.English,
-	"french":    stemmer.French,
-	"norwegian": stemmer.Norwegian,
-	"russian":   stemmer.Russian,
-	"spanish":   stemmer.Spanish,
-	"swedish":   stemmer.Swedish,
-}
-
 func main() {
+	//
+	// Flags. Prefer local instead of global, allowing other funcs to be stateless.
+	//
+	filein := flag.String("file", "", "input file path (if none, stdin is used as input)")
+	fileout := flag.String("out", "", "output file path (if none, stdout is used as input)")
+	html := flag.Bool("html", false, "parse input as html (keep tags whole)")
+	lang := flag.String("lang", "english", "language of input, relevant when used with -stem. options:\n"+strings.Join(langs, ", "))
+
+	// These flags aren't actually consumed, see setFilters below
+	// Need to declare them anyway, or flags package will consider them errors
+	flag.Bool("ascii", false, "a filter to replace diacritics with ascii equivalents, e.g. café → cafe")
+	flag.Bool("contractions", false, "a filter to expand contractions, e.g. Would've → Would have")
+	flag.Bool("stack", false, "a filter to recognize tech terms as Stack Overflow tags, e.g. Ruby on Rails → ruby-on-rails")
+	flag.Bool("stem", false, "a filter to stem words using snowball stemmer, e.g. management|manager → manag")
+
 	flag.Parse()
 
+	// Local to prevent mistaken use in other funcs
 	check := func(err error) {
 		if err != nil {
 			os.Stderr.WriteString(err.Error())
@@ -54,7 +42,7 @@ func main() {
 		}
 	}
 
-	var c = config{
+	c := config{
 		Fs:   afero.NewOsFs(),
 		HTML: *html,
 	}
@@ -154,6 +142,23 @@ func setInput(c *config, mode os.FileMode, filein string) error {
 	}
 
 	return nil
+}
+
+var filterMap = map[string]jargon.Filter{
+	"-ascii":        ascii.Fold,
+	"-contractions": contractions.Expander,
+	"-stack":        stackoverflow.Tags,
+	"-stem":         stemmer.English,
+}
+
+var langs = []string{"english", "french", "norwegian", "russian", "spanish", "swedish"}
+var stemmerMap = map[string]jargon.Filter{
+	"english":   stemmer.English,
+	"french":    stemmer.French,
+	"norwegian": stemmer.Norwegian,
+	"russian":   stemmer.Russian,
+	"spanish":   stemmer.Spanish,
+	"swedish":   stemmer.Swedish,
 }
 
 func setFilters(c *config, args []string, lang string) error {
