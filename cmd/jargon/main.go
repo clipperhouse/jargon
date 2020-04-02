@@ -46,6 +46,14 @@ var stemmerMap = map[string]jargon.Filter{
 func main() {
 	flag.Parse()
 
+	check := func(err error) {
+		if err != nil {
+			os.Stderr.WriteString(err.Error())
+			os.Stderr.WriteString("\n")
+			os.Exit(1)
+		}
+	}
+
 	var c = config{
 		Fs:   afero.NewOsFs(),
 		HTML: *html,
@@ -125,7 +133,9 @@ func setInput(c *config, mode os.FileMode, filein string) error {
 	if filein != "" {
 		// Try to open it
 		file, err := c.Fs.Open(filein)
-		check(err)
+		if err != nil {
+			return err
+		}
 
 		c.Filein = file
 	}
@@ -262,12 +272,4 @@ func execute(c *config) error {
 	}
 
 	return nil
-}
-
-func check(err error) {
-	if err != nil {
-		os.Stderr.WriteString(err.Error())
-		os.Stderr.WriteString("\n")
-		os.Exit(1)
-	}
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"reflect"
 	"testing"
@@ -82,6 +83,15 @@ func TestInput(t *testing.T) {
 			pipedin: true,
 			file:    true,
 		},
+		{
+			// Both piped and file
+			filein: "doesntexist",
+			mode:   os.ModeAppend,
+
+			err:     os.ErrNotExist,
+			pipedin: false,
+			file:    false,
+		},
 	}
 
 	for _, test := range tests {
@@ -91,7 +101,7 @@ func TestInput(t *testing.T) {
 		}
 
 		err = setInput(&c, test.mode, test.filein)
-		if err != test.err {
+		if !errors.Is(err, test.err) {
 			t.Errorf("expected err %v, got %v", test.err, err)
 		}
 		if c.Pipedin != test.pipedin {
@@ -198,7 +208,7 @@ func TestOutput(t *testing.T) {
 		}
 
 		err = setOutput(&c, test.fileout)
-		if err != test.err {
+		if !errors.Is(err, test.err) {
 			t.Errorf("expected err %v, got %v", test.err, err)
 		}
 		if c.Pipedout != test.pipedout {
