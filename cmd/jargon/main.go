@@ -52,7 +52,11 @@ func main() {
 	//
 	// Input
 	//
-	err := setInput(&c)
+	fi, err := os.Stdin.Stat()
+	check(err)
+	mode := fi.Mode()
+
+	err = setInput(&c, mode, *filein)
 	if err == errNoInput {
 		// Display usage
 		os.Stderr.WriteString(flag.CommandLine.Name() + " takes text from std input and processes it with one or more filters\n\n")
@@ -113,20 +117,16 @@ type config struct {
 var errNoInput = fmt.Errorf("no input")
 var errTwoInput = fmt.Errorf("choose *either* an input -file argument *or* piped input")
 
-func setInput(c *config) error {
-	if *filein != "" {
+func setInput(c *config, mode os.FileMode, filein string) error {
+	if filein != "" {
 		// Try to open it
-		file, err := os.Open(*filein)
+		file, err := os.Open(filein)
 		check(err)
 
 		c.Filein = file
 	}
 
-	in, err := os.Stdin.Stat()
-	if err != nil {
-		return err
-	}
-	c.Pipedin = (in.Mode() & os.ModeCharDevice) == 0 // https://stackoverflow.com/a/43947435/70613
+	c.Pipedin = (mode & os.ModeCharDevice) == 0 // https://stackoverflow.com/a/43947435/70613
 
 	// If no input, display usage
 	input := c.Pipedin || c.Filein != nil
