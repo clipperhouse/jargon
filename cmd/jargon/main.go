@@ -72,7 +72,7 @@ func main() {
 	//
 	// Filters
 	//
-	err = setFilters(&c, os.Args[1:])
+	err = setFilters(&c, os.Args[1:], *lang)
 	check(err)
 
 	//
@@ -142,19 +142,19 @@ func setInput(c *config, mode os.FileMode, filein string) error {
 	return nil
 }
 
-func setFilters(c *config, args []string) error {
+func setFilters(c *config, args []string, lang string) error {
 	// Loop through filters; order matters, so can't use flag package
 	for _, arg := range args {
 		filter, found := filterMap[arg]
 		if found {
 			if filter == stemmer.English {
 				// Look for a language specification
-				if *lang != "" {
-					stem, found := stemmerMap[*lang]
+				if lang != "" {
+					stem, found := stemmerMap[lang]
 					if found {
 						filter = stem
 					} else {
-						err := fmt.Errorf("lang %q is not known by %s; options are %s; leave it unspecified to default to english", *lang, flag.CommandLine.Name(), strings.Join(langs, ", "))
+						err := fmt.Errorf("lang %q is not known by %s; options are %s", lang, flag.CommandLine.Name(), strings.Join(langs, ", "))
 						return err
 					}
 				}
