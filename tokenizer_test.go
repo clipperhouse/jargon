@@ -117,16 +117,13 @@ func TestTokenizer(t *testing.T) {
 
 	got := map[string]bool{}
 
-	for {
-		token, err := tokens.Next()
-		if err != nil {
-			t.Error(err)
-		}
-		if token == nil {
-			break
-		}
-
+	for tokens.Scan() {
+		token := tokens.Token()
 		got[token.String()] = true
+	}
+
+	if err := tokens.Err(); err != nil {
+		t.Error(err)
 	}
 
 	for _, expected := range expecteds {

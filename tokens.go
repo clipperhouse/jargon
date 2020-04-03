@@ -9,6 +9,9 @@ import (
 type Tokens struct {
 	// Next returns the next Token. If nil, the iterator is exhausted. Because it depends on I/O, callers should check errors.
 	Next func() (*Token, error)
+
+	token *Token // stateful token when using Scan
+	err   error  // stateful error when using Scan
 }
 
 func newTokens(next func() (*Token, error)) *Tokens {
@@ -17,19 +20,29 @@ func newTokens(next func() (*Token, error)) *Tokens {
 	}
 }
 
+func (t *Tokens) Scan() bool {
+	t.token, t.err = t.Next()
+	return t.token != nil && t.err == nil
+}
+
+func (t *Tokens) Token() *Token {
+	return t.token
+}
+
+func (t *Tokens) Err() error {
+	return t.err
+}
+
 // ToSlice converts the Tokens iterator into a slice (array). Calling ToSlice will exhaust the iterator. For big files, putting everything into an array may cause memory pressure.
 func (incoming *Tokens) ToSlice() ([]*Token, error) {
 	var result []*Token
 
-	for {
-		t, err := incoming.Next()
-		if err != nil {
-			return result, err
-		}
-		if t == nil {
-			break
-		}
-		result = append(result, t)
+	for incoming.Scan() {
+		result = append(result, incoming.Token())
+	}
+
+	if err := incoming.Err(); err != nil {
+		return nil, incoming.Err()
 	}
 
 	return result, nil
@@ -47,15 +60,13 @@ func (incoming *Tokens) Filter(filters ...Filter) *Tokens {
 func (incoming *Tokens) String() (string, error) {
 	var b strings.Builder
 
-	for {
-		t, err := incoming.Next()
-		if err != nil {
-			return b.String(), err
-		}
-		if t == nil {
-			break
-		}
-		b.WriteString(t.String())
+	for incoming.Scan() {
+		token := incoming.Token()
+		b.WriteString(token.String())
+	}
+
+	if err := incoming.Err(); err != nil {
+		return "", incoming.Err()
 	}
 
 	return b.String(), nil
@@ -64,21 +75,18 @@ func (incoming *Tokens) String() (string, error) {
 // WriteTo writes all token string values to w
 func (incoming *Tokens) WriteTo(w io.Writer) (int64, error) {
 	var written int64
-	for {
-		t, err := incoming.Next()
-		if err != nil {
-			return written, err
-		}
-		if t == nil {
-			break
-		}
-
-		n, err := w.Write([]byte(t.String()))
+	for incoming.Scan() {
+		token := incoming.Token()
+		n, err := w.Write([]byte(token.String()))
 		written += int64(n)
 
 		if err != nil {
 			return written, err
 		}
+	}
+
+	if err := incoming.Err(); err != nil {
+		return written, incoming.Err()
 	}
 
 	return written, nil
@@ -112,15 +120,13 @@ func (incoming *Tokens) Lemmas() *Tokens {
 // Count counts all tokens. Note that it will consume all tokens, so you will not be able to iterate further after making this call.
 func (incoming *Tokens) Count() (int, error) {
 	var count int
-	for {
-		t, err := incoming.Next()
-		if err != nil {
-			return 0, err
-		}
-		if t == nil {
-			break
-		}
+	for incoming.Scan() {
 		count++
 	}
+
+	if err := incoming.Err(); err != nil {
+		return count, incoming.Err()
+	}
+
 	return count, nil
 }
