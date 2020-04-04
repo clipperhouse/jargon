@@ -106,7 +106,16 @@ func (t *tokens) next() (*jargon.Token, error) {
 			return nil, err
 		}
 
-		run := t.wordrun()
+		if t.buffer.Len() == 0 {
+			// Nothing left
+			break
+		}
+
+		run, err := t.wordrun()
+		if err != nil {
+			return nil, err
+		}
+
 		if len(run) == 0 {
 			// No more words
 			break
@@ -138,14 +147,47 @@ func (t *tokens) next() (*jargon.Token, error) {
 
 // fill the buffer until EOF, punctuation, or enough word tokens
 func (t *tokens) fill() error {
-	words := 0
+	// Leading buffered space & punct should go straight out
+	drop := 0
 	for _, token := range t.buffer.Tokens {
-		if !token.IsPunct() && !token.IsSpace() {
-			words++
+		if token.IsSpace() || token.IsPunct() {
+			t.outgoing.Push(token)
+			drop++
+			continue
+		}
+		// Else, it's a word
+		break
+	}
+	t.buffer.Drop(drop)
+
+	if t.buffer.Len() == 0 {
+		// Leading incoming space & punct should go straight out, don't even buffer
+		for t.incoming.Scan() {
+			token := t.incoming.Token()
+			if token.IsSpace() || token.IsPunct() {
+				t.outgoing.Push(token)
+				continue
+			}
+			// It's a word
+			t.buffer.Push(token)
+			break
+		}
+		// Gotta check err after Scan
+		if err := t.incoming.Err(); err != nil {
+			return err
 		}
 	}
 
-	for words < t.filter.maxWords {
+	// Count the words we have
+	wordcount := 0
+	for _, token := range t.buffer.Tokens {
+		if !token.IsPunct() && !token.IsSpace() {
+			wordcount++
+		}
+	}
+
+	// Fill until we have enough words, hit a punct, or EOF
+	for wordcount < t.filter.maxWords {
 		token, err := t.incoming.Next()
 		if err != nil {
 			return err
@@ -166,23 +208,22 @@ func (t *tokens) fill() error {
 		}
 
 		// It's a word
-		words++
+		wordcount++
 	}
 
 	return nil
 }
 
 // wordrun pulls the longest series of tokens comprised of words
-func (t *tokens) wordrun() []*jargon.Token {
-	spaces := 0
-	for _, token := range t.buffer.Tokens {
-		if !token.IsSpace() {
-			break
-		}
-		t.outgoing.Push(token)
-		spaces++
+func (t *tokens) wordrun() ([]*jargon.Token, error) {
+	// Requires a previous call to fill()
+	if t.buffer.Len() == 0 {
+		return nil, fmt.Errorf("expected buffer to have tokens")
 	}
-	t.buffer.Drop(spaces)
+	head := t.buffer.Tokens[0]
+	if head.IsSpace() || head.IsPunct() {
+		return nil, fmt.Errorf("expected buffer to have word as first token, got %q", head)
+	}
 
 	var (
 		end      int
@@ -211,7 +252,7 @@ func (t *tokens) wordrun() []*jargon.Token {
 		}
 	}
 
-	return t.buffer.Tokens[:end]
+	return t.buffer.Tokens[:end], nil
 }
 
 // String returns a Go source declaration of the Filter

@@ -1,5 +1,7 @@
 package jargon
 
+import "fmt"
+
 // TokenQueue is a FIFO queue
 type TokenQueue struct {
 	Tokens []*Token
@@ -7,7 +9,12 @@ type TokenQueue struct {
 
 // Any returns whether there are any tokens in the queue
 func (q *TokenQueue) Any() bool {
-	return len(q.Tokens) > 0
+	return q.Len() > 0
+}
+
+// Len is len(q.Tokens)
+func (q *TokenQueue) Len() int {
+	return len(q.Tokens)
 }
 
 // Pop returns the first token (front of) the queue, and removes it from the queue
@@ -46,4 +53,8 @@ func (q *TokenQueue) PopTo(dst *TokenQueue) {
 func (q *TokenQueue) FlushTo(dst *TokenQueue) {
 	dst.Tokens = append(dst.Tokens, q.Tokens...)
 	q.Clear()
+}
+
+func (q *TokenQueue) String() string {
+	return fmt.Sprintf("%q", q.Tokens)
 }

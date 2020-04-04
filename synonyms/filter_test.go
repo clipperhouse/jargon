@@ -1,10 +1,9 @@
-package synonyms_test
+package synonyms
 
 import (
 	"testing"
 
 	"github.com/clipperhouse/jargon"
-	"github.com/clipperhouse/jargon/synonyms"
 )
 
 func TestFilter(t *testing.T) {
@@ -16,19 +15,17 @@ func TestFilter(t *testing.T) {
 	}
 
 	ignore := []rune{'-', ' ', '.', '/'}
-	filter, err := synonyms.NewFilter(mappings, true, ignore)
+	synonyms, err := NewFilter(mappings, true, ignore)
 	if err != nil {
 		t.Error(err)
 	}
 
-	// t.Log(filter.Decl())
-	//t.Logf("%#v", syns.Trie)
-	original := `we are looking for a rockstar 10x developer or engineer for ruby on rails and Nodejs`
+	original := `we are looking for a rockstar, 10x developer, or engineer, for ruby on rails and Nodejs`
 	tokens := jargon.TokenizeString(original)
 
-	expected := `we are looking for a cliché cliché or boffin for ruby-on-rails and node.js`
+	expected := `we are looking for a cliché, cliché, or boffin, for ruby-on-rails and node.js`
 
-	got, err := filter.Filter(tokens).String()
+	got, err := tokens.Filter(synonyms).String()
 	if err != nil {
 		t.Error(err)
 	}
@@ -48,7 +45,7 @@ func BenchmarkFilter(b *testing.B) {
 	}
 
 	ignore := []rune{'-', ' ', '.', '/'}
-	filter, err := synonyms.NewFilter(mappings, true, ignore)
+	filter, err := NewFilter(mappings, true, ignore)
 	if err != nil {
 		b.Error(err)
 	}
@@ -58,7 +55,7 @@ func BenchmarkFilter(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		tokens := jargon.TokenizeString(original)
-		_, err := filter.Filter(tokens).Count()
+		_, err := tokens.Filter(filter).Count()
 		if err != nil {
 			b.Error(err)
 		}
