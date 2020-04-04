@@ -1,6 +1,7 @@
 package synonyms
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/clipperhouse/jargon"
@@ -206,6 +207,41 @@ func TestFill(t *testing.T) {
 		}
 	}
 
+}
+
+func TestPassthrough(t *testing.T) {
+	// If the filter doesn't do anything, the tokens should come back verbatim
+
+	mappings := map[string]string{}
+	ignore := []rune{}
+	synonyms, err := NewFilter(mappings, false, ignore)
+	if err != nil {
+		t.Error(err)
+	}
+
+	text := "This is a test, with spaces and punctuation."
+
+	original := jargon.TokenizeString(text)
+	if err != nil {
+		t.Error(err)
+	}
+	expected, err := original.ToSlice()
+	if err != nil {
+		t.Error(err)
+	}
+
+	filtered := jargon.TokenizeString(text)
+	if err != nil {
+		t.Error(err)
+	}
+	got, err := filtered.Filter(synonyms).ToSlice()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(expected, got) {
+		t.Errorf("expected %s, got %s", expected, got)
+	}
 }
 
 func TestFilter(t *testing.T) {
