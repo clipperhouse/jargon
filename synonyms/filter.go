@@ -94,6 +94,11 @@ type tokens struct {
 
 // next returns the next token; nil indicates end of data
 func (t *tokens) next() (*jargon.Token, error) {
+	// Buffer should be clear after every call to next()
+	if t.buffer.Len() != 0 {
+		return nil, fmt.Errorf("expected buffer to be empty")
+	}
+
 	// Clear out any outgoing
 	if t.outgoing.Any() {
 		return t.outgoing.Pop(), nil
@@ -132,6 +137,7 @@ func (t *tokens) next() (*jargon.Token, error) {
 			continue
 		}
 
+		// The word didn't lemmatize, pass it along verbatim
 		t.buffer.PopTo(t.outgoing)
 	}
 
