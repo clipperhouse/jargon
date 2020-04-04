@@ -78,7 +78,7 @@ func (t *tokenizer) next() (*Token, error) {
 			// It's not leading
 			token := NewToken(string(r), false)
 			return token, nil
-		case is.Hebrew(r):
+		case is.HebrewLetter(r):
 			t.accept(r)
 			return t.hebrew()
 		case is.AHLetter(r):
@@ -114,7 +114,7 @@ func (t *tokenizer) alphanumeric() (*Token, error) {
 			return nil, err
 		case eof:
 			return t.token()
-		case is.Hebrew(r):
+		case is.HebrewLetter(r):
 			t.accept(r)
 			return t.hebrew()
 		case is.AHLetter(r):
@@ -270,7 +270,7 @@ func (t *tokenizer) hebrew() (*Token, error) {
 			return nil, fmt.Errorf(`hebrew: buffer should be have one or more runes; this is likely a bug in the tokenizer`)
 		}
 		last, _ := utf8.DecodeLastRune(b)
-		if !is.Hebrew(last) {
+		if !is.HebrewLetter(last) {
 			return nil, fmt.Errorf(`last rune should be hebrew; this is likely a bug in the tokenizer`)
 		}
 	}
@@ -290,13 +290,13 @@ func (t *tokenizer) hebrew() (*Token, error) {
 				return nil, err
 			}
 
-			if eof || !is.Hebrew(lookahead) {
+			if eof || !is.HebrewLetter(lookahead) {
 				// Terminate the token
 				return t.token()
 			}
 
 			t.accept(r)
-		case is.Hebrew(r):
+		case is.HebrewLetter(r):
 			t.accept(r)
 		case is.AHLetter(r):
 			t.accept(r)

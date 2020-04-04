@@ -174,8 +174,8 @@ func Katakana(r rune) bool {
 	}
 }
 
-func Hebrew(r rune) bool {
-	return unicode.Is(unicode.Hebrew, r)
+func HebrewLetter(r rune) bool {
+	return unicode.Is(unicode.Hebrew, r) && unicode.IsLetter(r)
 }
 
 func Leading(r rune) bool {
