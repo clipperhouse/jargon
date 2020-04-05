@@ -37,7 +37,7 @@ func NewFilter(mappings map[string]string, ignoreCase bool, ignoreRunes []rune) 
 	}
 }
 
-func (f *Filter) build(err *error) error {
+func (f *Filter) build() error {
 	trie := trie.New(f.config.ignoreCase, f.config.ignoreRunes)
 	maxWords := 1
 	for synonyms, canonical := range f.config.mappings {
@@ -101,7 +101,7 @@ func (f *Filter) Filter(incoming *jargon.Tokens) *jargon.Tokens {
 	// unless we use it
 	var err error
 	f.once.Do(func() {
-		f.build(&err)
+		err = f.build()
 	})
 
 	t := &tokens{
@@ -111,7 +111,7 @@ func (f *Filter) Filter(incoming *jargon.Tokens) *jargon.Tokens {
 		filter:   f,
 	}
 
-	// Catch the error that may have resuled from lazy construction above
+	// Catch the error that may have resulted from lazy construction above
 	next := func() (*jargon.Token, error) {
 		if err != nil {
 			return nil, err
