@@ -3,6 +3,7 @@ package synonyms
 import (
 	"bytes"
 	"fmt"
+	"sync"
 
 	"github.com/clipperhouse/jargon"
 	"github.com/clipperhouse/jargon/synonyms/trie"
@@ -10,18 +11,39 @@ import (
 
 // Filter is the data structure of a synonyms filter. Use NewFilter to create.
 type Filter struct {
+	// For lazy loading, see build() below
+	config *config
+	once   sync.Once
+
 	trie     *trie.RuneTrie
 	maxWords int
 }
 
+type config struct {
+	mappings    map[string]string
+	ignoreCase  bool
+	ignoreRunes []rune
+}
+
 // NewFilter creates a new synonyms Filter
-func NewFilter(mappings map[string]string, ignoreCase bool, ignoreRunes []rune) (*Filter, error) {
-	trie := trie.New(ignoreCase, ignoreRunes)
+func NewFilter(mappings map[string]string, ignoreCase bool, ignoreRunes []rune) *Filter {
+	// Save the parameters for lazy loading (below)
+	return &Filter{
+		config: &config{
+			mappings:    mappings,
+			ignoreCase:  ignoreCase,
+			ignoreRunes: ignoreRunes,
+		},
+	}
+}
+
+func (f *Filter) build(err *error) error {
+	trie := trie.New(f.config.ignoreCase, f.config.ignoreRunes)
 	maxWords := 1
-	for synonyms, canonical := range mappings {
+	for synonyms, canonical := range f.config.mappings {
 		tokens, err := jargon.TokenizeString(synonyms).ToSlice()
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		start := 0
@@ -51,10 +73,14 @@ func NewFilter(mappings map[string]string, ignoreCase bool, ignoreRunes []rune) 
 		updateMaxWords(slice, &maxWords)
 	}
 
-	return &Filter{
-		trie:     trie,
-		maxWords: maxWords,
-	}, nil
+	// Populate with new values
+	f.trie = trie
+	f.maxWords = maxWords
+
+	// Kill the config
+	f.config = nil
+
+	return nil
 }
 
 func updateMaxWords(tokens []*jargon.Token, maxWords *int) {
@@ -71,14 +97,30 @@ func updateMaxWords(tokens []*jargon.Token, maxWords *int) {
 
 // Filter replaces tokens with their canonical terms, based on Stack Overflow tags & synonyms
 func (f *Filter) Filter(incoming *jargon.Tokens) *jargon.Tokens {
+	// Lazily build the trie on first call, i.e. don't pay for the construction
+	// unless we use it
+	var err error
+	f.once.Do(func() {
+		f.build(&err)
+	})
+
 	t := &tokens{
 		incoming: incoming,
 		buffer:   &jargon.TokenQueue{},
 		outgoing: &jargon.TokenQueue{},
 		filter:   f,
 	}
+
+	// Catch the error that may have resuled from lazy construction above
+	next := func() (*jargon.Token, error) {
+		if err != nil {
+			return nil, err
+		}
+		return t.next()
+	}
+
 	return &jargon.Tokens{
-		Next: t.next,
+		Next: next,
 	}
 }
 

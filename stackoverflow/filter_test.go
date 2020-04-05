@@ -44,13 +44,3 @@ func BenchmarkTags(b *testing.B) {
 		}
 	}
 }
-
-func BenchmarkCreate(b *testing.B) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, err := create()
-		if err != nil {
-			b.Error(err)
-		}
-	}
-}

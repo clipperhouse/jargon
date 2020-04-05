@@ -206,7 +206,6 @@ func TestFill(t *testing.T) {
 			t.Errorf("expected %s, got %s", expected, got)
 		}
 	}
-
 }
 
 func TestPassthrough(t *testing.T) {
@@ -214,17 +213,11 @@ func TestPassthrough(t *testing.T) {
 
 	mappings := map[string]string{}
 	ignore := []rune{}
-	synonyms, err := NewFilter(mappings, false, ignore)
-	if err != nil {
-		t.Error(err)
-	}
+	synonyms := NewFilter(mappings, false, ignore)
 
 	text := "This is a test, with spaces and punctuation."
 
 	original := jargon.TokenizeString(text)
-	if err != nil {
-		t.Error(err)
-	}
 	expected, err := original.ToSlice()
 	if err != nil {
 		t.Error(err)
@@ -244,6 +237,36 @@ func TestPassthrough(t *testing.T) {
 	}
 }
 
+func TestLazyLoad(t *testing.T) {
+	mappings := map[string]string{
+		"developer, engineer, programmer,": "boffin",
+	}
+	ignore := []rune{'-', ' ', '.', '/'}
+	synonyms := NewFilter(mappings, true, ignore)
+
+	if synonyms.trie != nil {
+		t.Errorf("trie should be nil prior to first Filter() call")
+	}
+
+	original := `we are looking for a developer or engineer`
+	tokens := jargon.TokenizeString(original)
+	filtered := tokens.Filter(synonyms)
+
+	if synonyms.trie == nil {
+		t.Errorf("trie should not be nil after first Filter() call")
+	}
+
+	expected := `we are looking for a boffin or boffin`
+	got, err := filtered.String()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if expected != got {
+		t.Errorf("expected %q, got %q", expected, got)
+	}
+}
+
 func TestFilter(t *testing.T) {
 	mappings := map[string]string{
 		"developer, engineer, programmer,": "boffin",
@@ -253,10 +276,7 @@ func TestFilter(t *testing.T) {
 	}
 
 	ignore := []rune{'-', ' ', '.', '/'}
-	synonyms, err := NewFilter(mappings, true, ignore)
-	if err != nil {
-		t.Error(err)
-	}
+	synonyms := NewFilter(mappings, true, ignore)
 
 	original := `we are looking for a rockstar, 10x developer, or engineer, for ruby on rails and Nodejs`
 	tokens := jargon.TokenizeString(original)
@@ -274,7 +294,6 @@ func TestFilter(t *testing.T) {
 }
 
 func BenchmarkFilter(b *testing.B) {
-
 	mappings := map[string]string{
 		"developer, engineer, programmer,": "boffin",
 		"rock star, 10x developer":         "cliché",
@@ -283,10 +302,7 @@ func BenchmarkFilter(b *testing.B) {
 	}
 
 	ignore := []rune{'-', ' ', '.', '/'}
-	filter, err := NewFilter(mappings, true, ignore)
-	if err != nil {
-		b.Error(err)
-	}
+	filter := NewFilter(mappings, true, ignore)
 
 	original := `we are looking for a rockstar 10x developer or engineer for ruby on rails and Nodejs`
 
