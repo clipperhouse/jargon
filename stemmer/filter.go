@@ -45,19 +45,17 @@ var Swedish = &filter{
 	stem: swedish.Stem,
 }
 
-func (f *filter) Filter(incoming *jargon.Tokens) *jargon.Tokens {
+func (f *filter) Filter(incoming *jargon.TokenStream) *jargon.TokenStream {
 	t := &tokens{
 		filter:   f,
 		incoming: incoming,
 	}
-	return &jargon.Tokens{
-		Next: t.next,
-	}
+	return jargon.NewTokenStream(t.next)
 }
 
 type tokens struct {
 	filter   *filter
-	incoming *jargon.Tokens
+	incoming *jargon.TokenStream
 }
 
 func (t *tokens) next() (*jargon.Token, error) {

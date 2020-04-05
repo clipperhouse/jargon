@@ -21,18 +21,16 @@ type filter struct{}
 // don't → does not
 // We’ve → We have
 // SHE'S -> SHE IS
-func (f *filter) Filter(incoming *jargon.Tokens) *jargon.Tokens {
+func (f *filter) Filter(incoming *jargon.TokenStream) *jargon.TokenStream {
 	t := &tokens{
 		incoming: incoming,
 		outgoing: &jargon.TokenQueue{},
 	}
-	return &jargon.Tokens{
-		Next: t.next,
-	}
+	return jargon.NewTokenStream(t.next)
 }
 
 type tokens struct {
-	incoming *jargon.Tokens
+	incoming *jargon.TokenStream
 	outgoing *jargon.TokenQueue
 }
 

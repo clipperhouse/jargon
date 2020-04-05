@@ -8,9 +8,9 @@ import (
 
 // TODO: test ordering
 
-func tokenize(r io.Reader) *Tokens {
+func tokenize(r io.Reader) *TokenStream {
 	t := newTokenizer(r, true) // add guard for testing
-	return newTokens(t.next)
+	return NewTokenStream(t.next)
 }
 
 func TestTokenizer(t *testing.T) {

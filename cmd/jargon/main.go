@@ -259,7 +259,7 @@ func execute(c *config) error {
 		return fmt.Errorf("writer is required")
 	}
 
-	var tokens *jargon.Tokens
+	var tokens *jargon.TokenStream
 	if c.HTML {
 		tokens = jargon.TokenizeHTML(c.Reader)
 	} else {

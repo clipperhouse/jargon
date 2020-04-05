@@ -96,7 +96,7 @@ func updateMaxWords(tokens []*jargon.Token, maxWords *int) {
 }
 
 // Filter replaces tokens with their canonical terms, based on Stack Overflow tags & synonyms
-func (f *Filter) Filter(incoming *jargon.Tokens) *jargon.Tokens {
+func (f *Filter) Filter(incoming *jargon.TokenStream) *jargon.TokenStream {
 	// Lazily build the trie on first call, i.e. don't pay for the construction
 	// unless we use it
 	var err error
@@ -119,14 +119,12 @@ func (f *Filter) Filter(incoming *jargon.Tokens) *jargon.Tokens {
 		return t.next()
 	}
 
-	return &jargon.Tokens{
-		Next: next,
-	}
+	return jargon.NewTokenStream(next)
 }
 
 type tokens struct {
 	// incoming stream of tokens from another source, such as a tokenizer
-	incoming *jargon.Tokens
+	incoming *jargon.TokenStream
 	// a 'lookahead' buffer for incoming tokens
 	buffer *jargon.TokenQueue
 	// outgoing queue of filtered tokens

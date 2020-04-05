@@ -10,21 +10,19 @@ import (
 // TokenizeHTML tokenizes HTML. Text nodes are tokenized using jargon.Tokenize; everything else (tags, comments) are left verbatim.
 // It returns a Tokens, intended to be iterated over by calling Next(), until nil.
 // It returns all tokens (including white space), so text can be reconstructed with fidelity. Ignoring (say) whitespace is a decision for the caller.
-func TokenizeHTML(r io.Reader) *Tokens {
+func TokenizeHTML(r io.Reader) *TokenStream {
 	t := &htokenizer{
 		htokenizer: html.NewTokenizer(r),
 		ttokens:    dummy, // dummy to avoid nil
 	}
-	return &Tokens{
-		Next: t.next,
-	}
+	return NewTokenStream(t.next)
 }
 
-var dummy = &Tokens{Next: func() (*Token, error) { return nil, nil }}
+var dummy = NewTokenStream(func() (*Token, error) { return nil, nil })
 
 type htokenizer struct {
 	htokenizer *html.Tokenizer
-	ttokens    *Tokens
+	ttokens    *TokenStream
 	parent     atom.Atom
 }
 

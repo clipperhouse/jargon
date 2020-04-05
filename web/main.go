@@ -42,7 +42,7 @@ func jargonHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	route := parts[1]
 
-	var tokens *jargon.Tokens
+	var tokens *jargon.TokenStream
 
 	switch route {
 	case "text":

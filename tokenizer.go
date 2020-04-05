@@ -16,15 +16,15 @@ import (
 // Its uses several specs from Unicode Text Segmentation https://unicode.org/reports/tr29/. It's not a full implementation, but a decent approximation for many mainstream cases.
 //
 // Tokenize returns all tokens (including white space), so text can be reconstructed with fidelity.
-func Tokenize(r io.Reader) *Tokens {
+func Tokenize(r io.Reader) *TokenStream {
 	t := newTokenizer(r, false)
-	return newTokens(t.next)
+	return NewTokenStream(t.next)
 }
 
 // TokenizeString returns an 'iterator' of Tokens. Call .Next() until it returns nil.
 //
 // It returns all tokens (including white space), so text can be reconstructed with fidelity ("round tripped").
-func TokenizeString(s string) *Tokens {
+func TokenizeString(s string) *TokenStream {
 	return Tokenize(strings.NewReader(s))
 }
 
