@@ -9,8 +9,12 @@ import (
 func TestFilter(t *testing.T) {
 	test := "This is a @handle and a #hashtag"
 	tokens := jargon.TokenizeString(test)
-	_, err := tokens.Filter(Filter).ToSlice()
+	tokens = Hashtags(tokens)
+	tokens = Handles(tokens)
+
+	got, err := tokens.ToSlice()
 	if err != nil {
 		t.Error(err)
 	}
+	t.Log(got)
 }
