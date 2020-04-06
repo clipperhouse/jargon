@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/clipperhouse/jargon"
@@ -31,6 +32,8 @@ func main() {
 	flag.Bool("stack", false, "a filter to recognize tech terms as Stack Overflow tags, e.g. Ruby on Rails → ruby-on-rails")
 	flag.Bool("stem", false, "a filter to stem words using snowball stemmer, e.g. management|manager → manag")
 
+	count := flag.Bool("count", false, "count the tokens")
+
 	flag.Parse()
 
 	// Local to prevent mistaken use in other funcs
@@ -43,8 +46,9 @@ func main() {
 	}
 
 	c := config{
-		Fs:   afero.NewOsFs(),
-		HTML: *html,
+		Fs:    afero.NewOsFs(),
+		HTML:  *html,
+		Count: *count,
 	}
 
 	//
@@ -105,6 +109,7 @@ type config struct {
 	Fs afero.Fs
 
 	HTML    bool
+	Count   bool
 	Filters []jargon.Filter
 
 	Filein, Fileout   afero.File
@@ -267,6 +272,19 @@ func execute(c *config) error {
 	}
 	for _, f := range c.Filters {
 		tokens = tokens.Filter(f)
+	}
+
+	if c.Count {
+		count, err := tokens.Count()
+		if err != nil {
+			return err
+		}
+		c.Writer.WriteString(strconv.Itoa(count) + "\n")
+		err = c.Writer.Flush()
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 
 	if _, err := tokens.WriteTo(c.Writer); err != nil {
