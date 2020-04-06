@@ -9,11 +9,7 @@ import (
 )
 
 // Filter looks for Twitter-style @handles and #hashtags
-var Filter = &filter{}
-
-type filter struct{}
-
-func (f *filter) Filter(incoming *jargon.TokenStream) *jargon.TokenStream {
+func Filter(incoming *jargon.TokenStream) *jargon.TokenStream {
 	t := &tokens{
 		incoming: incoming,
 		outgoing: &jargon.TokenQueue{},

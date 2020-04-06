@@ -75,7 +75,7 @@ func (stream *TokenStream) ToSlice() ([]*Token, error) {
 func (stream *TokenStream) Filter(filters ...Filter) *TokenStream {
 	outgoing := stream
 	for _, f := range filters {
-		outgoing = f.Filter(outgoing)
+		outgoing = f(outgoing)
 	}
 	return outgoing
 }

@@ -25,12 +25,7 @@ import "github.com/clipperhouse/jargon"
 // which are not in the first 127 ASCII characters (the "Basic Latin" Unicode
 // block) into their ASCII equivalents, if one exists.
 // Ported from Lucene org.apache.lucene.analysis.miscellaneous
-
-var Fold = &filter{}
-
-type filter struct{}
-
-func (f *filter) Filter(incoming *jargon.TokenStream) *jargon.TokenStream {
+func Fold(incoming *jargon.TokenStream) *jargon.TokenStream {
 	t := &tokens{
 		incoming: incoming,
 	}

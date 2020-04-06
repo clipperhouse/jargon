@@ -227,7 +227,7 @@ func TestPassthrough(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	got, err := filtered.Filter(synonyms).ToSlice()
+	got, err := synonyms.Filter(filtered).ToSlice()
 	if err != nil {
 		t.Error(err)
 	}
@@ -250,7 +250,7 @@ func TestLazyLoad(t *testing.T) {
 
 	original := `we are looking for a developer or engineer`
 	tokens := jargon.TokenizeString(original)
-	filtered := tokens.Filter(synonyms)
+	filtered := synonyms.Filter(tokens)
 
 	if synonyms.trie == nil {
 		t.Errorf("trie should not be nil after first Filter() call")
@@ -283,7 +283,7 @@ func TestFilter(t *testing.T) {
 
 	expected := `we are looking for a cliché, cliché, or boffin, for ruby-on-rails and node.js`
 
-	got, err := tokens.Filter(synonyms).String()
+	got, err := synonyms.Filter(tokens).String()
 	if err != nil {
 		t.Error(err)
 	}
@@ -302,14 +302,14 @@ func BenchmarkFilter(b *testing.B) {
 	}
 
 	ignore := []rune{'-', ' ', '.', '/'}
-	filter := NewFilter(mappings, true, ignore)
+	filter := NewFilter(mappings, true, ignore).Filter
 
 	original := `we are looking for a rockstar 10x developer or engineer for ruby on rails and Nodejs`
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		tokens := jargon.TokenizeString(original)
-		_, err := tokens.Filter(filter).Count()
+		_, err := filter(tokens).Count()
 		if err != nil {
 			b.Error(err)
 		}

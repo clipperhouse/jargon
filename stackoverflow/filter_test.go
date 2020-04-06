@@ -24,7 +24,7 @@ func TestFilter(t *testing.T) {
 
 	for _, expected := range expecteds {
 		tokens := jargon.TokenizeString(expected.input)
-		canonical, err := Tags.Filter(tokens).String()
+		canonical, err := Tags(tokens).String()
 		if err != nil {
 			t.Error(err)
 		}
@@ -38,7 +38,7 @@ func BenchmarkTags(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		tokens := jargon.TokenizeString("something about Ruby on Rails, and such.")
-		_, err := Tags.Filter(tokens).Count()
+		_, err := Tags(tokens).Count()
 		if err != nil {
 			b.Error(err)
 		}

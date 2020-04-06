@@ -32,6 +32,7 @@ func main() {
 	flag.Bool("stack", false, "a filter to recognize tech terms as Stack Overflow tags, e.g. Ruby on Rails → ruby-on-rails")
 	flag.Bool("stem", false, "a filter to stem words using snowball stemmer, e.g. management|manager → manag")
 
+	lemmas := flag.Bool("lemmas", false, "only return tokens that have been changed by a filter (lemmatized)")
 	count := flag.Bool("count", false, "count the tokens")
 
 	flag.Parse()
@@ -46,9 +47,10 @@ func main() {
 	}
 
 	c := config{
-		Fs:    afero.NewOsFs(),
-		HTML:  *html,
-		Count: *count,
+		Fs:     afero.NewOsFs(),
+		HTML:   *html,
+		Lemmas: *lemmas,
+		Count:  *count,
 	}
 
 	//
@@ -110,6 +112,7 @@ type config struct {
 
 	HTML    bool
 	Count   bool
+	Lemmas  bool
 	Filters []jargon.Filter
 
 	Filein, Fileout   afero.File
@@ -151,7 +154,8 @@ func setInput(c *config, mode os.FileMode, filein string) error {
 
 var filterMap = map[string]jargon.Filter{
 	"-ascii":        ascii.Fold,
-	"-contractions": contractions.Expander,
+	"-contractions": contractions.Expand,
+	"-lemmas":       (*jargon.TokenStream).Lemmas,
 	"-stack":        stackoverflow.Tags,
 	"-stem":         stemmer.English,
 }
@@ -170,22 +174,19 @@ func setFilters(c *config, args []string, lang string) error {
 	// Loop through filters; order matters, so can't use flag package
 	for _, arg := range args {
 		filter, found := filterMap[arg]
-		if found {
-			if filter == stemmer.English {
-				// Look for a language specification
-				if lang != "" {
-					stem, found := stemmerMap[lang]
-					if found {
-						filter = stem
-					} else {
-						err := fmt.Errorf("lang %q is not known by %s; options are %s", lang, flag.CommandLine.Name(), strings.Join(langs, ", "))
-						return err
-					}
+		if found && arg == "-stem" {
+			// Look for a language specification
+			if lang != "" {
+				stem, found := stemmerMap[lang]
+				if found {
+					filter = stem
+				} else {
+					err := fmt.Errorf("lang %q is not known by %s; options are %s", lang, flag.CommandLine.Name(), strings.Join(langs, ", "))
+					return err
 				}
 			}
-
-			c.Filters = append(c.Filters, filter)
 		}
+		c.Filters = append(c.Filters, filter)
 	}
 
 	return nil
@@ -270,8 +271,9 @@ func execute(c *config) error {
 	} else {
 		tokens = jargon.Tokenize(c.Reader)
 	}
+
 	for _, f := range c.Filters {
-		tokens = tokens.Filter(f)
+		tokens = f(tokens)
 	}
 
 	if c.Count {

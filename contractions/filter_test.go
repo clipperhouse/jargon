@@ -12,7 +12,7 @@ func TestContractions(t *testing.T) {
 	expected := "i will SHE WOULD they are Can not should have GOT TO Want to"
 
 	tokens := jargon.TokenizeString(given)
-	got, err := contractions.Expander.Filter(tokens).String()
+	got, err := contractions.Expand(tokens).String()
 	if err != nil {
 		t.Error(err)
 	}

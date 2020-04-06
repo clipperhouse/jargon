@@ -135,15 +135,22 @@ func TestFilters(t *testing.T) {
 			args: []string{"-stack", "-stem", "-ascii", "-contractions"},
 			lang: "",
 
-			err:     false,
-			filters: []jargon.Filter{stackoverflow.Tags, stemmer.English, ascii.Fold, contractions.Expander},
+			err: false,
+			filters: []jargon.Filter{
+				stackoverflow.Tags,
+				stemmer.English,
+				ascii.Fold,
+				contractions.Expand,
+			},
 		},
 		{
 			args: []string{"-stem"},
 			lang: "spanish",
 
-			err:     false,
-			filters: []jargon.Filter{stemmer.Spanish},
+			err: false,
+			filters: []jargon.Filter{
+				stemmer.Spanish,
+			},
 		},
 		{
 			args: []string{"-stem"},
@@ -163,8 +170,19 @@ func TestFilters(t *testing.T) {
 		if (err != nil) != test.err {
 			t.Errorf("expected err %v, got %v", test.err, err)
 		}
-		if !reflect.DeepEqual(c.Filters, test.filters) {
-			t.Errorf("expected filters to match, args: %v, lang: %s", test.args, test.lang)
+		if len(c.Filters) == len(test.filters) {
+			for i := range test.filters {
+				// https://stackoverflow.com/a/9644797
+				// This is not a good test, but perhaps better than nothing
+				// E.g. the pointers to different stemmers are all the same
+				expected := reflect.ValueOf(test.filters[i]).Pointer()
+				got := reflect.ValueOf(c.Filters[i]).Pointer()
+				if expected != got {
+					t.Errorf("expected filters to match, args: %v, lang: %s", test.args, test.lang)
+				}
+			}
+		} else {
+			t.Errorf("expected %d filters, got %d", len(test.filters), len(c.Filters))
 		}
 	}
 }

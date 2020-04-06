@@ -11,50 +11,45 @@ import (
 	"github.com/kljensen/snowball/swedish"
 )
 
-type filter struct {
+type stemmer struct {
 	stem func(string, bool) string
 }
 
 // English is a Snowball stemmer for English, implemented as a jargon.Filter
-var English = &filter{
-	stem: english.Stem,
-}
+var English = newStemmer(english.Stem).Stem
 
 // French is a Snowball stemmer for French, implemented as a jargon.Filter
-var French = &filter{
-	stem: french.Stem,
-}
+var French = newStemmer(french.Stem).Stem
 
 // Norwegian is a Snowball stemmer for Norwegian, implemented as a jargon.Filter
-var Norwegian = &filter{
-	stem: norwegian.Stem,
-}
+var Norwegian = newStemmer(norwegian.Stem).Stem
 
 // Russian is a Snowball stemmer for Russian, implemented as a jargon.Filter
-var Russian = &filter{
-	stem: russian.Stem,
-}
+var Russian = newStemmer(russian.Stem).Stem
 
 // Spanish is a Snowball stemmer for Spanish, implemented as a jargon.Filter
-var Spanish = &filter{
-	stem: spanish.Stem,
-}
+var Spanish = newStemmer(spanish.Stem).Stem
 
 // Swedish is a Snowball stemmer for Swedish, implemented as a jargon.Filter
-var Swedish = &filter{
-	stem: swedish.Stem,
+var Swedish = newStemmer(swedish.Stem).Stem
+
+// newStemmer creates a new stemmer
+func newStemmer(stem func(string, bool) string) *stemmer {
+	return &stemmer{
+		stem: stem,
+	}
 }
 
-func (f *filter) Filter(incoming *jargon.TokenStream) *jargon.TokenStream {
+func (st *stemmer) Stem(incoming *jargon.TokenStream) *jargon.TokenStream {
 	t := &tokens{
-		filter:   f,
+		stemmer:  st,
 		incoming: incoming,
 	}
 	return jargon.NewTokenStream(t.next)
 }
 
 type tokens struct {
-	filter   *filter
+	stemmer  *stemmer
 	incoming *jargon.TokenStream
 }
 
@@ -73,7 +68,7 @@ func (t *tokens) next() (*jargon.Token, error) {
 			return token, nil
 		}
 
-		stemmed := t.filter.stem(token.String(), true)
+		stemmed := t.stemmer.stem(token.String(), true)
 
 		if stemmed == token.String() {
 			// Had no effect, send back the original

@@ -9,19 +9,11 @@ import (
 
 //go:generate go run generate/main.go
 
-// Expander converts single-token contractions to non-contracted version. Examples:
+// Expand converts single-token contractions to non-contracted version. Examples:
 // don't → does not
 // We’ve → We have
 // SHE'S -> SHE IS
-var Expander = &filter{}
-
-type filter struct{}
-
-// Filter converts single-token contractions to non-contracted version. Examples:
-// don't → does not
-// We’ve → We have
-// SHE'S -> SHE IS
-func (f *filter) Filter(incoming *jargon.TokenStream) *jargon.TokenStream {
+func Expand(incoming *jargon.TokenStream) *jargon.TokenStream {
 	t := &tokens{
 		incoming: incoming,
 		outgoing: &jargon.TokenQueue{},

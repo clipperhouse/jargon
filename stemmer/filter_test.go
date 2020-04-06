@@ -24,7 +24,7 @@ func TestEnglish(t *testing.T) {
 
 	for _, test := range tests {
 		tokens := jargon.TokenizeString(test.input)
-		got, err := English.Filter(tokens).String()
+		got, err := English(tokens).String()
 		if err != nil {
 			t.Error(err)
 		}
