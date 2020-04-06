@@ -7,7 +7,7 @@ import (
 )
 
 // NewFilter creates a token filter for the supplied stop words
-func NewFilter(stopwords []string, ignoreCase bool) *filter {
+func NewFilter(stopwords []string, ignoreCase bool) jargon.Filter {
 	includes := make(map[string]bool)
 	for _, s := range stopwords {
 		var key string
@@ -19,10 +19,12 @@ func NewFilter(stopwords []string, ignoreCase bool) *filter {
 		includes[key] = true
 	}
 
-	return &filter{
+	f := &filter{
 		includes:   includes,
 		ignoreCase: ignoreCase,
 	}
+
+	return f.Filter
 }
 
 type filter struct {

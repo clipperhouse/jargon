@@ -227,7 +227,7 @@ func TestPassthrough(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	got, err := synonyms.Filter(filtered).ToSlice()
+	got, err := synonyms(filtered).ToSlice()
 	if err != nil {
 		t.Error(err)
 	}
@@ -242,7 +242,13 @@ func TestLazyLoad(t *testing.T) {
 		"developer, engineer, programmer,": "boffin",
 	}
 	ignore := []rune{'-', ' ', '.', '/'}
-	synonyms := NewFilter(mappings, true, ignore)
+	synonyms := &Filter{
+		config: &config{
+			mappings:    mappings,
+			ignoreCase:  true,
+			ignoreRunes: ignore,
+		},
+	}
 
 	if synonyms.trie != nil {
 		t.Errorf("trie should be nil prior to first Filter() call")
@@ -283,7 +289,7 @@ func TestFilter(t *testing.T) {
 
 	expected := `we are looking for a cliché, cliché, or boffin, for ruby-on-rails and node.js`
 
-	got, err := synonyms.Filter(tokens).String()
+	got, err := synonyms(tokens).String()
 	if err != nil {
 		t.Error(err)
 	}
@@ -302,7 +308,7 @@ func BenchmarkFilter(b *testing.B) {
 	}
 
 	ignore := []rune{'-', ' ', '.', '/'}
-	filter := NewFilter(mappings, true, ignore).Filter
+	filter := NewFilter(mappings, true, ignore)
 
 	original := `we are looking for a rockstar 10x developer or engineer for ruby on rails and Nodejs`
 

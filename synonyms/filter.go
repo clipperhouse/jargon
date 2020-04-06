@@ -26,15 +26,16 @@ type config struct {
 }
 
 // NewFilter creates a new synonyms Filter
-func NewFilter(mappings map[string]string, ignoreCase bool, ignoreRunes []rune) *Filter {
+func NewFilter(mappings map[string]string, ignoreCase bool, ignoreRunes []rune) jargon.Filter {
 	// Save the parameters for lazy loading (below)
-	return &Filter{
+	f := &Filter{
 		config: &config{
 			mappings:    mappings,
 			ignoreCase:  ignoreCase,
 			ignoreRunes: ignoreRunes,
 		},
 	}
+	return f.Filter
 }
 
 func (f *Filter) build() error {

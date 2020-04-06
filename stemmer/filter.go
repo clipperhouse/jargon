@@ -16,28 +16,29 @@ type stemmer struct {
 }
 
 // English is a Snowball stemmer for English, implemented as a jargon.Filter
-var English = newStemmer(english.Stem).Stem
+var English jargon.Filter = newStemmer(english.Stem)
 
 // French is a Snowball stemmer for French, implemented as a jargon.Filter
-var French = newStemmer(french.Stem).Stem
+var French = newStemmer(french.Stem)
 
 // Norwegian is a Snowball stemmer for Norwegian, implemented as a jargon.Filter
-var Norwegian = newStemmer(norwegian.Stem).Stem
+var Norwegian = newStemmer(norwegian.Stem)
 
 // Russian is a Snowball stemmer for Russian, implemented as a jargon.Filter
-var Russian = newStemmer(russian.Stem).Stem
+var Russian = newStemmer(russian.Stem)
 
 // Spanish is a Snowball stemmer for Spanish, implemented as a jargon.Filter
-var Spanish = newStemmer(spanish.Stem).Stem
+var Spanish = newStemmer(spanish.Stem)
 
 // Swedish is a Snowball stemmer for Swedish, implemented as a jargon.Filter
-var Swedish = newStemmer(swedish.Stem).Stem
+var Swedish = newStemmer(swedish.Stem)
 
 // newStemmer creates a new stemmer
-func newStemmer(stem func(string, bool) string) *stemmer {
-	return &stemmer{
+func newStemmer(stem func(string, bool) string) jargon.Filter {
+	s := &stemmer{
 		stem: stem,
 	}
+	return s.Stem
 }
 
 func (st *stemmer) Stem(incoming *jargon.TokenStream) *jargon.TokenStream {

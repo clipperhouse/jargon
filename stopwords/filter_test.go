@@ -13,7 +13,7 @@ func TestCaseSensitive(t *testing.T) {
 		"four",
 		"five",
 	}
-	filter := stopwords.NewFilter(words, false)
+	stop := stopwords.NewFilter(words, false)
 
 	type test struct {
 		input  string
@@ -26,7 +26,7 @@ func TestCaseSensitive(t *testing.T) {
 
 	for _, test := range tests {
 		tokens := jargon.TokenizeString(test.input)
-		output, err := filter.Filter(tokens).String()
+		output, err := stop(tokens).String()
 		if err != nil {
 			t.Error(err)
 		}
@@ -42,7 +42,7 @@ func TestCaseInsensitive(t *testing.T) {
 		"four",
 		"five",
 	}
-	filter := stopwords.NewFilter(words, true)
+	stop := stopwords.NewFilter(words, true)
 
 	type test struct {
 		input  string
@@ -55,7 +55,7 @@ func TestCaseInsensitive(t *testing.T) {
 
 	for _, test := range tests {
 		tokens := jargon.TokenizeString(test.input)
-		output, err := filter.Filter(tokens).String()
+		output, err := stop(tokens).String()
 		if err != nil {
 			t.Error(err)
 		}
