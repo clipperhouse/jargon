@@ -4,7 +4,7 @@ Jargon is a text pipeline, focused on recognizing variations on canonical and sy
 
 For example, jargon lemmatizes `react`, `React.js`, `React JS` and `REACTJS` to a canonical `reactjs`.
 
-### Install
+## Install
 
 If you have a [Go installation](https://golang.org/doc/install):
 
@@ -12,11 +12,13 @@ If you have a [Go installation](https://golang.org/doc/install):
 go install github.com/clipperhouse/jargon/cmd/jargon
 ```
 
-If you’re on a Mac have [Homebrew](https://brew.sh):
+If you’re on a Mac and have [Homebrew](https://brew.sh):
 
 ```bash
 brew install clipperhouse/tap/jargon
 ```
+
+There on binaries for Mac, Windows and Linux on the [releases page](https://github.com/clipperhouse/jargon/releases).
 
 To display usage, simply type:
 
@@ -30,9 +32,9 @@ Example:
 echo "I like Ruby on Rails and react js" | jargon -stack
 ```
 
-[Usage and details](https://github.com/clipperhouse/jargon/tree/master/cmd/jargon)
+[CLI usage and details...](https://github.com/clipperhouse/jargon/tree/master/cmd/jargon)
 
-### In your code
+## In your code
 
 See [GoDoc](https://godoc.org/github.com/clipperhouse/jargon). Example:
 
@@ -83,7 +85,7 @@ Canonical terms (lemmas) are looked up in token filters. Several are available:
 [Stem](https://pkg.go.dev/github.com/clipperhouse/jargon/stemmer)
   - `Manager|management|manages → manag`
 
-To implement your own, see the [jargon.Filter type](https://godoc.org/github.com/clipperhouse/jargon/#Filter)
+To implement your own, see the [Filter type](https://godoc.org/github.com/clipperhouse/jargon/#Filter).
 
 ## Performance
 
