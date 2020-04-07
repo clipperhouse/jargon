@@ -1,10 +1,8 @@
 # Jargon
 
-Jargon is a **lemmatizer**, useful for recognizing variations on canonical and synonymous terms.
+Jargon is a text pipeline, focused on recognizing variations on canonical and synonymous terms.
 
 For example, jargon lemmatizes `react`, `React.js`, `React JS` and `REACTJS` to a canonical `reactjs`.
-
-Jargon uses Stack Overflow tags & synonyms, and implements “insensitivity” to spaces, dots and dashes.
 
 ### Online demo
 
@@ -24,24 +22,7 @@ To display usage, simply type:
 jargon
 ```
 
-```
-jargon accepts piped UTF8 text from Stdin and pipes lemmatized text to Stdout
-
-  Example: echo "I luv Rails" | jargon
-
-Alternatively, use jargon 'standalone' by passing flags for inputs and outputs:
-
-  -f string
-    	Input file path
-  -o string
-    	Output file path
-  -s string
-    	A (quoted) string to lemmatize
-  -u string
-    	A URL to fetch and lemmatize
-
-  Example: jargon -f /path/to/original.txt -o /path/to/lemmatized.txt
-```
+[Usage and details](https://github.com/clipperhouse/jargon/tree/master/cmd/jargon)
 
 ### In your code
 
@@ -49,17 +30,20 @@ See [GoDoc](https://godoc.org/github.com/clipperhouse/jargon).
 
 ## Token filters
 
-Canonical terms (lemmas) are looked up in token filters. Three are available:
+Canonical terms (lemmas) are looked up in token filters. Several are available:
 
-[Stack Overflow technology tags](https://github.com/clipperhouse/jargon/stackoverflow)
+[Stack Overflow technology tags](https://pkg.go.dev/github.com/clipperhouse/jargon/stackoverflow)
 - `Ruby on Rails → ruby-on-rails`
 - `ObjC → objective-c`
 
-[Contractions](https://github.com/clipperhouse/jargon/contractions)
+[Contractions](https://pkg.go.dev/github.com/clipperhouse/jargon/contractions)
 - `Couldn‘t → Could not`
 
-[Simple numbers](https://github.com/clipperhouse/jargon/numbers)
-- `Thirty-five hundred → 3500`
+[ASCII fold](https://pkg.go.dev/github.com/clipperhouse/jargon/ascii)
+- `café → cafe`
+
+[Stem](https://pkg.go.dev/github.com/clipperhouse/jargon/stemmer)
+- `Manager|management|manages → manag`
 
 To implement your own, see the [jargon.TokenFilter interface](https://godoc.org/github.com/clipperhouse/jargon/#TokenFilter)
 

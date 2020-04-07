@@ -1,3 +1,5 @@
+// Package is provide utilities for identifying Unicode categories of runes, relating to Unicode text segmentation:
+// https://unicode.org/reports/tr29/
 package is
 
 import "unicode"

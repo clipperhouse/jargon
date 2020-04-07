@@ -1,3 +1,4 @@
+// Package stackoverflow provides a filter for identifying technical terms in jargon
 package stackoverflow
 
 import (

@@ -1,3 +1,4 @@
+// Package twitter provides filters to identify Twitter-style @handles and #hashtags, and coalesce them into single tokens
 package twitter
 
 import (

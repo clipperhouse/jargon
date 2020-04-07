@@ -1,3 +1,4 @@
+// Package synonyms provides a builder for filtering and replacing synonyms in a token stream
 package synonyms
 
 import (

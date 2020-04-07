@@ -1,4 +1,4 @@
-// Package stemmer offers the Snowball stemmer in several languages.
+// Package stemmer offers the Snowball stemmer in several languages
 package stemmer
 
 import (

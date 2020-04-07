@@ -1,4 +1,4 @@
-// Package contractions provides a jargon.TokenFilter to expand English contractions, such as "don't" → "does not"
+// Package contractions provides a filter to expand English contractions, such as "don't" → "does not", for use with jargon
 package contractions
 
 import (

@@ -11,7 +11,7 @@ import (
 	"github.com/clipperhouse/jargon/is"
 )
 
-// Tokenize returns an 'iterator' of Tokens from a io.Reader. Call .Next() until it returns nil.
+// Tokenize tokenizes a reader into a stream of tokens. Iterate through the stream by calling Scan() or Next().
 //
 // Its uses several specs from Unicode Text Segmentation https://unicode.org/reports/tr29/. It's not a full implementation, but a decent approximation for many mainstream cases.
 //
@@ -21,7 +21,7 @@ func Tokenize(r io.Reader) *TokenStream {
 	return NewTokenStream(t.next)
 }
 
-// TokenizeString returns an 'iterator' of Tokens. Call .Next() until it returns nil.
+// TokenizeString tokenizes a string into a stream of tokens. Iterate through the stream by calling Scan() or Next().
 //
 // It returns all tokens (including white space), so text can be reconstructed with fidelity ("round tripped").
 func TokenizeString(s string) *TokenStream {

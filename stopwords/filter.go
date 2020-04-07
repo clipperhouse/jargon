@@ -1,3 +1,4 @@
+// Package stopwords allows omission of words from a token stream
 package stopwords
 
 import (
