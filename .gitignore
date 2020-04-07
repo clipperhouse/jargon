@@ -3,3 +3,4 @@
 *.ts
 cpu.prof
 mem.prof
+cmd/jargon/dist/*
