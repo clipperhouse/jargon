@@ -1,14 +1,14 @@
 package jargon
 
 type where struct {
-	incoming  *TokenStream
+	stream    *TokenStream
 	predicate func(*Token) bool
 }
 
 // Where filters a stream of Tokens that match a predicate
-func (incoming *TokenStream) Where(predicate func(*Token) bool) *TokenStream {
+func (stream *TokenStream) Where(predicate func(*Token) bool) *TokenStream {
 	w := &where{
-		incoming:  incoming,
+		stream:    stream,
 		predicate: predicate,
 	}
 	return NewTokenStream(w.next)
@@ -16,7 +16,7 @@ func (incoming *TokenStream) Where(predicate func(*Token) bool) *TokenStream {
 
 func (w *where) next() (*Token, error) {
 	for {
-		token, err := w.incoming.Next()
+		token, err := w.stream.Next()
 		if err != nil {
 			return nil, err
 		}

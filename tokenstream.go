@@ -121,7 +121,7 @@ func (stream *TokenStream) Words() *TokenStream {
 		return !t.IsPunct() && !t.IsSpace()
 	}
 	w := &where{
-		incoming:  stream,
+		stream:    stream,
 		predicate: isWord,
 	}
 	return NewTokenStream(w.next)
@@ -130,7 +130,7 @@ func (stream *TokenStream) Words() *TokenStream {
 // Lemmas returns only tokens which have been 'lemmatized', or in some way modified by a token filter
 func (stream *TokenStream) Lemmas() *TokenStream {
 	w := &where{
-		incoming:  stream,
+		stream:    stream,
 		predicate: (*Token).IsLemma,
 	}
 	return NewTokenStream(w.next)
