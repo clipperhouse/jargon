@@ -7,8 +7,25 @@ before:
     # you may remove this if you don't need go generate
     # - go generate ./...
 builds:
-- env:
-  - CGO_ENABLED=0
+  -
+    # Custom environment variables to be set during the builds.
+    # Default is empty.
+    env:
+      - CGO_ENABLED=0
+    
+    # GOOS list to build for.
+    # For more info refer to: https://golang.org/doc/install/source#environment
+    # Defaults are darwin and linux.
+    goos:
+      - darwin
+      - windows
+      - linux
+    
+    # GOARCH to build for.
+    # For more info refer to: https://golang.org/doc/install/source#environment
+    # Defaults are 386 and amd64.
+    goarch:
+      - amd64
 archives:
 - replacements:
     darwin: Darwin
