@@ -6,14 +6,14 @@ import (
 	"strings"
 
 	"github.com/clipperhouse/jargon"
+	"github.com/clipperhouse/jargon/stackoverflow"
 )
 
 func ExampleTokenStream_Scan() {
 	// TokensStream is an iterator resulting from a call to Tokenize or Filter
 
 	text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
-	r := strings.NewReader(text)
-	stream := jargon.Tokenize(r)
+	stream := jargon.TokenizeString(text).Filter(stackoverflow.Tags)
 
 	// Loop while Scan() returns true. Scan() will return false on error or end of tokens.
 	for stream.Scan() {
