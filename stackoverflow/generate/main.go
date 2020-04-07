@@ -30,6 +30,8 @@ var trailingVersion = regexp.MustCompile(`-[\d.]+$`)
 var ignore = map[string]bool{
 	"drop-down": true,
 	"datatable": true,
+	"for":       true,
+	"this":      true,
 }
 
 // run this in generator_test.go
@@ -71,6 +73,11 @@ func writeDictionary() error {
 					synonym = strings.ReplaceAll(synonym, "-", " ")
 
 					filtered = append(filtered, synonym)
+				}
+
+				if len(filtered) == 0 {
+					// Skip it
+					continue
 				}
 
 				for _, synonym := range filtered {
