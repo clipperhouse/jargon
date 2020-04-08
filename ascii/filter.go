@@ -21,7 +21,7 @@ import "github.com/clipperhouse/jargon"
  * limitations under the License.
  */
 
-// Fold is a jargon.TokenFilter, which converts alphabetic, numeric, and symbolic Unicode characters
+// Fold is a jargon Filter which converts alphabetic, numeric, and symbolic Unicode characters
 // which are not in the first 127 ASCII characters (the "Basic Latin" Unicode
 // block) into their ASCII equivalents, if one exists.
 // Ported from Lucene org.apache.lucene.analysis.miscellaneous
@@ -45,7 +45,7 @@ func (t *tokens) next() (*jargon.Token, error) {
 		return nil, nil
 	}
 
-	fold, folded := fold(token.String())
+	fold, folded := FoldString(token.String())
 	if folded {
 		return jargon.NewToken(fold, true), nil
 	}

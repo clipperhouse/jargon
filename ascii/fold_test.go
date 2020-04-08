@@ -40,7 +40,7 @@ func TestLatin1Accents(t *testing.T) {
 		t.Error("input and expected should be the same length")
 	}
 
-	got, folded := fold(input)
+	got, folded := FoldString(input)
 
 	if !folded {
 		t.Errorf("input should not have been folded")
@@ -53,7 +53,7 @@ func TestLatin1Accents(t *testing.T) {
 	}
 
 	for i := 0; i < len(inputs); i++ {
-		_, folded := fold(inputs[i])
+		_, folded := FoldString(inputs[i])
 
 		shouldntFold := i < 2 || i == 4
 		shouldFold := !shouldntFold

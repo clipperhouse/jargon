@@ -2,7 +2,8 @@ package ascii
 
 import "bytes"
 
-func fold(s string) (string, bool) {
+// FoldString is a utility method for folding a single string. Use the Fold() filter to process a token stream.
+func FoldString(s string) (string, bool) {
 	var b bytes.Buffer
 	folded := false
 
@@ -2155,7 +2156,7 @@ func fold(s string) (string, bool) {
 	}
 
 	if folded {
-		// Only allocate is something happened
+		// Only allocate if something happened
 		return b.String(), true
 	}
 
