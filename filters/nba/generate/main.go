@@ -10,7 +10,7 @@ import (
 	"text/template"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/clipperhouse/jargon/ascii"
+	"github.com/clipperhouse/jargon/filters/ascii"
 )
 
 func main() {

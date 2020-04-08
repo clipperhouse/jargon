@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"github.com/clipperhouse/jargon"
-	"github.com/clipperhouse/jargon/ascii"
-	"github.com/clipperhouse/jargon/contractions"
-	"github.com/clipperhouse/jargon/stackoverflow"
-	"github.com/clipperhouse/jargon/stemmer"
+	"github.com/clipperhouse/jargon/filters/ascii"
+	"github.com/clipperhouse/jargon/filters/contractions"
+	"github.com/clipperhouse/jargon/filters/stackoverflow"
+	"github.com/clipperhouse/jargon/filters/stemmer"
 	"github.com/spf13/afero"
 )
 
@@ -136,7 +136,7 @@ func setInput(c *config, mode os.FileMode, filein string) error {
 		c.Filein = file
 	}
 
-	c.Pipedin = (mode & os.ModeCharDevice) == 0 // https://stackoverflow.com/a/43947435/70613
+	c.Pipedin = (mode & os.ModeCharDevice) == 0 // https://filters/stackoverflow.com/a/43947435/70613
 
 	// If no input, display usage
 	input := c.Pipedin || c.Filein != nil

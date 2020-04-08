@@ -2,7 +2,7 @@
 package stackoverflow
 
 import (
-	"github.com/clipperhouse/jargon/synonyms"
+	"github.com/clipperhouse/jargon/filters/synonyms"
 )
 
 //go:generate go run generate/main.go

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/clipperhouse/jargon"
-	"github.com/clipperhouse/jargon/contractions"
+	"github.com/clipperhouse/jargon/filters/contractions"
 )
 
 func TestContractions(t *testing.T) {

@@ -45,7 +45,7 @@ import (
 	"strings"
 
 	"github.com/clipperhouse/jargon"
-	"github.com/clipperhouse/jargon/stackoverflow"
+	"github.com/clipperhouse/jargon/filters/stackoverflow"
 )
  
 text := `Let’s talk about Ruby on Rails and ASPNET MVC.`
@@ -72,17 +72,17 @@ if err := stream.Err(); err != nil {
 
 Canonical terms (lemmas) are looked up in token filters. Several are available:
 
-[Stack Overflow technology tags](https://pkg.go.dev/github.com/clipperhouse/jargon/stackoverflow)
+[Stack Overflow technology tags](https://pkg.go.dev/github.com/clipperhouse/jargon/filters/stackoverflow)
   - `Ruby on Rails → ruby-on-rails`
   - `ObjC → objective-c`
 
-[Contractions](https://pkg.go.dev/github.com/clipperhouse/jargon/contractions)
+[Contractions](https://pkg.go.dev/github.com/clipperhouse/jargon/filters/contractions)
   - `Couldn’t → Could not`
 
-[ASCII fold](https://pkg.go.dev/github.com/clipperhouse/jargon/ascii)
+[ASCII fold](https://pkg.go.dev/github.com/clipperhouse/jargon/filters/ascii)
   - `café → cafe`
 
-[Stem](https://pkg.go.dev/github.com/clipperhouse/jargon/stemmer)
+[Stem](https://pkg.go.dev/github.com/clipperhouse/jargon/filters/stemmer)
   - `Manager|management|manages → manag`
 
 To implement your own, see the [Filter type](https://godoc.org/github.com/clipperhouse/jargon/#Filter).

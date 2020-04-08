@@ -27,7 +27,7 @@ import (
     "fmt"
 
     "github.com/clipperhouse/jargon"
-    "github.com/clipperhouse/jargon/contractions"
+    "github.com/clipperhouse/jargon/filters/contractions"
 )
 
 var lem = jargon.NewLemmatizer(contractions.Expander)
@@ -52,6 +52,6 @@ func main() {
 
 ### Implementation
 
-The [Lookup method](https://github.com/clipperhouse/jargon/blob/master/contractions/filter.go#L7) satisfies the [jargon.TokenFilter interface](https://github.com/clipperhouse/jargon/blob/master/filter.go).
+The [Lookup method](https://github.com/clipperhouse/jargon/blob/master/filters/contractions/filter.go#L7) satisfies the [jargon.TokenFilter interface](https://github.com/clipperhouse/jargon/blob/master/filter.go).
 
-Here is the [base list of contractions](https://github.com/clipperhouse/jargon/blob/master/contractions/generator.go#L101). Variations (case, apostrophes) are code-generated.
+Here is the [base list of contractions](https://github.com/clipperhouse/jargon/blob/master/filters/contractions/generator.go#L101). Variations (case, apostrophes) are code-generated.

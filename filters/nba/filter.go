@@ -1,6 +1,6 @@
 package nba
 
-import "github.com/clipperhouse/jargon/synonyms"
+import "github.com/clipperhouse/jargon/filters/synonyms"
 
 //go:generate go run generate/main.go
 

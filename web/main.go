@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/clipperhouse/jargon"
-	"github.com/clipperhouse/jargon/stackoverflow"
+	"github.com/clipperhouse/jargon/filters/stackoverflow"
 )
 
 func main() {

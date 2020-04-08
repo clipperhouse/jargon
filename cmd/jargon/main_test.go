@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	"github.com/clipperhouse/jargon"
-	"github.com/clipperhouse/jargon/ascii"
-	"github.com/clipperhouse/jargon/contractions"
-	"github.com/clipperhouse/jargon/stackoverflow"
-	"github.com/clipperhouse/jargon/stemmer"
+	"github.com/clipperhouse/jargon/filters/ascii"
+	"github.com/clipperhouse/jargon/filters/contractions"
+	"github.com/clipperhouse/jargon/filters/stackoverflow"
+	"github.com/clipperhouse/jargon/filters/stemmer"
 	"github.com/spf13/afero"
 )
 
@@ -172,7 +172,7 @@ func TestFilters(t *testing.T) {
 		}
 		if len(c.Filters) == len(test.filters) {
 			for i := range test.filters {
-				// https://stackoverflow.com/a/9644797
+				// https://filters/stackoverflow.com/a/9644797
 				// This is not a good test, but perhaps better than nothing
 				// E.g. the pointers to different stemmers are all the same
 				expected := reflect.ValueOf(test.filters[i]).Pointer()

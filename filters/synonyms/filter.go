@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/clipperhouse/jargon"
-	"github.com/clipperhouse/jargon/synonyms/trie"
+	"github.com/clipperhouse/jargon/filters/synonyms/trie"
 )
 
 // Filter is the data structure of a synonyms filter. Use NewFilter to create.

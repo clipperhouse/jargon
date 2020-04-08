@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/clipperhouse/jargon"
-	"github.com/clipperhouse/jargon/stopwords"
+	"github.com/clipperhouse/jargon/filters/stopwords"
 )
 
 func TestCaseSensitive(t *testing.T) {

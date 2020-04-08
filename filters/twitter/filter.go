@@ -5,7 +5,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/clipperhouse/jargon/sigil"
+	"github.com/clipperhouse/jargon/filters/sigil"
 )
 
 // Handles will identify Twitter-style handles, combining the @ and name into a single token
