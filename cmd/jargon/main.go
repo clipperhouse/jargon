@@ -53,7 +53,7 @@ func main() {
 
 	if *v {
 		fmt.Println("Version: " + version)
-		fmt.Println("Commit: " + date)
+		fmt.Println("Commit: " + commit)
 		fmt.Println("Build date: " + date)
 		return
 	}
