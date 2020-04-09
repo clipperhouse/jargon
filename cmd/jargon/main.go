@@ -34,6 +34,7 @@ func main() {
 
 	lemmas := flag.Bool("lemmas", false, "only return tokens that have been changed by a filter (lemmatized)")
 	count := flag.Bool("count", false, "count the tokens")
+	lines := flag.Bool("lines", false, "add a line break between all tokens")
 
 	flag.Parse()
 
@@ -51,6 +52,7 @@ func main() {
 		HTML:   *html,
 		Lemmas: *lemmas,
 		Count:  *count,
+		Lines:  *lines,
 	}
 
 	//
@@ -112,6 +114,7 @@ type config struct {
 
 	HTML    bool
 	Count   bool
+	Lines   bool
 	Lemmas  bool
 	Filters []jargon.Filter
 
@@ -273,6 +276,7 @@ func execute(c *config) error {
 	}
 
 	for _, f := range c.Filters {
+		fmt.Println(f)
 		tokens = f(tokens)
 	}
 
@@ -289,9 +293,25 @@ func execute(c *config) error {
 		return nil
 	}
 
-	if _, err := tokens.WriteTo(c.Writer); err != nil {
+	// Write all
+	for tokens.Scan() {
+		token := tokens.Token()
+		_, err := c.Writer.WriteString(token.String())
+		if err != nil {
+			return err
+		}
+
+		if c.Lines {
+			_, err := c.Writer.WriteRune('\n')
+			if err != nil {
+				return err
+			}
+		}
+	}
+	if err := tokens.Err(); err != nil {
 		return err
 	}
+
 	if err := c.Writer.Flush(); err != nil {
 		return err
 	}

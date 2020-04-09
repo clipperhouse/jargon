@@ -109,7 +109,7 @@ func (stream *TokenStream) WriteTo(w io.Writer) (int64, error) {
 	}
 
 	if err := stream.Err(); err != nil {
-		return written, stream.Err()
+		return written, err
 	}
 
 	return written, nil
