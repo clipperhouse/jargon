@@ -33,8 +33,9 @@ func main() {
 	flag.Bool("contractions", false, "a filter to expand contractions, e.g. Would've → Would have")
 	flag.Bool("stack", false, "a filter to recognize tech terms as Stack Overflow tags, e.g. Ruby on Rails → ruby-on-rails")
 	flag.Bool("stem", false, "a filter to stem words using snowball stemmer, e.g. management|manager → manag")
+	flag.Bool("lemmas", false, "only return tokens that have been changed by a filter (lemmatized)")
+	flag.Bool("distinct", false, "only return unique tokens")
 
-	lemmas := flag.Bool("lemmas", false, "only return tokens that have been changed by a filter (lemmatized)")
 	count := flag.Bool("count", false, "count the tokens")
 	lines := flag.Bool("lines", false, "add a line break between all tokens")
 
@@ -59,11 +60,10 @@ func main() {
 	}
 
 	c := config{
-		Fs:     afero.NewOsFs(),
-		HTML:   *html,
-		Lemmas: *lemmas,
-		Count:  *count,
-		Lines:  *lines,
+		Fs:    afero.NewOsFs(),
+		HTML:  *html,
+		Count: *count,
+		Lines: *lines,
 	}
 
 	//
@@ -126,7 +126,6 @@ type config struct {
 	HTML    bool
 	Count   bool
 	Lines   bool
-	Lemmas  bool
 	Filters []jargon.Filter
 
 	Filein, Fileout   afero.File
@@ -170,6 +169,7 @@ var filterMap = map[string]jargon.Filter{
 	"-ascii":        ascii.Fold,
 	"-contractions": contractions.Expand,
 	"-lemmas":       (*jargon.TokenStream).Lemmas,
+	"-distinct":     (*jargon.TokenStream).Distinct,
 	"-stack":        stackoverflow.Tags,
 	"-stem":         stemmer.English,
 }
@@ -287,7 +287,6 @@ func execute(c *config) error {
 	}
 
 	for _, f := range c.Filters {
-		fmt.Println(f)
 		tokens = f(tokens)
 	}
 

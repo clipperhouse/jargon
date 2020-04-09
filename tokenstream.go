@@ -136,6 +136,23 @@ func (stream *TokenStream) Lemmas() *TokenStream {
 	return NewTokenStream(w.next)
 }
 
+func (stream *TokenStream) Distinct() *TokenStream {
+	seen := map[string]bool{}
+	isDistinct := func(t *Token) bool {
+		found := seen[t.String()]
+		if !found {
+			seen[t.String()] = true
+		}
+		return !found
+	}
+
+	w := &where{
+		stream:    stream,
+		predicate: isDistinct,
+	}
+	return NewTokenStream(w.next)
+}
+
 // Count counts all tokens. Note that it will consume all tokens, so you will not be able to iterate further after making this call.
 func (stream *TokenStream) Count() (int, error) {
 	var count int

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"testing"
 
 	"github.com/clipperhouse/jargon"
 	"github.com/clipperhouse/jargon/filters/stackoverflow"
@@ -58,4 +59,18 @@ func ExampleTokenStream_Next() {
 	// once you consume a token, you can't go back.
 
 	// See also the convenience methods String, ToSlice, WriteTo
+}
+
+func TestDistinct(t *testing.T) {
+	text := "one two three three two one four"
+	got, err := jargon.TokenizeString(text).Distinct().String()
+	if err != nil {
+		t.Error(err)
+	}
+
+	expected := "one twothreefour"
+
+	if got != expected {
+		t.Errorf("expected %q, got %q", expected, got)
+	}
 }
