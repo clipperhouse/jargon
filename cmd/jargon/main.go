@@ -174,9 +174,9 @@ func setFilters(c *config, args []string, lang string) error {
 	// Loop through filters; order matters, so can't use flag package
 	for _, arg := range args {
 		filter, found := filterMap[arg]
-		if found && arg == "-stem" {
-			// Look for a language specification
-			if lang != "" {
+		if found {
+			if arg == "-stem" && lang != "" {
+				// Look for a language specification
 				stem, found := stemmerMap[lang]
 				if found {
 					filter = stem
@@ -185,8 +185,8 @@ func setFilters(c *config, args []string, lang string) error {
 					return err
 				}
 			}
+			c.Filters = append(c.Filters, filter)
 		}
-		c.Filters = append(c.Filters, filter)
 	}
 
 	return nil
