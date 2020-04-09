@@ -16,6 +16,8 @@ import (
 	"github.com/spf13/afero"
 )
 
+var version, commit, date string
+
 func main() {
 	//
 	// Flags. Prefer local instead of global, allowing other funcs to be stateless.
@@ -36,6 +38,8 @@ func main() {
 	count := flag.Bool("count", false, "count the tokens")
 	lines := flag.Bool("lines", false, "add a line break between all tokens")
 
+	v := flag.Bool("version", false, "display the version")
+
 	flag.Parse()
 
 	// Local to prevent mistaken use in other funcs
@@ -45,6 +49,13 @@ func main() {
 			os.Stderr.WriteString("\n")
 			os.Exit(1)
 		}
+	}
+
+	if *v {
+		fmt.Println("Version: " + version)
+		fmt.Println("Commit: " + date)
+		fmt.Println("Build date: " + date)
+		return
 	}
 
 	c := config{
