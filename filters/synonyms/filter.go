@@ -10,8 +10,8 @@ import (
 	"github.com/clipperhouse/jargon/filters/synonyms/trie"
 )
 
-// Filter is the data structure of a synonyms filter. Use NewFilter to create.
-type Filter struct {
+// filter is the data structure of a synonyms filter. Use NewFilter to create.
+type filter struct {
 	// For lazy loading, see build() below
 	config *config
 	once   sync.Once
@@ -29,7 +29,7 @@ type config struct {
 // NewFilter creates a new synonyms Filter
 func NewFilter(mappings map[string]string, ignoreCase bool, ignoreRunes []rune) jargon.Filter {
 	// Save the parameters for lazy loading (below)
-	f := &Filter{
+	f := &filter{
 		config: &config{
 			mappings:    mappings,
 			ignoreCase:  ignoreCase,
@@ -39,7 +39,7 @@ func NewFilter(mappings map[string]string, ignoreCase bool, ignoreRunes []rune) 
 	return f.Filter
 }
 
-func (f *Filter) build() error {
+func (f *filter) build() error {
 	trie := trie.New(f.config.ignoreCase, f.config.ignoreRunes)
 	maxWords := 1
 	for synonyms, canonical := range f.config.mappings {
@@ -98,7 +98,7 @@ func updateMaxWords(tokens []*jargon.Token, maxWords *int) {
 }
 
 // Filter replaces tokens with their canonical terms, based on Stack Overflow tags & synonyms
-func (f *Filter) Filter(incoming *jargon.TokenStream) *jargon.TokenStream {
+func (f *filter) Filter(incoming *jargon.TokenStream) *jargon.TokenStream {
 	// Lazily build the trie on first call, i.e. don't pay for the construction
 	// unless we use it
 	var err error
@@ -131,7 +131,7 @@ type tokens struct {
 	buffer *jargon.TokenQueue
 	// outgoing queue of filtered tokens
 	outgoing *jargon.TokenQueue
-	filter   *Filter
+	filter   *filter
 }
 
 // next returns the next token; nil indicates end of data
@@ -304,12 +304,12 @@ func (t *tokens) wordrun() ([]*jargon.Token, error) {
 }
 
 // String returns a Go source declaration of the Filter
-func (f *Filter) String() string {
+func (f *filter) String() string {
 	return f.Decl()
 }
 
 // Decl returns a Go source declaration of the Filter
-func (f *Filter) Decl() string {
+func (f *filter) Decl() string {
 	var b bytes.Buffer
 
 	fmt.Fprintf(&b, "&synonyms.Filter{\n")

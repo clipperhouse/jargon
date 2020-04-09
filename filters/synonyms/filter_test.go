@@ -188,7 +188,7 @@ func TestFill(t *testing.T) {
 			incoming: incoming,
 			buffer:   test.previous,
 			outgoing: &jargon.TokenQueue{},
-			filter: &Filter{
+			filter: &filter{
 				maxWords: test.maxWords,
 			},
 		}
@@ -242,7 +242,7 @@ func TestLazyLoad(t *testing.T) {
 		"developer, engineer, programmer,": "boffin",
 	}
 	ignore := []rune{'-', ' ', '.', '/'}
-	synonyms := &Filter{
+	synonyms := &filter{
 		config: &config{
 			mappings:    mappings,
 			ignoreCase:  true,
