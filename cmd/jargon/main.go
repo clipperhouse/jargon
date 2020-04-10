@@ -2,12 +2,12 @@ package main
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
+	"github.com/clipperhouse/flag"
 	"github.com/clipperhouse/jargon"
 	"github.com/clipperhouse/jargon/filters/ascii"
 	"github.com/clipperhouse/jargon/filters/contractions"
@@ -29,23 +29,23 @@ func main() {
 	}
 
 	//
-	// Flags. We're doing multiple flag sets to organize the Usage output a bit
+	// Flags.
 	//
-	filein := flag.String("file", "", "input file path (if none, stdin is used as input)")
-	fileout := flag.String("out", "", "output file path (if none, stdout is used as input)")
-	html := flag.Bool("html", false, "parse input as html (keep tags whole)")
-	count := flag.Bool("count", false, "count the tokens")
-	lines := flag.Bool("lines", false, "add a line break between all tokens")
-	flag.Bool("lemmas", false, "only return tokens that have been changed by a filter (lemmatized)")
-	flag.Bool("distinct", false, "only return unique tokens")
-	v := flag.Bool("version", false, "display the version")
-
-	// We don't actually use these flags, see setFilters below; included here for Usage and errors
-	flag.Bool("ascii", false, "a filter to replace diacritics with ascii equivalents, e.g. café → cafe")
-	flag.Bool("contractions", false, "a filter to expand contractions, e.g. Would've → Would have")
+	// We don't actually consume some of these flags, see setFilters below; declared here for Usage and errors
 	flag.Bool("stack", false, "a filter to recognize tech terms as Stack Overflow tags, e.g. Ruby on Rails → ruby-on-rails")
+	flag.Bool("contractions", false, "a filter to expand contractions, e.g. Would've → Would have")
+	flag.Bool("ascii", false, "a filter to replace diacritics with ascii equivalents, e.g. café → cafe")
 	flag.Bool("stem", false, "a filter to stem words using snowball stemmer, e.g. management|manager → manag")
 	lang := flag.String("lang", "english", "language of input, relevant when used with -stem. options:\n"+strings.Join(langs, ", "))
+
+	html := flag.Bool("html", false, "parse input as html (keep tags whole)")
+	filein := flag.String("file", "", "input file path (if none, stdin is used as input)")
+	fileout := flag.String("out", "", "output file path (if none, stdout is used as input)")
+	flag.Bool("lemmas", false, "only return tokens that have been changed by a filter (lemmatized)")
+	count := flag.Bool("count", false, "count the tokens")
+	lines := flag.Bool("lines", false, "add a line break between tokens")
+	flag.Bool("distinct", false, "only return unique tokens")
+	v := flag.Bool("version", false, "display the version")
 
 	flag.Parse()
 
@@ -72,9 +72,7 @@ func main() {
 
 	err = setInput(&c, mode, *filein)
 	if err == errNoInput {
-		// Display usage
-		os.Stderr.WriteString(flag.CommandLine.Name() + " takes text from std input and processes it with one or more filters\n\n")
-		flag.PrintDefaults()
+		printUsage()
 		return
 	}
 	check(err)
@@ -133,6 +131,14 @@ type config struct {
 
 var errNoInput = fmt.Errorf("no input")
 var errTwoInput = fmt.Errorf("choose *either* an input -file argument *or* piped input")
+
+func printUsage() {
+	// Display usage
+	os.Stderr.WriteString(flag.CommandLine.Name() + " takes text from std input and processes it with one or more filters.\n\n")
+	os.Stderr.WriteString("Example:\n\n  curl -s https://en.wikipedia.org/wiki/Computer_programming | jargon -html -stack -lemmas -lines\n\n")
+	os.Stderr.WriteString("Flags:\n\n")
+	flag.PrintDefaults()
+}
 
 func setInput(c *config, mode os.FileMode, filein string) error {
 	if filein != "" {
