@@ -29,7 +29,7 @@ jargon
 Example:
 
 ```bash
-echo "I like Ruby on Rails and react js" | jargon -stack
+curl -s https://en.wikipedia.org/wiki/Computer_programming | jargon -html -stack -lemmas -lines
 ```
 
 [CLI usage and details...](https://github.com/clipperhouse/jargon/tree/master/cmd/jargon)
