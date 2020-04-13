@@ -4,23 +4,30 @@ package is
 
 import "unicode"
 
-// https://unicode.org/reports/tr29/#ALetter
-func ALetter(r rune) bool {
-	if r == '_' {
+// https://unicode.org/reports/tr44/#Alphabetic
+func Alphabetic(r rune) bool {
+	switch {
+	case
+		r == '_',
+		unicode.IsLetter(r),
+		unicode.Is(unicode.Nl, r),
+		unicode.Is(unicode.Other_Alphabetic, r):
 		return true
 	}
+	return false
+}
 
-	if unicode.IsLetter(r) {
-		if unicode.Is(unicode.Hebrew, r) {
-			return false
-		}
-		if unicode.Is(unicode.Katakana, r) {
-			return false
-		}
-		if unicode.Is(unicode.Ideographic, r) {
-			return false
-		}
-		return true
+// https://unicode.org/reports/tr29/#ALetter
+func ALetter(r rune) bool {
+	// Logic of the above standard, from the bottom up
+
+	switch {
+	case
+		HebrewLetter(r),
+		unicode.Is(unicode.Hiragana, r),
+		unicode.Is(unicode.Katakana, r),
+		unicode.Is(unicode.Ideographic, r):
+		return false
 	}
 
 	switch {
@@ -47,14 +54,14 @@ func ALetter(r rune) bool {
 		return true
 	}
 
-	return false
+	return Alphabetic(r)
 }
 
 // AHLetter is any unicode letter or number, or underscore, and not ideographic
 // Working to comply with https://unicode.org/reports/tr29/#WB5 through WB13
 // Current logic implements WB5, WB8, WB9, WB10, WB13
 func AHLetter(r rune) bool {
-	return ALetter(r) || unicode.Is(unicode.Hebrew, r)
+	return ALetter(r) || HebrewLetter(r)
 }
 
 // MidLetter are runes allowed mid-word
@@ -156,6 +163,10 @@ func Cr(r rune) bool {
 	return r == '\r'
 }
 
+func Lf(r rune) bool {
+	return r == '\n'
+}
+
 // https://unicode.org/reports/tr29/#Katakana
 func Katakana(r rune) bool {
 	switch r {
@@ -202,4 +213,14 @@ func Newline(r rune) bool {
 	}
 
 	return false
+}
+
+// https://unicode.org/reports/tr29/#Single_Quote
+func SingleQuote(r rune) bool {
+	return r == '\''
+}
+
+// https://unicode.org/reports/tr29/#Double_Quote
+func DoubleQuote(r rune) bool {
+	return r == '"'
 }
