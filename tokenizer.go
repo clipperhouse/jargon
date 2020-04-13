@@ -66,11 +66,12 @@ func (t *tokenizer) next() (*Token, error) {
 			// https://unicode.org/reports/tr29/#WB3
 			t.accept(r)
 			return t.cr()
-		case r == '\r' || r == '\n' || is.Newline(r):
+		case is.Cr(r) || is.Lf(r) || is.Newline(r):
 			// https://unicode.org/reports/tr29/#WB3a
 			token := NewToken(string(r), false)
 			return token, nil
 		case is.Leading(r):
+			// Diverges from standard; we want .net and .123 as single tokens
 			lookahead, eof, err := t.peekRune()
 			if err != nil {
 				return nil, err
@@ -84,18 +85,23 @@ func (t *tokenizer) next() (*Token, error) {
 			token := NewToken(string(r), false)
 			return token, nil
 		case is.HebrewLetter(r):
+			// https://unicode.org/reports/tr29/#WB7a
 			t.accept(r)
-			return t.hebrew()
+			return t.hebrewletter()
 		case is.AHLetter(r):
+			// https://unicode.org/reports/tr29/#WB6
 			t.accept(r)
-			return t.alphanumeric()
+			return t.ahletter()
 		case is.Numeric(r):
+			// https://unicode.org/reports/tr29/#WB8
 			t.accept(r)
 			return t.numeric()
 		case is.Katakana(r):
+			// https://unicode.org/reports/tr29/#WB13
 			t.accept(r)
 			return t.katakana()
 		default:
+			// https://unicode.org/reports/tr29/#WB999
 			// Everything else is its own token: punct, space, symbols, ideographs, controls, etc
 			token := NewToken(string(r), false)
 			return token, nil
@@ -103,7 +109,7 @@ func (t *tokenizer) next() (*Token, error) {
 	}
 }
 
-func (t *tokenizer) alphanumeric() (*Token, error) {
+func (t *tokenizer) ahletter() (*Token, error) {
 	// Assumes an AHLetter is already in the buffer
 	if t.guard {
 		b := t.buffer.Bytes()
@@ -121,7 +127,7 @@ func (t *tokenizer) alphanumeric() (*Token, error) {
 			return t.token()
 		case is.HebrewLetter(r):
 			t.accept(r)
-			return t.hebrew()
+			return t.hebrewletter()
 		case is.AHLetter(r):
 			t.accept(r)
 		case is.Numeric(r):
@@ -230,7 +236,7 @@ func (t *tokenizer) numeric() (*Token, error) {
 		case is.AHLetter(r):
 			t.accept(r)
 			// Punt to general alpha
-			return t.alphanumeric()
+			return t.ahletter()
 		default:
 			return t.token()
 		}
@@ -266,8 +272,7 @@ func (t *tokenizer) katakana() (*Token, error) {
 	}
 }
 
-// https://unicode.org/reports/tr29/#WB7a
-func (t *tokenizer) hebrew() (*Token, error) {
+func (t *tokenizer) hebrewletter() (*Token, error) {
 	// Assumes a Hebrew character is already in the buffer
 	if t.guard {
 		b := t.buffer.Bytes()
@@ -280,36 +285,61 @@ func (t *tokenizer) hebrew() (*Token, error) {
 		}
 	}
 
-	for {
-		r, eof, err := t.readRune()
-		switch {
-		case err != nil:
+	r, eof, err := t.readRune()
+	switch {
+	case err != nil:
+		return nil, err
+	case eof:
+		return t.token()
+	case is.SingleQuote(r):
+		// https://unicode.org/reports/tr29/#WB7a
+		t.accept(r)
+		return t.token()
+	case is.DoubleQuote(r):
+		// https://unicode.org/reports/tr29/#WB7b
+
+		lookahead, _, err := t.readRune()
+		if err != nil {
 			return nil, err
-		case eof:
-			return t.token()
-		case r == '\'':
-			t.accept(r)
-		case r == '"':
-			lookahead, eof, err := t.peekRune()
-			if err != nil {
-				return nil, err
-			}
-
-			if eof || !is.HebrewLetter(lookahead) {
-				// Terminate the token
-				return t.token()
-			}
-
-			t.accept(r)
-		case is.HebrewLetter(r):
-			t.accept(r)
-		case is.AHLetter(r):
-			t.accept(r)
-			return t.alphanumeric()
-		default:
-			return t.token()
 		}
+
+		if is.HebrewLetter(lookahead) {
+			t.accept(r)
+			t.accept(lookahead)
+			return t.ahletter()
+		}
+
+		// Consider it breaking
+
+		// Lookahead can be undone
+		err = t.unreadRune()
+		if err != nil {
+			return nil, err
+		}
+
+		// Take existing buffered token
+		token, err := t.token()
+		if err != nil {
+			return nil, err
+		}
+
+		// New token for r, save for later
+		t.accept(r)
+		breaking, err := t.token()
+		if err != nil {
+			return nil, err
+		}
+		t.outgoing.Push(breaking)
+
+		return token, nil
 	}
+
+	// Else, punt back to alpha
+	err = t.unreadRune()
+	if err != nil {
+		return nil, err
+	}
+	return t.ahletter()
 }
 
 func (t *tokenizer) token() (*Token, error) {
@@ -342,6 +372,16 @@ func (t *tokenizer) readRune() (r rune, eof bool, err error) {
 	}
 
 	return r, false, nil
+}
+
+func (t *tokenizer) unreadRune() error {
+	err := t.incoming.UnreadRune()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // peekRune peeks the next rune, without advancing the reader

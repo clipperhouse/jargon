@@ -22,6 +22,7 @@ func TestTokenizer(t *testing.T) {
 	ש״ח
 	א"ב
 	ב'
+	"אא"בב"abc
 	Then ウィキペディア and 象形.`
 	text += "crlf is \r\n"
 
@@ -103,6 +104,8 @@ func TestTokenizer(t *testing.T) {
 		{"ש״ח", true},
 		{`א"ב`, true},
 		{"ב'", true},
+		{"אא\"בב", true},
+		{"abc", true},
 
 		{"ウィキペディア", true},
 		{"ウ", false},
