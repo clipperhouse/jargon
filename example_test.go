@@ -38,7 +38,7 @@ func ExampleTokenize() {
 	// Usually, Tokenize serves as input to Lemmatize
 }
 
-func ExampleTokens_Filter() {
+func ExampleTokenStream_Filter() {
 	// Lemmatize take tokens and attempts to find their canonical version
 
 	// Lemmatize takes a Tokens iterator, and one or more token filters
