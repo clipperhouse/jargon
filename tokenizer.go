@@ -58,11 +58,16 @@ func (t *tokenizer) next() (*Token, error) {
 			return nil, err
 		case eof:
 			return nil, nil
+		case r == ' ', r == '\t':
+			// An optimization to avoid hitting `is` methods
+			token := NewToken(string(r), false)
+			return token, nil
 		case is.Cr(r):
+			// https://unicode.org/reports/tr29/#WB3
 			t.accept(r)
 			return t.cr()
-		case r == ' ', r == '\n', r == '\t':
-			// An optimization to avoid hitting `is` methods
+		case r == '\r' || r == '\n' || is.Newline(r):
+			// https://unicode.org/reports/tr29/#WB3a
 			token := NewToken(string(r), false)
 			return token, nil
 		case is.Leading(r):

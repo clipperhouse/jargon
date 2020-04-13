@@ -188,3 +188,18 @@ func Leading(r rune) bool {
 		return false
 	}
 }
+
+// https://unicode.org/reports/tr29/#WB3a
+func Newline(r rune) bool {
+	switch r {
+	case
+		0x000B,
+		0x000C,
+		0x0085,
+		0x2028,
+		0x2029:
+		return true
+	}
+
+	return false
+}
