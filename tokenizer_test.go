@@ -61,8 +61,8 @@ func TestTokenizer(t *testing.T) {
 		{"789", true},
 		{"789,", false},
 
-		{".234", true},
-		{"234", false},
+		{".234", false},
+		{"234", true},
 
 		{"1,000", true},
 		{"1,000,", false},
@@ -80,8 +80,8 @@ func TestTokenizer(t *testing.T) {
 		{"F", true},
 		{"#", true},
 
-		{".net", true},
-		{"net", false},
+		{".net", false},
+		{"net", true},
 
 		{"Let's", true},
 		{"Let’s", true},
