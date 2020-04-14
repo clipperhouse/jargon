@@ -59,7 +59,7 @@ func (t *tokenizer) next() (*Token, error) {
 		case err != nil:
 			return nil, err
 		case eof:
-			return nil, nil
+			return t.token()
 		case t.wb3(r):
 			// true indicates continue
 			t.accept(r)
@@ -76,17 +76,14 @@ func (t *tokenizer) next() (*Token, error) {
 			return token2, nil
 		case t.wb5(r):
 			// true indicates continue
-			fmt.Println("wb5 is true")
 			t.accept(r)
 			continue
 		case t.wb6(r):
 			// true indicates continue
-			fmt.Println("wb6 is true")
 			t.accept(r)
 			continue
 		case t.wb7(r):
 			// true indicates continue
-			fmt.Println("wb7 is true")
 			t.accept(r)
 			continue
 		case t.wb7a(r):
@@ -101,54 +98,58 @@ func (t *tokenizer) next() (*Token, error) {
 			// true indicates continue
 			t.accept(r)
 			continue
-		// case r == ' ', r == '\t':
-		// 	// An optimization to avoid hitting `is` methods
-		// 	token := NewToken(string(r), false)
-		// 	return token, nil
-		// case is.Leading(r):
-		// 	// Diverges from standard; we want .net and .123 as single tokens
-		// 	lookahead, eof, err := t.peekRune()
-		// 	if err != nil {
-		// 		return nil, err
-		// 	}
-		// 	if !eof && (is.ALetter(lookahead) || is.Numeric(lookahead)) {
-		// 		// It's leading
-		// 		t.accept(r)
-		// 		continue
-		// 	}
-		// 	// It's not leading
-		// 	token := NewToken(string(r), false)
-		// 	return token, nil
-		// case is.HebrewLetter(r):
-		// 	// https://unicode.org/reports/tr29/#WB7a
-		// 	t.accept(r)
-		// 	return t.hebrewletter()
-		// case is.AHLetter(r):
-		// 	// https://unicode.org/reports/tr29/#WB6
-		// 	t.accept(r)
-		// 	return t.ahletter()
-		// case is.Numeric(r):
-		// 	// https://unicode.org/reports/tr29/#WB8
-		// 	t.accept(r)
-		// 	return t.numeric()
-		// case is.Katakana(r):
-		// 	// https://unicode.org/reports/tr29/#WB13
-		// 	t.accept(r)
-		// 	return t.katakana()
-		default:
-			// https://unicode.org/reports/tr29/#WB999
-			// Everything else is its own token: punct, space, symbols, ideographs, controls, etc
+		case t.wb8(r):
+			// true indicates continue
+			t.accept(r)
+			continue
+		case t.wb9(r):
+			// true indicates continue
+			t.accept(r)
+			continue
+		case t.wb10(r):
+			// true indicates continue
+			t.accept(r)
+			continue
+		case t.wb11(r):
+			// true indicates continue
+			t.accept(r)
+			continue
+		case t.wb12(r):
+			// true indicates continue
+			t.accept(r)
+			continue
+		case t.wb13(r):
+			// true indicates continue
+			t.accept(r)
+			continue
 
-			fmt.Println("fell through to default")
-			token, _ := t.token()
-			token2 := NewToken(string(r), false)
-
-			if token != nil {
-				t.outgoing.Push(token2)
-				return token, nil
-			}
-			return token2, nil
+			// case is.Leading(r):
+			// 	// Diverges from standard; we want .net and .123 as single tokens
+			// 	lookahead, eof, err := t.peekRune()
+			// 	if err != nil {
+			// 		return nil, err
+			// 	}
+			// 	if !eof && (is.ALetter(lookahead) || is.Numeric(lookahead)) {
+			// 		// It's leading
+			// 		t.accept(r)
+			// 		continue
+			// 	}
+			// 	// It's not leading
+			// 	token := NewToken(string(r), false)
+			// 	return token, nil
 		}
+
+		// https://unicode.org/reports/tr29/#WB999
+		// Everything else is its own token: punct, space, symbols, ideographs, controls, etc
+
+		token, _ := t.token()
+		token2 := NewToken(string(r), false)
+
+		if token != nil {
+			t.outgoing.Push(token2)
+			return token, nil
+		}
+		return token2, nil
 	}
 }
 
@@ -254,6 +255,79 @@ func (t *tokenizer) wb7c(r rune) (continues bool) {
 	preprevious := t.rbuffer[len(t.rbuffer)-2]
 
 	return is.HebrewLetter(preprevious) && is.DoubleQuote(previous) && is.HebrewLetter(r)
+}
+
+// https://unicode.org/reports/tr29/#WB8
+func (t *tokenizer) wb8(r rune) (continues bool) {
+	// If it's a new token and Numeric
+	if len(t.rbuffer) == 0 {
+		return is.Numeric(r)
+	}
+
+	previous := t.rbuffer[len(t.rbuffer)-1]
+	return is.Numeric(previous) && is.Numeric(r)
+}
+
+// https://unicode.org/reports/tr29/#WB9
+func (t *tokenizer) wb9(r rune) (continues bool) {
+	if len(t.rbuffer) == 0 {
+		return false
+	}
+
+	previous := t.rbuffer[len(t.rbuffer)-1]
+	return is.AHLetter(previous) && is.Numeric(r)
+}
+
+// https://unicode.org/reports/tr29/#WB9
+func (t *tokenizer) wb10(r rune) (continues bool) {
+	if len(t.rbuffer) == 0 {
+		return false
+	}
+
+	previous := t.rbuffer[len(t.rbuffer)-1]
+	return is.Numeric(previous) && is.AHLetter(r)
+}
+
+// https://unicode.org/reports/tr29/#WB11
+func (t *tokenizer) wb11(r rune) (continues bool) {
+	if len(t.rbuffer) < 2 {
+		return false
+	}
+
+	previous := t.rbuffer[len(t.rbuffer)-1]
+	preprevious := t.rbuffer[len(t.rbuffer)-2]
+
+	return is.Numeric(preprevious) && (is.MidNum(previous) || is.MidNumLetQ(previous)) && is.Numeric(r)
+}
+
+// https://unicode.org/reports/tr29/#WB12
+func (t *tokenizer) wb12(r rune) (continues bool) {
+	if len(t.rbuffer) == 0 {
+		return false
+	}
+
+	previous := t.rbuffer[len(t.rbuffer)-1]
+	lookahead, eof, err := t.peekRune()
+	if err != nil {
+		t.err = err
+		return false
+	}
+	if eof {
+		return false
+	}
+
+	return is.Numeric(previous) && (is.MidNum(r) || is.MidNumLetQ(r)) && is.Numeric(lookahead)
+}
+
+// https://unicode.org/reports/tr29/#WB13
+func (t *tokenizer) wb13(r rune) (continues bool) {
+	// If it's a new token and Katakana
+	if len(t.rbuffer) == 0 {
+		return is.Katakana(r)
+	}
+
+	previous := t.rbuffer[len(t.rbuffer)-1]
+	return is.Katakana(previous) && is.Katakana(r)
 }
 
 func (t *tokenizer) ahletter() (*Token, error) {
@@ -505,7 +579,6 @@ func (t *tokenizer) token() (*Token, error) {
 }
 
 func (t *tokenizer) accept(r rune) {
-	fmt.Println("accepting " + string(r))
 	t.buffer.WriteRune(r)
 	t.rbuffer = append(t.rbuffer, r)
 }
