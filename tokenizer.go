@@ -120,6 +120,12 @@ func (t *tokenizer) next() (*Token, error) {
 			continue
 		}
 
+		if t.err != nil {
+			err := t.err
+			t.err = nil
+			return nil, err
+		}
+
 		// https://unicode.org/reports/tr29/#WB999
 		// Everything else is its own token: punct, space, symbols, ideographs, controls, etc
 
