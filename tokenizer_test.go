@@ -14,7 +14,7 @@ func tokenize(r io.Reader) *TokenStream {
 }
 
 func TestTokenizer(t *testing.T) {
-	text := `Hi. 
+	text := `Hi.    
 	node.js, first_last, my.name@domain.com
 	123.456, 789, .234, 1,000, a16z, 3G and $200.13.
 	wishy-washy and C++ and F# and .net
@@ -27,6 +27,17 @@ func TestTokenizer(t *testing.T) {
 	text += "crlf is \r\n"
 
 	tokens := tokenize(strings.NewReader(text))
+
+	got := map[string]bool{}
+
+	for tokens.Scan() {
+		token := tokens.Token()
+		got[token.String()] = true
+	}
+
+	if err := tokens.Err(); err != nil {
+		t.Error(err)
+	}
 
 	type test struct {
 		value string
@@ -116,17 +127,6 @@ func TestTokenizer(t *testing.T) {
 
 		{"\r\n", true},
 		{"\r", false},
-	}
-
-	got := map[string]bool{}
-
-	for tokens.Scan() {
-		token := tokens.Token()
-		got[token.String()] = true
-	}
-
-	if err := tokens.Err(); err != nil {
-		t.Error(err)
 	}
 
 	for _, expected := range expecteds {

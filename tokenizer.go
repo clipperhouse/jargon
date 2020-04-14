@@ -28,26 +28,16 @@ func TokenizeString(s string) *TokenStream {
 type tokenizer struct {
 	incoming *bufio.Reader
 	buffer   []rune
-	outgoing *TokenQueue
-
-	// guard is a debugging flag to verify assumptions (aka guard statements)
-	guard bool
 }
 
 func newTokenizer(r io.Reader, guard bool) *tokenizer {
 	return &tokenizer{
 		incoming: bufio.NewReaderSize(r, 64*1024),
-		outgoing: &TokenQueue{},
-		guard:    guard,
 	}
 }
 
 // next returns the next token. Call until it returns nil.
 func (t *tokenizer) next() (*Token, error) {
-	if t.outgoing.Any() {
-		return t.outgoing.Pop(), nil
-	}
-
 	for {
 		current, eof, err := t.readRune()
 		switch {
@@ -69,16 +59,16 @@ func (t *tokenizer) next() (*Token, error) {
 			// true indicates continue
 			t.accept(current)
 			continue
-		case t.wb3ab(current):
+		case t.wb3a(current):
 			// true indicates break
-			token := t.token()
-			token2 := NewToken(string(current), false)
-
-			if token != nil {
-				t.outgoing.Push(token2)
-				return token, nil
-			}
-			return token2, nil
+			goto breaking
+		case t.wb3b(current):
+			// true indicates break
+			goto breaking
+		case t.wb3d(current):
+			// true indicates continue
+			t.accept(current)
+			continue
 		case t.wb5(current):
 			// true indicates continue
 			t.accept(current)
@@ -129,17 +119,17 @@ func (t *tokenizer) next() (*Token, error) {
 			continue
 		}
 
+	breaking:
+		// If we fall through all the above rules, it's a word break
 		// https://unicode.org/reports/tr29/#WB999
-		// Everything else is its own token: punct, space, symbols, ideographs, controls, etc
-
 		token := t.token()
-		token2 := NewToken(string(current), false)
+		t.accept(current)
 
-		if token != nil {
-			t.outgoing.Push(token2)
-			return token, nil
+		if token == nil {
+			continue
 		}
-		return token2, nil
+
+		return token, nil
 	}
 }
 
@@ -160,8 +150,29 @@ func (t *tokenizer) wb3(current rune) (continues bool) {
 }
 
 // https://unicode.org/reports/tr29/#WB3a
-func (t *tokenizer) wb3ab(current rune) (breaks bool) {
+func (t *tokenizer) wb3a(current rune) (breaks bool) {
+	if len(t.buffer) == 0 {
+		return false
+	}
+
+	previous := t.buffer[len(t.buffer)-1]
+	return is.Cr(previous) || is.Lf(previous) || is.Newline(previous)
+}
+
+// https://unicode.org/reports/tr29/#WB3b
+func (t *tokenizer) wb3b(current rune) (breaks bool) {
 	return is.Cr(current) || is.Lf(current) || is.Newline(current)
+}
+
+// https://unicode.org/reports/tr29/#WB5
+func (t *tokenizer) wb3d(current rune) (continues bool) {
+	// If it's a new token
+	if len(t.buffer) == 0 {
+		return is.WSegSpace(current)
+	}
+
+	previous := t.buffer[len(t.buffer)-1]
+	return is.WSegSpace(previous) && is.WSegSpace(current)
 }
 
 // https://unicode.org/reports/tr29/#WB5

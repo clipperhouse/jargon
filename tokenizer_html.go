@@ -13,12 +13,9 @@ import (
 func TokenizeHTML(r io.Reader) *TokenStream {
 	t := &htokenizer{
 		htokenizer: html.NewTokenizer(r),
-		ttokens:    dummy, // dummy to avoid nil
 	}
 	return NewTokenStream(t.next)
 }
-
-var dummy = NewTokenStream(func() (*Token, error) { return nil, nil })
 
 type htokenizer struct {
 	htokenizer *html.Tokenizer
@@ -29,12 +26,17 @@ type htokenizer struct {
 // next is the implementation of the Tokens interface. To iterate, call until it returns nil
 func (t *htokenizer) next() (*Token, error) {
 	// Are we "inside" a text node?
-	ttoken, err := t.ttokens.Next()
-	if err != nil {
-		return nil, err
-	}
-	if ttoken != nil {
-		return ttoken, nil
+	if t.ttokens != nil {
+		ttoken, err := t.ttokens.Next()
+		if err != nil {
+			return nil, err
+		}
+		if ttoken != nil {
+			return ttoken, nil
+		}
+
+		// Done with text node
+		t.ttokens = nil
 	}
 
 	htype := t.htokenizer.Next()

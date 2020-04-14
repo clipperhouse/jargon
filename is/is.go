@@ -224,3 +224,8 @@ func SingleQuote(r rune) bool {
 func DoubleQuote(r rune) bool {
 	return r == '"'
 }
+
+// https://unicode.org/reports/tr29/#WSegSpace
+func WSegSpace(r rune) bool {
+	return unicode.Is(unicode.Zs, r)
+}

@@ -2,7 +2,6 @@ package jargon
 
 import (
 	"unicode"
-	"unicode/utf8"
 )
 
 // Token represents a piece of text with metadata.
@@ -42,9 +41,32 @@ func NewToken(s string, isLemma bool) *Token {
 		return token
 	}
 
-	r, ok := tryRuneInString(s)
-	punct := s == "\r\n" || (ok && isPunct(r)) // CRLF is special case, see tokenizer cr() method
-	space := ok && unicode.IsSpace(r)
+	var punct, space bool
+
+	switch {
+	case len(s) == 0:
+		punct = false
+		space = false
+	case s == "\r\n":
+		punct = true
+		space = true
+	default:
+		punct = true
+		for _, r := range s {
+			if !isPunct(r) {
+				punct = false
+				break
+			}
+		}
+
+		space = true
+		for _, r := range s {
+			if !unicode.IsSpace(r) {
+				space = false
+				break
+			}
+		}
+	}
 
 	return &Token{
 		value: s,
@@ -52,17 +74,6 @@ func NewToken(s string, isLemma bool) *Token {
 		space: space,
 		lemma: isLemma,
 	}
-}
-
-func tryRuneInString(s string) (rune, bool) {
-	ok := utf8.RuneCountInString(s) == 1
-
-	if ok {
-		r, _ := utf8.DecodeRuneInString(s)
-		return r, true
-	}
-
-	return utf8.RuneError, false
 }
 
 var common = make(map[string]map[bool]*Token)
