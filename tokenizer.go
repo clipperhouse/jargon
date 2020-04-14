@@ -30,7 +30,9 @@ func TokenizeString(s string) *TokenStream {
 
 type tokenizer struct {
 	incoming *bufio.Reader
+	err      error
 	buffer   bytes.Buffer
+	rbuffer  []rune
 	outgoing *TokenQueue
 
 	// guard is a debugging flag to verify assumptions (aka guard statements)
@@ -58,55 +60,200 @@ func (t *tokenizer) next() (*Token, error) {
 			return nil, err
 		case eof:
 			return nil, nil
-		case r == ' ', r == '\t':
-			// An optimization to avoid hitting `is` methods
-			token := NewToken(string(r), false)
-			return token, nil
-		case is.Cr(r):
-			// https://unicode.org/reports/tr29/#WB3
+		case t.wb3(r):
+			// true indicates continue
 			t.accept(r)
-			return t.cr()
-		case is.Cr(r) || is.Lf(r) || is.Newline(r):
-			// https://unicode.org/reports/tr29/#WB3a
-			token := NewToken(string(r), false)
-			return token, nil
-		case is.Leading(r):
-			// Diverges from standard; we want .net and .123 as single tokens
-			lookahead, eof, err := t.peekRune()
-			if err != nil {
-				return nil, err
+			continue
+		case t.wb3ab(r):
+			// true indicates break
+			token, _ := t.token()
+			token2 := NewToken(string(r), false)
+
+			if token != nil {
+				t.outgoing.Push(token2)
+				return token, nil
 			}
-			if !eof && (is.ALetter(lookahead) || is.Numeric(lookahead)) {
-				// It's leading
-				t.accept(r)
-				continue
-			}
-			// It's not leading
-			token := NewToken(string(r), false)
-			return token, nil
-		case is.HebrewLetter(r):
-			// https://unicode.org/reports/tr29/#WB7a
+			return token2, nil
+		case t.wb5(r):
+			// true indicates continue
+			fmt.Println("wb5 is true")
 			t.accept(r)
-			return t.hebrewletter()
-		case is.AHLetter(r):
-			// https://unicode.org/reports/tr29/#WB6
+			continue
+		case t.wb6(r):
+			// true indicates continue
+			fmt.Println("wb6 is true")
 			t.accept(r)
-			return t.ahletter()
-		case is.Numeric(r):
-			// https://unicode.org/reports/tr29/#WB8
+			continue
+		case t.wb7(r):
+			// true indicates continue
+			fmt.Println("wb7 is true")
 			t.accept(r)
-			return t.numeric()
-		case is.Katakana(r):
-			// https://unicode.org/reports/tr29/#WB13
+			continue
+		case t.wb7a(r):
+			// true indicates continue
 			t.accept(r)
-			return t.katakana()
+			continue
+		case t.wb7b(r):
+			// true indicates continue
+			t.accept(r)
+			continue
+		case t.wb7c(r):
+			// true indicates continue
+			t.accept(r)
+			continue
+		// case r == ' ', r == '\t':
+		// 	// An optimization to avoid hitting `is` methods
+		// 	token := NewToken(string(r), false)
+		// 	return token, nil
+		// case is.Leading(r):
+		// 	// Diverges from standard; we want .net and .123 as single tokens
+		// 	lookahead, eof, err := t.peekRune()
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// 	if !eof && (is.ALetter(lookahead) || is.Numeric(lookahead)) {
+		// 		// It's leading
+		// 		t.accept(r)
+		// 		continue
+		// 	}
+		// 	// It's not leading
+		// 	token := NewToken(string(r), false)
+		// 	return token, nil
+		// case is.HebrewLetter(r):
+		// 	// https://unicode.org/reports/tr29/#WB7a
+		// 	t.accept(r)
+		// 	return t.hebrewletter()
+		// case is.AHLetter(r):
+		// 	// https://unicode.org/reports/tr29/#WB6
+		// 	t.accept(r)
+		// 	return t.ahletter()
+		// case is.Numeric(r):
+		// 	// https://unicode.org/reports/tr29/#WB8
+		// 	t.accept(r)
+		// 	return t.numeric()
+		// case is.Katakana(r):
+		// 	// https://unicode.org/reports/tr29/#WB13
+		// 	t.accept(r)
+		// 	return t.katakana()
 		default:
 			// https://unicode.org/reports/tr29/#WB999
 			// Everything else is its own token: punct, space, symbols, ideographs, controls, etc
-			token := NewToken(string(r), false)
-			return token, nil
+
+			fmt.Println("fell through to default")
+			token, _ := t.token()
+			token2 := NewToken(string(r), false)
+
+			if token != nil {
+				t.outgoing.Push(token2)
+				return token, nil
+			}
+			return token2, nil
 		}
 	}
+}
+
+// https://unicode.org/reports/tr29/#WB3
+func (t *tokenizer) wb3(r rune) (continues bool) {
+	// If it's a new token and CR
+	if len(t.rbuffer) == 0 {
+		return is.Cr(r)
+	}
+
+	// If it's LF and previous was CR
+	if is.Lf(r) {
+		previous := t.rbuffer[len(t.rbuffer)-1]
+		return is.Cr(previous)
+	}
+
+	return false
+}
+
+// https://unicode.org/reports/tr29/#WB3a
+func (t *tokenizer) wb3ab(r rune) (breaks bool) {
+	return is.Cr(r) || is.Lf(r) || is.Newline(r)
+}
+
+// https://unicode.org/reports/tr29/#WB5
+func (t *tokenizer) wb5(r rune) (continues bool) {
+	// If it's a new token and AHLetter
+	if len(t.rbuffer) == 0 {
+		return is.AHLetter(r)
+	}
+
+	previous := t.rbuffer[len(t.rbuffer)-1]
+	return is.AHLetter(previous) && is.AHLetter(r)
+}
+
+// https://unicode.org/reports/tr29/#WB6
+func (t *tokenizer) wb6(r rune) (continues bool) {
+	if len(t.rbuffer) == 0 {
+		return false
+	}
+
+	previous := t.rbuffer[len(t.rbuffer)-1]
+	lookahead, eof, err := t.peekRune()
+	if err != nil {
+		t.err = err
+		return false
+	}
+	if eof {
+		return false
+	}
+
+	return is.AHLetter(previous) && (is.MidLetter(r) || is.MidNumLetQ(r)) && is.AHLetter(lookahead)
+}
+
+// https://unicode.org/reports/tr29/#WB7
+func (t *tokenizer) wb7(r rune) (continues bool) {
+	if len(t.rbuffer) < 2 {
+		return false
+	}
+
+	previous := t.rbuffer[len(t.rbuffer)-1]
+	preprevious := t.rbuffer[len(t.rbuffer)-2]
+
+	return is.AHLetter(preprevious) && (is.MidLetter(previous) || is.MidNumLetQ(previous)) && is.AHLetter(r)
+}
+
+// https://unicode.org/reports/tr29/#WB7a
+func (t *tokenizer) wb7a(r rune) (continues bool) {
+	if len(t.rbuffer) == 0 {
+		return false
+	}
+
+	previous := t.rbuffer[len(t.rbuffer)-1]
+	return is.HebrewLetter(previous) && is.SingleQuote(r)
+}
+
+// https://unicode.org/reports/tr29/#WB7b
+func (t *tokenizer) wb7b(r rune) (continues bool) {
+	if len(t.rbuffer) == 0 {
+		return false
+	}
+
+	previous := t.rbuffer[len(t.rbuffer)-1]
+	lookahead, eof, err := t.peekRune()
+	if err != nil {
+		t.err = err
+		return false
+	}
+	if eof {
+		return false
+	}
+
+	return is.AHLetter(previous) && is.DoubleQuote(r) && is.HebrewLetter(lookahead)
+}
+
+// https://unicode.org/reports/tr29/#WB7c
+func (t *tokenizer) wb7c(r rune) (continues bool) {
+	if len(t.rbuffer) < 2 {
+		return false
+	}
+
+	previous := t.rbuffer[len(t.rbuffer)-1]
+	preprevious := t.rbuffer[len(t.rbuffer)-2]
+
+	return is.HebrewLetter(preprevious) && is.DoubleQuote(previous) && is.HebrewLetter(r)
 }
 
 func (t *tokenizer) ahletter() (*Token, error) {
@@ -351,13 +498,16 @@ func (t *tokenizer) token() (*Token, error) {
 
 	// Got the bytes, can reset
 	t.buffer.Reset()
+	t.rbuffer = t.rbuffer[:0]
 
 	token := NewToken(string(b), false)
 	return token, nil
 }
 
 func (t *tokenizer) accept(r rune) {
+	fmt.Println("accepting " + string(r))
 	t.buffer.WriteRune(r)
+	t.rbuffer = append(t.rbuffer, r)
 }
 
 // readRune gets the next rune, advancing the reader
