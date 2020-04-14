@@ -122,14 +122,15 @@ func (t *tokenizer) next() (*Token, error) {
 	breaking:
 		// If we fall through all the above rules, it's a word break
 		// https://unicode.org/reports/tr29/#WB999
-		token := t.token()
-		t.accept(current)
 
-		if token == nil {
-			continue
+		if len(t.buffer) > 0 {
+			token := t.token()
+			t.accept(current)
+			return token, nil
 		}
 
-		return token, nil
+		t.accept(current)
+		continue
 	}
 }
 

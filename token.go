@@ -41,12 +41,13 @@ func NewToken(s string, isLemma bool) *Token {
 		return token
 	}
 
+	if len(s) == 0 {
+		return nil
+	}
+
 	var punct, space bool
 
 	switch {
-	case len(s) == 0:
-		punct = false
-		space = false
 	case s == "\r\n":
 		punct = true
 		space = true
