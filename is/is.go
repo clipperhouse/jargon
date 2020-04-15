@@ -4,7 +4,7 @@ package is
 
 import "unicode"
 
-// https://unicode.org/reports/tr44/#Alphabetic
+// Alphabetic is defined here: https://unicode.org/reports/tr44/#Alphabetic
 func Alphabetic(r rune) bool {
 	switch {
 	case
@@ -17,7 +17,7 @@ func Alphabetic(r rune) bool {
 	return false
 }
 
-// https://unicode.org/reports/tr29/#ALetter
+// ALetter is defined here: https://unicode.org/reports/tr29/#ALetter
 func ALetter(r rune) bool {
 	// Logic of the above standard, from the bottom up
 
@@ -57,15 +57,12 @@ func ALetter(r rune) bool {
 	return Alphabetic(r)
 }
 
-// AHLetter is any unicode letter or number, or underscore, and not ideographic
-// Working to comply with https://unicode.org/reports/tr29/#WB5 through WB13
-// Current logic implements WB5, WB8, WB9, WB10, WB13
+// AHLetter is ALetter or HebrewLetter
 func AHLetter(r rune) bool {
 	return ALetter(r) || HebrewLetter(r)
 }
 
-// MidLetter are runes allowed mid-word
-// https://unicode.org/reports/tr29/#MidLetter
+// MidLetter is defined here: https://unicode.org/reports/tr29/#MidLetter
 func MidLetter(r rune) bool {
 	switch r {
 	case
@@ -83,8 +80,7 @@ func MidLetter(r rune) bool {
 	return false
 }
 
-// MidNumLet are non-alphanumeric characters allowed within words
-// See https://unicode.org/reports/tr29/#MidNumLet
+// MidNumLet is defined here: https://unicode.org/reports/tr29/#MidNumLet
 func MidNumLet(r rune) bool {
 	switch r {
 	case
@@ -99,13 +95,12 @@ func MidNumLet(r rune) bool {
 	return false
 }
 
-// MidNumLetQ are non-alphanumeric characters allowed within words
-// See https://unicode.org/reports/tr29/#MidNumLet
+// MidNumLetQ is defined here: https://unicode.org/reports/tr29/#MidNumLet
 func MidNumLetQ(r rune) bool {
 	return MidNumLet(r) || r == '\''
 }
 
-// https://unicode.org/reports/tr14/
+// InfixNumeric is defined here: https://unicode.org/reports/tr14/
 func InfixNumeric(r rune) bool {
 	switch r {
 	case
@@ -128,7 +123,7 @@ func InfixNumeric(r rune) bool {
 	return false
 }
 
-// https://unicode.org/reports/tr29/#MidNum
+// MidNum is defined here: https://unicode.org/reports/tr29/#MidNum
 func MidNum(r rune) bool {
 	switch r {
 	case
@@ -148,6 +143,7 @@ func MidNum(r rune) bool {
 	}
 }
 
+// Numeric is defined here: https://unicode.org/reports/tr29/#Numeric
 func Numeric(r rune) bool {
 	switch {
 	case r == '٬':
@@ -159,15 +155,17 @@ func Numeric(r rune) bool {
 	}
 }
 
+// Cr is carriage return (\r, 13)
 func Cr(r rune) bool {
 	return r == '\r'
 }
 
+// Lf is line feed (\n, 10)
 func Lf(r rune) bool {
 	return r == '\n'
 }
 
-// https://unicode.org/reports/tr29/#Katakana
+// Katakana is defined here: https://unicode.org/reports/tr29/#Katakana
 func Katakana(r rune) bool {
 	switch r {
 	case
@@ -187,20 +185,12 @@ func Katakana(r rune) bool {
 	}
 }
 
+// HebrewLetter is defined here: https://unicode.org/reports/tr29/#Hebrew_Letter
 func HebrewLetter(r rune) bool {
 	return unicode.Is(unicode.Hebrew, r) && unicode.IsLetter(r)
 }
 
-func Leading(r rune) bool {
-	switch {
-	case r == '.':
-		return true
-	default:
-		return false
-	}
-}
-
-// https://unicode.org/reports/tr29/#WB3a
+// Newline is defined here: https://unicode.org/reports/tr29/#WB3a
 func Newline(r rune) bool {
 	switch r {
 	case
@@ -215,22 +205,22 @@ func Newline(r rune) bool {
 	return false
 }
 
-// https://unicode.org/reports/tr29/#Single_Quote
+// SingleQuote is defined here: https://unicode.org/reports/tr29/#Single_Quote
 func SingleQuote(r rune) bool {
 	return r == '\''
 }
 
-// https://unicode.org/reports/tr29/#Double_Quote
+// DoubleQuote is defined here: https://unicode.org/reports/tr29/#Double_Quote
 func DoubleQuote(r rune) bool {
 	return r == '"'
 }
 
-// https://unicode.org/reports/tr29/#WSegSpace
+// WSegSpace is defined here: https://unicode.org/reports/tr29/#WSegSpace
 func WSegSpace(r rune) bool {
 	return unicode.Is(unicode.Zs, r)
 }
 
-// https://unicode.org/reports/tr29/#ExtendNumLetWB
+// ExtendNumLet is defined here: https://unicode.org/reports/tr29/#ExtendNumLetWB
 func ExtendNumLet(r rune) bool {
 	return unicode.Is(unicode.Pc, r) || r == 0x202F
 }
