@@ -1,20 +1,14 @@
 package jargon
 
 import (
-	"io"
 	"strings"
 	"testing"
 )
 
 // TODO: test ordering
 
-func tokenize(r io.Reader) *TokenStream {
-	t := newTokenizer(r, true) // add guard for testing
-	return NewTokenStream(t.next)
-}
-
 func TestTokenizer(t *testing.T) {
-	text := `Hi.    
+	original := `Hi.    
 	node.js, first_last, my.name@domain.com
 	123.456, 789, .234, 1,000, a16z, 3G and $200.13.
 	wishy-washy and C++ and F# and .net
@@ -24,9 +18,21 @@ func TestTokenizer(t *testing.T) {
 	ב'
 	"אא"בב"abc
 	Then ウィキペディア and 象形.`
-	text += "crlf is \r\n"
+	original += "crlf is \r\n"
 
-	tokens := tokenize(strings.NewReader(text))
+	tokens := Tokenize(strings.NewReader(original))
+
+	// First, sanity check
+	roundtrip, err := tokens.String()
+	if err != nil {
+		t.Error(err)
+	}
+	if roundtrip != original {
+		t.Error("roundtrip should equal the original")
+	}
+
+	// Gotta re-tokenize
+	tokens = Tokenize(strings.NewReader(original))
 
 	got := map[string]bool{}
 
