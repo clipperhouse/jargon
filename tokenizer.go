@@ -55,65 +55,30 @@ func (t *tokenizer) next() (*Token, error) {
 		}
 
 		switch {
-		case t.wb3(current):
+		case
+			t.wb3(current):
 			// true indicates continue
 			t.accept(current)
 			continue
-		case t.wb3a(current):
+		case
+			t.wb3a(current),
+			t.wb3b(current):
 			// true indicates break
 			goto breaking
-		case t.wb3b(current):
-			// true indicates break
-			goto breaking
-		case t.wb3d(current):
-			// true indicates continue
-			t.accept(current)
-			continue
-		case t.wb5(current):
-			// true indicates continue
-			t.accept(current)
-			continue
-		case t.wb6(current, lookahead):
-			// true indicates continue
-			t.accept(current)
-			continue
-		case t.wb7(current):
-			// true indicates continue
-			t.accept(current)
-			continue
-		case t.wb7a(current):
-			// true indicates continue
-			t.accept(current)
-			continue
-		case t.wb7b(current, lookahead):
-			// true indicates continue
-			t.accept(current)
-			continue
-		case t.wb7c(current):
-			// true indicates continue
-			t.accept(current)
-			continue
-		case t.wb8(current):
-			// true indicates continue
-			t.accept(current)
-			continue
-		case t.wb9(current):
-			// true indicates continue
-			t.accept(current)
-			continue
-		case t.wb10(current):
-			// true indicates continue
-			t.accept(current)
-			continue
-		case t.wb11(current):
-			// true indicates continue
-			t.accept(current)
-			continue
-		case t.wb12(current, lookahead):
-			// true indicates continue
-			t.accept(current)
-			continue
-		case t.wb13(current):
+		case
+			t.wb3d(current),
+			t.wb5(current),
+			t.wb6(current, lookahead),
+			t.wb7(current),
+			t.wb7a(current),
+			t.wb7b(current, lookahead),
+			t.wb7c(current),
+			t.wb8(current),
+			t.wb9(current),
+			t.wb10(current),
+			t.wb11(current),
+			t.wb12(current, lookahead),
+			t.wb13(current):
 			// true indicates continue
 			t.accept(current)
 			continue
