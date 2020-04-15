@@ -4,8 +4,36 @@ package is
 
 import "unicode"
 
+type memoized struct {
+	f     func(rune) bool
+	cache map[rune]bool
+}
+
+func (m memoized) call(r rune) bool {
+	if val, found := m.cache[r]; found {
+		return val
+	}
+
+	val := m.f(r)
+	m.cache[r] = val
+	return val
+}
+
+func memoize(f func(rune) bool) func(rune) bool {
+	m := &memoized{
+		f:     f,
+		cache: map[rune]bool{},
+	}
+	return m.call
+}
+
+// We've only memoized funcs that call into unicode.Is funcs;
+// funcs that are comprised entirely of switch statements probably are not improved by a map lookup
+
 // Alphabetic is defined here: https://unicode.org/reports/tr44/#Alphabetic
-func Alphabetic(r rune) bool {
+var Alphabetic = memoize(alphabetic)
+
+func alphabetic(r rune) bool {
 	switch {
 	case
 		r == '_',
@@ -18,7 +46,9 @@ func Alphabetic(r rune) bool {
 }
 
 // ALetter is defined here: https://unicode.org/reports/tr29/#ALetter
-func ALetter(r rune) bool {
+var ALetter = memoize(aletter)
+
+func aletter(r rune) bool {
 	// Logic of the above standard, from the bottom up
 
 	switch {
@@ -58,7 +88,9 @@ func ALetter(r rune) bool {
 }
 
 // AHLetter is ALetter or HebrewLetter
-func AHLetter(r rune) bool {
+var AHLetter = memoize(ahletter)
+
+func ahletter(r rune) bool {
 	return ALetter(r) || HebrewLetter(r)
 }
 
@@ -144,7 +176,9 @@ func MidNum(r rune) bool {
 }
 
 // Numeric is defined here: https://unicode.org/reports/tr29/#Numeric
-func Numeric(r rune) bool {
+var Numeric = memoize(numeric)
+
+func numeric(r rune) bool {
 	switch {
 	case r == '٬':
 		return false
@@ -166,7 +200,9 @@ func Lf(r rune) bool {
 }
 
 // Katakana is defined here: https://unicode.org/reports/tr29/#Katakana
-func Katakana(r rune) bool {
+var Katakana = memoize(katakana)
+
+func katakana(r rune) bool {
 	switch r {
 	case
 		0x3031,
@@ -186,7 +222,9 @@ func Katakana(r rune) bool {
 }
 
 // HebrewLetter is defined here: https://unicode.org/reports/tr29/#Hebrew_Letter
-func HebrewLetter(r rune) bool {
+var HebrewLetter = memoize(hebrewletter)
+
+func hebrewletter(r rune) bool {
 	return unicode.Is(unicode.Hebrew, r) && unicode.IsLetter(r)
 }
 
