@@ -153,7 +153,7 @@ func (t *tokenizer) wb3(current rune) (continues bool) {
 // https://unicode.org/reports/tr29/#WB3a
 func (t *tokenizer) wb3a(current rune) (breaks bool) {
 	if len(t.buffer) == 0 {
-		return false
+		return is.Cr(current) || is.Lf(current) || is.Newline(current)
 	}
 
 	previous := t.buffer[len(t.buffer)-1]
@@ -190,7 +190,7 @@ func (t *tokenizer) wb5(current rune) (continues bool) {
 // https://unicode.org/reports/tr29/#WB6
 func (t *tokenizer) wb6(current, lookahead rune) (continues bool) {
 	if len(t.buffer) == 0 {
-		return false
+		return is.AHLetter(current)
 	}
 
 	previous := t.buffer[len(t.buffer)-1]
@@ -212,7 +212,7 @@ func (t *tokenizer) wb7(current rune) (continues bool) {
 // https://unicode.org/reports/tr29/#WB7a
 func (t *tokenizer) wb7a(current rune) (continues bool) {
 	if len(t.buffer) == 0 {
-		return false
+		return is.HebrewLetter(current)
 	}
 
 	previous := t.buffer[len(t.buffer)-1]
@@ -222,7 +222,7 @@ func (t *tokenizer) wb7a(current rune) (continues bool) {
 // https://unicode.org/reports/tr29/#WB7b
 func (t *tokenizer) wb7b(current, lookahead rune) (continues bool) {
 	if len(t.buffer) == 0 {
-		return false
+		return is.HebrewLetter(current)
 	}
 
 	previous := t.buffer[len(t.buffer)-1]
@@ -255,7 +255,7 @@ func (t *tokenizer) wb8(current rune) (continues bool) {
 // https://unicode.org/reports/tr29/#WB9
 func (t *tokenizer) wb9(current rune) (continues bool) {
 	if len(t.buffer) == 0 {
-		return false
+		return is.AHLetter(current)
 	}
 
 	previous := t.buffer[len(t.buffer)-1]
@@ -265,7 +265,7 @@ func (t *tokenizer) wb9(current rune) (continues bool) {
 // https://unicode.org/reports/tr29/#WB9
 func (t *tokenizer) wb10(current rune) (continues bool) {
 	if len(t.buffer) == 0 {
-		return false
+		return is.Numeric(current)
 	}
 
 	previous := t.buffer[len(t.buffer)-1]
@@ -287,7 +287,7 @@ func (t *tokenizer) wb11(current rune) (continues bool) {
 // https://unicode.org/reports/tr29/#WB12
 func (t *tokenizer) wb12(current, lookahead rune) (continues bool) {
 	if len(t.buffer) == 0 {
-		return false
+		return is.Numeric(current)
 	}
 
 	previous := t.buffer[len(t.buffer)-1]
@@ -303,6 +303,26 @@ func (t *tokenizer) wb13(current rune) (continues bool) {
 
 	previous := t.buffer[len(t.buffer)-1]
 	return is.Katakana(previous) && is.Katakana(current)
+}
+
+// https://unicode.org/reports/tr29/#WB13a
+func (t *tokenizer) wb13a(current rune) (continues bool) {
+	if len(t.buffer) == 0 {
+		return is.AHLetter(current) || is.Numeric(current) || is.Katakana(current) || is.ExtendNumLet(current)
+	}
+
+	previous := t.buffer[len(t.buffer)-1]
+	return (is.AHLetter(previous) || is.Numeric(previous) || is.Katakana(previous) || is.ExtendNumLet(previous)) && is.ExtendNumLet(current)
+}
+
+// https://unicode.org/reports/tr29/#WB13b
+func (t *tokenizer) wb13b(current rune) (continues bool) {
+	if len(t.buffer) == 0 {
+		return is.ExtendNumLet(current)
+	}
+
+	previous := t.buffer[len(t.buffer)-1]
+	return is.ExtendNumLet(previous) && (is.AHLetter(current) || is.Numeric(current) || is.Katakana(current))
 }
 
 func (t *tokenizer) token() *Token {

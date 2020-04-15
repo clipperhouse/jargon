@@ -229,3 +229,8 @@ func DoubleQuote(r rune) bool {
 func WSegSpace(r rune) bool {
 	return unicode.Is(unicode.Zs, r)
 }
+
+// https://unicode.org/reports/tr29/#ExtendNumLetWB
+func ExtendNumLet(r rune) bool {
+	return unicode.Is(unicode.Pc, r) || r == 0x202F
+}
