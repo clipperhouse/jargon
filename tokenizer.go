@@ -44,6 +44,8 @@ func (t *tokenizer) next() (*Token, error) {
 		case err != nil:
 			return nil, err
 		case eof:
+			// This is WB2
+			// https://unicode.org/reports/tr29/#WB2
 			return t.token(), nil
 		}
 
@@ -99,20 +101,20 @@ func (t *tokenizer) next() (*Token, error) {
 	}
 }
 
+// Word boundary rules: https://unicode.org/reports/tr29/#Word_Boundaries
+// Typically they take the form of Category1 × Category2; × means don't break between runes of these categories.
+// The funcs below test the 'left' side first, when len(buffer) == 0, i.e. beginning of token.
+// Then, they test the 'right' side, if something is already in the buffer.
+// In most cases, returning true means 'keep going'.
+
 // https://unicode.org/reports/tr29/#WB3
 func (t *tokenizer) wb3(current rune) (continues bool) {
-	// If it's a new token and CR
 	if len(t.buffer) == 0 {
 		return is.Cr(current)
 	}
 
-	// If it's LF and previous was CR
-	if is.Lf(current) {
-		previous := t.buffer[len(t.buffer)-1]
-		return is.Cr(previous)
-	}
-
-	return false
+	previous := t.buffer[len(t.buffer)-1]
+	return is.Cr(previous) && is.Lf(current)
 }
 
 // https://unicode.org/reports/tr29/#WB3a
@@ -132,7 +134,6 @@ func (t *tokenizer) wb3b(current rune) (breaks bool) {
 
 // https://unicode.org/reports/tr29/#WB5
 func (t *tokenizer) wb3d(current rune) (continues bool) {
-	// If it's a new token
 	if len(t.buffer) == 0 {
 		return is.WSegSpace(current)
 	}
@@ -143,7 +144,6 @@ func (t *tokenizer) wb3d(current rune) (continues bool) {
 
 // https://unicode.org/reports/tr29/#WB5
 func (t *tokenizer) wb5(current rune) (continues bool) {
-	// If it's a new token and AHLetter
 	if len(t.buffer) == 0 {
 		return is.AHLetter(current)
 	}
