@@ -4,7 +4,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/clipperhouse/uax29"
+	"github.com/clipperhouse/uax29/words"
 )
 
 // Tokenize tokenizes a reader into a stream of tokens. Iterate through the stream by calling Scan() or Next().
@@ -25,12 +25,12 @@ func TokenizeString(s string) *TokenStream {
 }
 
 type tokenizer struct {
-	sc *uax29.Scanner
+	sc *words.Scanner
 }
 
 func newTokenizer(r io.Reader) *tokenizer {
 	return &tokenizer{
-		sc: uax29.NewScanner(r),
+		sc: words.NewScanner(r),
 	}
 }
 
