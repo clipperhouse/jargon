@@ -3,6 +3,7 @@ package stemmer
 
 import (
 	"github.com/clipperhouse/jargon"
+	"github.com/clipperhouse/jargon/filters/mapper"
 	"github.com/kljensen/snowball/english"
 	"github.com/kljensen/snowball/french"
 	"github.com/kljensen/snowball/norwegian"
@@ -35,47 +36,21 @@ var Swedish = newStemmer(swedish.Stem)
 
 // newStemmer creates a new stemmer
 func newStemmer(stem func(string, bool) string) jargon.Filter {
-	s := &stemmer{
-		stem: stem,
-	}
-	return s.Stem
-}
-
-func (st *stemmer) Stem(incoming *jargon.TokenStream) *jargon.TokenStream {
-	t := &tokens{
-		stemmer:  st,
-		incoming: incoming,
-	}
-	return jargon.NewTokenStream(t.next)
-}
-
-type tokens struct {
-	stemmer  *stemmer
-	incoming *jargon.TokenStream
-}
-
-func (t *tokens) next() (*jargon.Token, error) {
-	for {
-		token, err := t.incoming.Next()
-		if err != nil {
-			return nil, err
-		}
-		if token == nil {
-			return nil, nil
-		}
-
+	f := func(token *jargon.Token) *jargon.Token {
 		// Only interested in stemming words
 		if token.IsPunct() || token.IsSpace() {
-			return token, nil
+			return token
 		}
 
-		stemmed := t.stemmer.stem(token.String(), true)
+		stemmed := stem(token.String(), true)
 
 		if stemmed == token.String() {
 			// Had no effect, send back the original
-			return token, nil
+			return token
 		}
 
-		return jargon.NewToken(stemmed, true), nil
+		return jargon.NewToken(stemmed, true)
 	}
+
+	return mapper.NewFilter(f)
 }

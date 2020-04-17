@@ -2,7 +2,10 @@
 // Ported from Lucene org.apache.lucene.analysis.miscellaneous
 package ascii
 
-import "github.com/clipperhouse/jargon"
+import (
+	"github.com/clipperhouse/jargon"
+	"github.com/clipperhouse/jargon/filters/mapper"
+)
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -25,30 +28,12 @@ import "github.com/clipperhouse/jargon"
 // which are not in the first 127 ASCII characters (the "Basic Latin" Unicode
 // block) into their ASCII equivalents, if one exists.
 // Ported from Lucene org.apache.lucene.analysis.miscellaneous
-func Fold(incoming *jargon.TokenStream) *jargon.TokenStream {
-	t := &tokens{
-		incoming: incoming,
-	}
-	return jargon.NewTokenStream(t.next)
-}
+var Fold = mapper.NewFilter(folder)
 
-type tokens struct {
-	incoming *jargon.TokenStream
-}
-
-func (t *tokens) next() (*jargon.Token, error) {
-	token, err := t.incoming.Next()
-	if err != nil {
-		return nil, err
-	}
-	if token == nil {
-		return nil, nil
-	}
-
+func folder(token *jargon.Token) *jargon.Token {
 	fold, folded := FoldString(token.String())
 	if folded {
-		return jargon.NewToken(fold, true), nil
+		return jargon.NewToken(fold, true)
 	}
-
-	return token, nil
+	return token
 }
