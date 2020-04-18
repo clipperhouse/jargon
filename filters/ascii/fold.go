@@ -49,7 +49,6 @@ func FoldString(s string) (string, bool) {
 				'\u24B6', // Ⓐ  [CIRCLED LATIN CAPITAL LETTER A]
 				'\uFF21': // Ａ  [FULLWIDTH LATIN CAPITAL LETTER A]
 				b.WriteRune('A')
-				b.WriteRune('A')
 				folded = true
 			case
 				'\u00E0', // à  [LATIN SMALL LETTER A WITH GRAVE]
