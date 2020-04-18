@@ -5,6 +5,9 @@ import (
 	"strings"
 )
 
+// Filter processes a stream of tokens
+type Filter func(*TokenStream) *TokenStream
+
 // TokenStream represents an 'iterator' of Token, the result of a call to Tokenize or Filter. Call Next() until it returns nil.
 type TokenStream struct {
 	next func() (*Token, error)
@@ -54,6 +57,38 @@ func (stream *TokenStream) Token() *Token {
 // Err returns the current error in the stream, after calling Scan
 func (stream *TokenStream) Err() error {
 	return stream.err
+}
+
+type where struct {
+	stream    *TokenStream
+	predicate func(*Token) bool
+}
+
+// Where filters a stream of Tokens that match a predicate
+func (stream *TokenStream) Where(predicate func(*Token) bool) *TokenStream {
+	w := &where{
+		stream:    stream,
+		predicate: predicate,
+	}
+	return NewTokenStream(w.next)
+}
+
+func (w *where) next() (*Token, error) {
+	for {
+		token, err := w.stream.Next()
+		if err != nil {
+			return nil, err
+		}
+		if token == nil {
+			break
+		}
+
+		if w.predicate(token) {
+			return token, nil
+		}
+	}
+
+	return nil, nil
 }
 
 // ToSlice converts the Tokens iterator into a slice (array). Calling ToSlice will exhaust the iterator. For big files, putting everything into an array may cause memory pressure.
@@ -136,6 +171,7 @@ func (stream *TokenStream) Lemmas() *TokenStream {
 	return NewTokenStream(w.next)
 }
 
+// Distinct return one token per occurence of a given value (string)
 func (stream *TokenStream) Distinct() *TokenStream {
 	seen := map[string]bool{}
 	isDistinct := func(t *Token) bool {
