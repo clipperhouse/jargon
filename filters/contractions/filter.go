@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/clipperhouse/jargon"
+	"github.com/clipperhouse/jargon/tokenqueue"
 )
 
 //go:generate go run generate/main.go
@@ -16,14 +17,14 @@ import (
 func Expand(incoming *jargon.TokenStream) *jargon.TokenStream {
 	t := &tokens{
 		incoming: incoming,
-		outgoing: &jargon.TokenQueue{},
+		outgoing: tokenqueue.New(),
 	}
 	return jargon.NewTokenStream(t.next)
 }
 
 type tokens struct {
 	incoming *jargon.TokenStream
-	outgoing *jargon.TokenQueue
+	outgoing *tokenqueue.TokenQueue
 }
 
 func (t *tokens) next() (*jargon.Token, error) {

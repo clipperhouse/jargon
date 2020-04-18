@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/clipperhouse/jargon"
+	"github.com/clipperhouse/jargon/tokenqueue"
 )
 
 // NewFilter creates a new filter for leading characters. sigil is the leading character; legal defines legality for the following token.
@@ -24,7 +25,7 @@ func (f *filter) filter(incoming *jargon.TokenStream) *jargon.TokenStream {
 	t := &stream{
 		filter:   f,
 		incoming: incoming,
-		outgoing: &jargon.TokenQueue{},
+		outgoing: tokenqueue.New(),
 	}
 	return jargon.NewTokenStream(t.next)
 }
@@ -34,7 +35,7 @@ type stream struct {
 
 	incoming *jargon.TokenStream
 	previous *jargon.Token
-	outgoing *jargon.TokenQueue
+	outgoing *tokenqueue.TokenQueue
 }
 
 func (s *stream) next() (*jargon.Token, error) {

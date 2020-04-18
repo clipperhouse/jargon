@@ -1,6 +1,20 @@
-package jargon
+package tokenqueue
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/clipperhouse/jargon"
+)
+
+// Token is an alias to jargon.Token for convenience
+type Token = jargon.Token
+
+// New creates a new TokenQueue
+func New(tokens ...*Token) *TokenQueue {
+	return &TokenQueue{
+		Tokens: tokens,
+	}
+}
 
 // TokenQueue is a FIFO queue
 type TokenQueue struct {

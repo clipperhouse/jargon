@@ -8,6 +8,7 @@ import (
 
 	"github.com/clipperhouse/jargon"
 	"github.com/clipperhouse/jargon/filters/synonyms/trie"
+	"github.com/clipperhouse/jargon/tokenqueue"
 )
 
 // filter is the data structure of a synonyms filter. Use NewFilter to create.
@@ -108,8 +109,8 @@ func (f *filter) Filter(incoming *jargon.TokenStream) *jargon.TokenStream {
 
 	t := &tokens{
 		incoming: incoming,
-		buffer:   &jargon.TokenQueue{},
-		outgoing: &jargon.TokenQueue{},
+		buffer:   tokenqueue.New(),
+		outgoing: tokenqueue.New(),
 		filter:   f,
 	}
 
@@ -128,9 +129,9 @@ type tokens struct {
 	// incoming stream of tokens from another source, such as a tokenizer
 	incoming *jargon.TokenStream
 	// a 'lookahead' buffer for incoming tokens
-	buffer *jargon.TokenQueue
+	buffer *tokenqueue.TokenQueue
 	// outgoing queue of filtered tokens
-	outgoing *jargon.TokenQueue
+	outgoing *tokenqueue.TokenQueue
 	filter   *filter
 }
 

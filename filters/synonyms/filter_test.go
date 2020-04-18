@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/clipperhouse/jargon"
+	"github.com/clipperhouse/jargon/tokenqueue"
 )
 
 func TestFill(t *testing.T) {
@@ -12,173 +13,135 @@ func TestFill(t *testing.T) {
 		// input
 		input    string
 		maxWords int
-		previous *jargon.TokenQueue
+		previous *tokenqueue.TokenQueue
 
 		// expected
-		buffer   *jargon.TokenQueue
-		outgoing *jargon.TokenQueue
+		buffer   *tokenqueue.TokenQueue
+		outgoing *tokenqueue.TokenQueue
 	}
 
 	tests := []test{
 		{
 			input:    "test one",
 			maxWords: 3,
-			previous: &jargon.TokenQueue{},
-
-			buffer: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{
-					jargon.NewToken("test", false),
-					jargon.NewToken(" ", false),
-					jargon.NewToken("one", false),
-				},
-			},
-			outgoing: &jargon.TokenQueue{},
+			previous: tokenqueue.New(),
+			buffer: tokenqueue.New(
+				jargon.NewToken("test", false),
+				jargon.NewToken(" ", false),
+				jargon.NewToken("one", false),
+			),
+			outgoing: tokenqueue.New(),
 		},
 		{
 			input:    "test two",
 			maxWords: 1,
-			previous: &jargon.TokenQueue{},
-
-			buffer: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{
-					jargon.NewToken("test", false),
-				},
-			},
-			outgoing: &jargon.TokenQueue{},
+			previous: tokenqueue.New(),
+			buffer: tokenqueue.New(
+				jargon.NewToken("test", false),
+			),
+			outgoing: tokenqueue.New(),
 		},
 		{
 			input:    " test three",
 			maxWords: 2,
-			previous: &jargon.TokenQueue{},
+			previous: tokenqueue.New(),
 
-			buffer: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{
-					jargon.NewToken("test", false),
-					jargon.NewToken(" ", false),
-					jargon.NewToken("three", false),
-				},
-			},
-			outgoing: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{
-					jargon.NewToken(" ", false),
-				},
-			},
+			buffer: tokenqueue.New(
+				jargon.NewToken("test", false),
+				jargon.NewToken(" ", false),
+				jargon.NewToken("three", false),
+			),
+			outgoing: tokenqueue.New(
+				jargon.NewToken(" ", false),
+			),
 		},
 		{
 			input:    "test four, and five",
 			maxWords: 4,
-			previous: &jargon.TokenQueue{},
+			previous: tokenqueue.New(),
 
-			buffer: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{
-					jargon.NewToken("test", false),
-					jargon.NewToken(" ", false),
-					jargon.NewToken("four", false),
-					jargon.NewToken(",", false),
-				},
-			},
-			outgoing: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{},
-			},
+			buffer: tokenqueue.New(
+				jargon.NewToken("test", false),
+				jargon.NewToken(" ", false),
+				jargon.NewToken("four", false),
+				jargon.NewToken(",", false),
+			),
+			outgoing: tokenqueue.New(),
 		},
 		{
 			input:    ", test six and seven",
 			maxWords: 4,
-			previous: &jargon.TokenQueue{},
+			previous: tokenqueue.New(),
 
-			buffer: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{
-					jargon.NewToken("test", false),
-					jargon.NewToken(" ", false),
-					jargon.NewToken("six", false),
-					jargon.NewToken(" ", false),
-					jargon.NewToken("and", false),
-					jargon.NewToken(" ", false),
-					jargon.NewToken("seven", false),
-				},
-			},
-			outgoing: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{
-					jargon.NewToken(",", false),
-					jargon.NewToken(" ", false),
-				},
-			},
+			buffer: tokenqueue.New(
+				jargon.NewToken("test", false),
+				jargon.NewToken(" ", false),
+				jargon.NewToken("six", false),
+				jargon.NewToken(" ", false),
+				jargon.NewToken("and", false),
+				jargon.NewToken(" ", false),
+				jargon.NewToken("seven", false),
+			),
+			outgoing: tokenqueue.New(
+				jargon.NewToken(",", false),
+				jargon.NewToken(" ", false),
+			),
 		},
 		{
 			input:    " test eight and nine",
 			maxWords: 4,
-			previous: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{
-					jargon.NewToken("previous", false),
-					jargon.NewToken(" ", false),
-					jargon.NewToken("stuff", false),
-				},
-			},
+			previous: tokenqueue.New(
+				jargon.NewToken("previous", false),
+				jargon.NewToken(" ", false),
+				jargon.NewToken("stuff", false),
+			),
 
-			buffer: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{
-					jargon.NewToken("previous", false),
-					jargon.NewToken(" ", false),
-					jargon.NewToken("stuff", false),
-					jargon.NewToken(" ", false),
-					jargon.NewToken("test", false),
-					jargon.NewToken(" ", false),
-					jargon.NewToken("eight", false),
-				},
-			},
-			outgoing: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{},
-			},
+			buffer: tokenqueue.New(
+				jargon.NewToken("previous", false),
+				jargon.NewToken(" ", false),
+				jargon.NewToken("stuff", false),
+				jargon.NewToken(" ", false),
+				jargon.NewToken("test", false),
+				jargon.NewToken(" ", false),
+				jargon.NewToken("eight", false),
+			),
+			outgoing: tokenqueue.New(),
 		},
 		{
 			input:    ". test ten and eleven",
 			maxWords: 4,
-			previous: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{
-					jargon.NewToken("previous", false),
-					jargon.NewToken(" ", false),
-					jargon.NewToken("stuff", false),
-				},
-			},
-
-			buffer: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{
-					jargon.NewToken("previous", false),
-					jargon.NewToken(" ", false),
-					jargon.NewToken("stuff", false),
-					jargon.NewToken(".", false),
-				},
-			},
-			outgoing: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{},
-			},
+			previous: tokenqueue.New(
+				jargon.NewToken("previous", false),
+				jargon.NewToken(" ", false),
+				jargon.NewToken("stuff", false),
+			),
+			buffer: tokenqueue.New(
+				jargon.NewToken("previous", false),
+				jargon.NewToken(" ", false),
+				jargon.NewToken("stuff", false),
+				jargon.NewToken(".", false),
+			),
+			outgoing: tokenqueue.New(),
 		},
 		{
 			input:    " test twelve and thirteen",
 			maxWords: 3,
-			previous: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{
-					jargon.NewToken(".", false),
-					jargon.NewToken(" ", false),
-					jargon.NewToken("leftover", false),
-				},
-			},
-
-			buffer: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{
-					jargon.NewToken("leftover", false),
-					jargon.NewToken(" ", false),
-					jargon.NewToken("test", false),
-					jargon.NewToken(" ", false),
-					jargon.NewToken("twelve", false),
-				},
-			},
-			outgoing: &jargon.TokenQueue{
-				Tokens: []*jargon.Token{
-					jargon.NewToken(".", false),
-					jargon.NewToken(" ", false),
-				},
-			},
+			previous: tokenqueue.New(
+				jargon.NewToken(".", false),
+				jargon.NewToken(" ", false),
+				jargon.NewToken("leftover", false),
+			),
+			buffer: tokenqueue.New(
+				jargon.NewToken("leftover", false),
+				jargon.NewToken(" ", false),
+				jargon.NewToken("test", false),
+				jargon.NewToken(" ", false),
+				jargon.NewToken("twelve", false),
+			),
+			outgoing: tokenqueue.New(
+				jargon.NewToken(".", false),
+				jargon.NewToken(" ", false),
+			),
 		},
 	}
 
@@ -187,7 +150,7 @@ func TestFill(t *testing.T) {
 		tokens := &tokens{
 			incoming: incoming,
 			buffer:   test.previous,
-			outgoing: &jargon.TokenQueue{},
+			outgoing: tokenqueue.New(),
 			filter: &filter{
 				maxWords: test.maxWords,
 			},
