@@ -25,13 +25,13 @@ func legalHandle(s string) bool {
 			return false
 		case
 			'A' <= r && r <= 'Z',
-			'a' <= r && r <= 'r',
+			'a' <= r && r <= 'z',
 			'0' <= r && r <= '9',
 			r == '_':
 			continue
-		default:
-			return false
 		}
+
+		return false
 	}
 
 	return true
