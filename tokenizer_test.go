@@ -59,10 +59,11 @@ func TestTokenizer(t *testing.T) {
 		{"node", false},
 		{"js", false},
 
-		{"first_last", false},
-		{"first", true},
-		{"_", true},
-		{"last", true},
+		// Note: uax29 package considers underscore a mid-word char
+		{"first_last", true},
+		{"first", false},
+		{"_", false},
+		{"last", false},
 
 		{"my.name", true},
 		{"my.name@", false},
