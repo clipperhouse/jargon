@@ -25,7 +25,7 @@ func newFilter(form norm.Form) jargon.Filter {
 		}
 
 		s := form.String(token.String())
-		return jargon.NewToken(s, true)
+		return jargon.NewToken([]byte(s), true)
 	}
 
 	return mapper.NewFilter(f)

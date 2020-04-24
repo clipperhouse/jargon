@@ -1,13 +1,19 @@
 package ascii
 
-import "bytes"
+import (
+	"bytes"
+	"unicode/utf8"
+)
 
 // FoldString is a utility method for folding a single string. Use the Fold() filter to process a token stream.
-func FoldString(s string) (string, bool) {
+func FoldString(s []byte) ([]byte, bool) {
 	var b bytes.Buffer
 	folded := false
 
-	for _, r := range s {
+	i := 0
+	for i < len(s) {
+		r, w := utf8.DecodeRune(s[i:])
+		i += w
 		// Quick test: if it's not in range then just keep current character
 		if r < '\u0080' {
 			b.WriteRune(r)
@@ -2156,7 +2162,7 @@ func FoldString(s string) (string, bool) {
 
 	if folded {
 		// Only allocate if something happened
-		return b.String(), true
+		return b.Bytes(), true
 	}
 
 	return s, false

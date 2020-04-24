@@ -1,18 +1,25 @@
 package jargon
 
 import (
+	"reflect"
 	"unicode"
+	"unicode/utf8"
 )
 
 // Token represents a piece of text with metadata.
 type Token struct {
-	value               string
+	value               []byte
 	punct, space, lemma bool
+}
+
+// Bytes returned the bytes of the token
+func (t *Token) Bytes() []byte {
+	return t.value
 }
 
 // String is the string value of the token
 func (t *Token) String() string {
-	return t.value
+	return string(t.value)
 }
 
 // IsPunct indicates that the token should be considered 'breaking' of a run of words. Mostly uses
@@ -34,8 +41,8 @@ func (t *Token) IsLemma() bool {
 }
 
 // NewToken creates a new token, and calculates whether the token is space or punct.
-func NewToken(s string, isLemma bool) *Token {
-	token, found := common[s][isLemma]
+func NewToken(s []byte, isLemma bool) *Token {
+	token, found := common[string(s)][isLemma]
 
 	if found {
 		return token
@@ -48,12 +55,15 @@ func NewToken(s string, isLemma bool) *Token {
 	var punct, space bool
 
 	switch {
-	case s == "\r\n":
+	case reflect.DeepEqual(s, []byte("\r\n")):
 		punct = true
 		space = true
 	default:
 		punct = true
-		for _, r := range s {
+		i := 0
+		for i < len(s) {
+			r, w := utf8.DecodeRune(s[i:])
+			i += w
 			if !isPunct(r) {
 				punct = false
 				break
@@ -61,7 +71,10 @@ func NewToken(s string, isLemma bool) *Token {
 		}
 
 		space = true
-		for _, r := range s {
+		i = 0
+		for i < len(s) {
+			r, w := utf8.DecodeRune(s[i:])
+			i += w
 			if !unicode.IsSpace(r) {
 				space = false
 				break
@@ -103,8 +116,8 @@ func init() {
 
 	for _, s := range ss {
 		common[s] = map[bool]*Token{
-			true:  NewToken(s, true),
-			false: NewToken(s, false),
+			true:  NewToken([]byte(s), true),
+			false: NewToken([]byte(s), false),
 		}
 	}
 }

@@ -37,7 +37,7 @@ func newTokenizer(r io.Reader) *tokenizer {
 // next returns the next token. Call until it returns nil.
 func (t *tokenizer) next() (*Token, error) {
 	if t.sc.Scan() {
-		token := NewToken(t.sc.Text(), false)
+		token := NewToken(t.sc.Bytes(), false)
 		return token, nil
 	}
 	if err := t.sc.Err(); err != nil {

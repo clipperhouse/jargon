@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/clipperhouse/jargon"
 )
@@ -66,7 +67,12 @@ type node struct {
 func (t *RuneTrie) Add(tokens []*jargon.Token, canonical string) {
 	n := t.root
 	for _, token := range tokens {
-		for _, r := range token.String() {
+		b := token.Bytes()
+		i := 0
+		for i < len(b) {
+			r, w := utf8.DecodeRune(b[i:])
+			i += w
+
 			if t.ignoreCase {
 				r = unicode.ToLower(r)
 			}

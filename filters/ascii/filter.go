@@ -31,9 +31,9 @@ import (
 var Fold = mapper.NewFilter(folder)
 
 func folder(token *jargon.Token) *jargon.Token {
-	fold, folded := FoldString(token.String())
+	fold, folded := FoldString(token.Bytes())
 	if folded {
-		return jargon.NewToken(fold, true)
+		return jargon.NewToken([]byte(fold), true)
 	}
 	return token
 }

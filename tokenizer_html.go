@@ -62,11 +62,7 @@ func (t *htokenizer) next() (*Token, error) {
 		switch t.parent {
 		case atom.Script, atom.Style:
 			// Don't tokenize script and style blocks, just return as one big string
-			token := &Token{
-				value: htoken.String(),
-				punct: false,
-				space: false,
-			}
+			token := NewToken([]byte(htoken.String()), false)
 			return token, nil
 		default:
 			t.ttokens = TokenizeString(htoken.String())
@@ -80,7 +76,7 @@ func (t *htokenizer) next() (*Token, error) {
 
 	// Everything else is punct for our purposes
 	token := &Token{
-		value: htoken.String(),
+		value: []byte(htoken.String()),
 		punct: true,
 		space: false,
 	}

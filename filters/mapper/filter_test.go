@@ -11,7 +11,7 @@ func TestNewFilter(t *testing.T) {
 	fn := func(token *jargon.Token) *jargon.Token {
 		s := strings.ToLower(token.String())
 		if s != token.String() {
-			return jargon.NewToken(s, true)
+			return jargon.NewToken([]byte(s), true)
 		}
 		return token
 	}

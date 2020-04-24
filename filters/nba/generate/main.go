@@ -64,9 +64,9 @@ func getMappings(names []string) (map[string]string, error) {
 		canonical := strings.TrimSpace(split[1]) + " " + strings.TrimSpace(split[0])
 		synonyms = append(synonyms, canonical)
 
-		fold, folded := ascii.FoldString(canonical)
+		fold, folded := ascii.FoldString([]byte(canonical))
 		if folded {
-			synonyms = append(synonyms, fold)
+			synonyms = append(synonyms, string(fold))
 		}
 
 		key := strings.Join(synonyms, ", ")

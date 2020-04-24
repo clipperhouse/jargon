@@ -20,21 +20,23 @@ package ascii
  */
 
 import (
-	"strings"
+	"bytes"
 	"testing"
+
+	"github.com/clipperhouse/jargon"
 )
 
 func TestLatin1Accents(t *testing.T) {
-	input := `Des mot clés À LA CHAÎNE À Á Â Ã Ä Å Æ Ç È É Ê Ë Ì Í Î Ï Ĳ Ð Ñ
+	input := []byte(`Des mot clés À LA CHAÎNE À Á Â Ã Ä Å Æ Ç È É Ê Ë Ì Í Î Ï Ĳ Ð Ñ
  Ò Ó Ô Õ Ö Ø Œ Þ Ù Ú Û Ü Ý Ÿ à á â ã ä å æ ç è é ê ë ì í î ï ĳ
- ð ñ ò ó ô õ ö ø œ ß þ ù ú û ü ý ÿ ﬁ ﬂ`
+ ð ñ ò ó ô õ ö ø œ ß þ ù ú û ü ý ÿ ﬁ ﬂ`)
 
-	expected := `Des mot cles AA LA CHAINE AA AA AA AA AA AA AE C E E E E I I I I IJ D N
+	expected := []byte(`Des mot cles AA LA CHAINE AA AA AA AA AA AA AE C E E E E I I I I IJ D N
  O O O O O O OE TH U U U U Y Y a a a a a a ae c e e e e i i i i ij
- d n o o o o o o oe ss th u u u u y y fi fl`
+ d n o o o o o o oe ss th u u u u y y fi fl`)
 
-	inputs := strings.Fields(input)
-	expecteds := strings.Fields(expected)
+	inputs := bytes.Fields(input)
+	expecteds := bytes.Fields(expected)
 
 	if len(inputs) != len(expecteds) {
 		t.Error("input and expected should be the same length")
@@ -46,7 +48,7 @@ func TestLatin1Accents(t *testing.T) {
 		t.Errorf("input should not have been folded")
 	}
 
-	gots := strings.Fields(got)
+	gots := bytes.Fields(got)
 
 	if len(gots) != len(expecteds) {
 		t.Error("got and expected should be the same length")
@@ -63,6 +65,17 @@ func TestLatin1Accents(t *testing.T) {
 		}
 		if shouldFold && !folded {
 			t.Errorf("input %s should have folded", inputs[i])
+		}
+	}
+}
+
+func BenchmarkFold(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tokens := jargon.TokenizeString("Let's go to the café mañana")
+		_, err := Fold(tokens).Count()
+		if err != nil {
+			b.Error(err)
 		}
 	}
 }

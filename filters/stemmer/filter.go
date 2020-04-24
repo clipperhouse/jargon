@@ -49,7 +49,7 @@ func newStemmer(stem func(string, bool) string) jargon.Filter {
 			return token
 		}
 
-		return jargon.NewToken(stemmed, true)
+		return jargon.NewToken([]byte(stemmed), true)
 	}
 
 	return mapper.NewFilter(f)

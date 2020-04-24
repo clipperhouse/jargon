@@ -93,7 +93,7 @@ func (s *stream) try(sigil string, current *jargon.Token, legal func(string) boo
 	if legal(lookahead.String()) {
 		// Drop current & lookahead, replace with new token
 		s := sigil + lookahead.String()
-		token := jargon.NewToken(s, true)
+		token := jargon.NewToken([]byte(s), true)
 		return true, token, nil
 	}
 
