@@ -8,6 +8,8 @@ github.com/clipperhouse/segment v0.9.2 h1:4hs+NnA3i1hLJjzThBvy+/iPe8zdNtDLmH0U+F
 github.com/clipperhouse/segment v0.9.2/go.mod h1:dXhm+4H19wRiIENCoOqt/hGAfVxaakd65CBJrp8hc3U=
 github.com/clipperhouse/uax29 v1.0.6 h1:whUwHPrOIaUv8f0cT8FPhNVLkEEPLAk+YorU+okyMlk=
 github.com/clipperhouse/uax29 v1.0.6/go.mod h1:j6OhGfWZw7JQ1sM+nDLNpWM+VxW7Aa0U/Bx6U8NiliQ=
+github.com/clipperhouse/uax29 v1.1.0 h1:gOcIX+0oTnBZdj86YgHnSdZHmb16FjKmHHRnNJAsrI0=
+github.com/clipperhouse/uax29 v1.1.0/go.mod h1:j6OhGfWZw7JQ1sM+nDLNpWM+VxW7Aa0U/Bx6U8NiliQ=
 github.com/kljensen/snowball v0.6.0 h1:6DZLCcZeL0cLfodx+Md4/OLC6b/bfurWUOUGs1ydfOU=
 github.com/kljensen/snowball v0.6.0/go.mod h1:27N7E8fVU5H68RlUmnWwZCfxgt4POBJfENGMvNRhldw=
 github.com/spf13/afero v1.2.2 h1:5jhuqJyZCZf2JRofRvN/nIFgIWNzPa3/Vz8mYylgbWc=
