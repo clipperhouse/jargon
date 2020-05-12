@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"regexp"
 	"strings"
 	"text/template"
 	"time"
@@ -22,9 +21,6 @@ func main() {
 		panic(err)
 	}
 }
-
-// Hyphenated trailing versions, like python-2.7. Things like html5 are considered a unique name, not a version per se.
-var trailingVersion = regexp.MustCompile(`-[\d.]+$`)
 
 // Hard-coded exceptions that cause bad mappings
 var ignore = map[string]bool{
@@ -120,7 +116,7 @@ func writeDictionary() error {
 
 			if wrapper.Backoff > 10 {
 				// That's too much for this run
-				err := fmt.Errorf("Abort: received a message to backoff %d seconds from api.stackexchange.com. That's too much, try again later. See http://api.stackexchange.com/docs/throttle", wrapper.Backoff)
+				err := fmt.Errorf("abort: received a message to backoff %d seconds from api.stackexchange.com. That's too much, try again later. See http://api.stackexchange.com/docs/throttle", wrapper.Backoff)
 				return err
 			}
 

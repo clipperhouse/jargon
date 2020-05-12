@@ -29,7 +29,6 @@ func NewFilter(stopwords []string, ignoreCase bool) jargon.Filter {
 }
 
 type filter struct {
-	incoming   *jargon.TokenStream
 	includes   map[string]bool
 	ignoreCase bool
 }

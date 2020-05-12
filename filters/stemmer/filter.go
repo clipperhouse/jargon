@@ -12,10 +12,6 @@ import (
 	"github.com/kljensen/snowball/swedish"
 )
 
-type stemmer struct {
-	stem func(string, bool) string
-}
-
 // English is a Snowball stemmer for English, implemented as a jargon.Filter
 var English jargon.Filter = newStemmer(english.Stem)
 
