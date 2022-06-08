@@ -1,10 +1,10 @@
 package jargon
 
 import (
-	"bufio"
 	"io"
 	"strings"
 
+	"github.com/clipperhouse/uax29/iterators"
 	"github.com/clipperhouse/uax29/words"
 )
 
@@ -26,7 +26,7 @@ func TokenizeString(s string) *TokenStream {
 }
 
 type tokenizer struct {
-	sc *bufio.Scanner
+	sc *iterators.Scanner
 }
 
 func newTokenizer(r io.Reader) *tokenizer {
