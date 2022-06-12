@@ -4,8 +4,8 @@ github.com/andybalholm/cascadia v1.1.0 h1:BuuO6sSfQNFRu1LppgbD25Hr2vLYW25JvxHs5z
 github.com/andybalholm/cascadia v1.1.0/go.mod h1:GsXiBklL0woXo1j/WYWtSYYC4ouU9PqHO0sqidkEA4Y=
 github.com/clipperhouse/flag v0.0.1 h1:EUgginbk0r3635gKAtpvtkUkrVEVDTjF8Dq0ddzsiYc=
 github.com/clipperhouse/flag v0.0.1/go.mod h1:R2oWQkmwllOvef0btjd2tJDA/fLJw5/bO5poK6cTsC8=
-github.com/clipperhouse/uax29 v1.9.1 h1:fDwxavqwGNQPpyEvlwk515NnwcqD02IsTRTnw0M/MqE=
-github.com/clipperhouse/uax29 v1.9.1/go.mod h1:FAo2cvpr40r4bLhfxYnbbOM9JgZAcIv6uXPtZKvBmv4=
+github.com/clipperhouse/uax29 v1.11.0 h1:iZAPSUGrDY58/9HssqAXcvgyQxVr93fhIRBJbNDCU8Y=
+github.com/clipperhouse/uax29 v1.11.0/go.mod h1:FAo2cvpr40r4bLhfxYnbbOM9JgZAcIv6uXPtZKvBmv4=
 github.com/kljensen/snowball v0.6.0 h1:6DZLCcZeL0cLfodx+Md4/OLC6b/bfurWUOUGs1ydfOU=
 github.com/kljensen/snowball v0.6.0/go.mod h1:27N7E8fVU5H68RlUmnWwZCfxgt4POBJfENGMvNRhldw=
 github.com/spf13/afero v1.2.2 h1:5jhuqJyZCZf2JRofRvN/nIFgIWNzPa3/Vz8mYylgbWc=
