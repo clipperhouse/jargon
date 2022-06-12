@@ -6,19 +6,17 @@ For example, jargon lemmatizes `react`, `React.js`, `React JS` and `REACTJS` to 
 
 ## Install
 
-If you have a [Go installation](https://golang.org/doc/install):
+Binaries are available on the [Releases page](https://github.com/clipperhouse/jargon/releases).
 
-```bash
-go install github.com/clipperhouse/jargon/cmd/jargon
+If you have [Homebrew](https://brew.sh):
 ```
-
-If you’re on a Mac and have [Homebrew](https://brew.sh):
-
-```bash
 brew install clipperhouse/tap/jargon
 ```
 
-There on binaries for Mac, Windows and Linux on the [releases page](https://github.com/clipperhouse/jargon/releases).
+If you have a [Go installation](https://golang.org/doc/install):
+```
+go install github.com/clipperhouse/jargon/cmd/jargon
+```
 
 To display usage, simply type:
 
