@@ -1,2 +1,2 @@
-runtime: go113
+runtime: go122
 main: ./web
