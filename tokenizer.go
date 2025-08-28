@@ -4,6 +4,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/clipperhouse/uax29/iterators"
 	"github.com/clipperhouse/uax29/words"
 )
 
@@ -25,12 +26,12 @@ func TokenizeString(s string) *TokenStream {
 }
 
 type tokenizer struct {
-	sc *words.Scanner
+	sc *iterators.Scanner
 }
 
 func newTokenizer(r io.Reader) *tokenizer {
 	return &tokenizer{
-		sc: words.NewScanner(r),
+		sc: words.NewScanner(r).Scanner,
 	}
 }
 
