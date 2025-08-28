@@ -31,7 +31,7 @@ type tokenizer struct {
 
 func newTokenizer(r io.Reader) *tokenizer {
 	return &tokenizer{
-		sc: words.NewScanner(r),
+		sc: words.NewScanner(r).Scanner,
 	}
 }
 
