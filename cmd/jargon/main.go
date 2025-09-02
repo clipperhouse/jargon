@@ -297,7 +297,10 @@ func execute(c *config) error {
 		if err != nil {
 			return err
 		}
-		c.Writer.WriteString(strconv.Itoa(count) + "\n")
+		_, err = c.Writer.WriteString(strconv.Itoa(count) + "\n")
+		if err != nil {
+			return err
+		}
 		err = c.Writer.Flush()
 		if err != nil {
 			return err
